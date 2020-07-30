@@ -1,1 +1,2 @@
 #algos_in_rust
+This project shows how common algorithms and data structures can be created in rust from first principles. These implementations not based on how they may have created in rust libraries - but how some body coming from a different programming language might attempt to create them.
