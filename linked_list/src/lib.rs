@@ -27,6 +27,16 @@ impl<T: std::fmt::Display> LinkedList<T> {
         self
     }
 
+    pub fn pop_front(&mut self) -> Option<T> {
+        match self.head.take() {
+            Some(h) => {
+                self.head = h.next;
+                Some(h.value)
+            }
+            None => None,
+        }
+    }
+
     pub fn print(&self) {
         match &self.head {
             None => println!("None"),
@@ -76,6 +86,21 @@ mod tests {
         ll.print();
         ll.push_front(300);
         ll.push_front(400);
+        ll.push_front(500).push_front(600);
         ll.print();
+    }
+    #[test]
+    fn test_pop_front() {
+        let mut ll: LinkedList<i32> = LinkedList::empty();
+        assert_eq!(ll.pop_front(), None);
+        ll.push_front(100);
+        assert_eq!(ll.pop_front(), Some(100));
+        ll.push_front(1).push_front(2).push_front(3);
+        println!("Printing the entries");
+        ll.print();
+        assert_eq!(ll.pop_front(), Some(3));
+        assert_eq!(ll.pop_front(), Some(2));
+        assert_eq!(ll.pop_front(), Some(1));
+        assert_eq!(ll.pop_front(), None);
     }
 }
