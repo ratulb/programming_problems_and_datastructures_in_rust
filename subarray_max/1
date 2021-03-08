@@ -1,0 +1,17 @@
+pub fn subarray_max(array: &[i32], subarray_size: usize) -> Vec<i32> {
+ if array.len() == 0 || subarray_size == 0 {
+   return vec![]
+ } else if subarray_size >= array.len() {
+   return vec![array.iter().unwrap().max()]
+ }
+ vec![]
+
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
+}
