@@ -1,10 +1,9 @@
-
 /**
  * A simple merge sort routine
  */
 
 pub fn mergesort<'a>(array: &'a mut [u16]) -> &'a [u16] {
-    sort(array, 0, array.len()-1);
+    sort(array, 0, array.len() - 1);
     array
 }
 
@@ -34,9 +33,9 @@ pub fn sort(array: &mut [u16], low: usize, high: usize) {
     if high <= low {
         return;
     }
-    let mid = low + (high -low)/2;
+    let mid = low + (high - low) / 2;
     sort(array, low, mid);
-    sort(array, mid+1, high);
+    sort(array, mid + 1, high);
     merge(array, low, mid, high);
 }
 
@@ -45,7 +44,7 @@ mod tests {
     use super::mergesort;
     use rand::Rng;
     #[test]
-    fn quicksort_test() {
+    fn merge_sort_test() {
         let mut runs = 5;
         loop {
             let mut array: [u16; 20] = [0; 20];
