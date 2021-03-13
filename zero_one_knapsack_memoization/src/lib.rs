@@ -5,7 +5,7 @@ pub fn knapsack(weights: &[u32], values: &[u32], capacity: usize) -> u32 {
     knapsack_helper(weights, values, capacity, weights.len(), &mut None)
 }
 
-pub fn knapsack_helper(
+fn knapsack_helper(
     weights: &[u32],
     values: &[u32],
     capacity: usize,
