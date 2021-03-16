@@ -1,0 +1,42 @@
+///Find the maximum number of meeting rooms given arrays of meeting start and end timings
+
+pub fn max_rooms(start_times: &[&str], end_times: &[&str]) -> usize {
+    if start_times.len() == 0 || end_times.len() == 0 || start_times.len() != end_times.len() {
+        return 0;
+    }
+    let start_times = reformat_timings(start_times).sort();
+    //start_times.sort();
+    let end_times = reformat_timings(end_times).sort();
+    //end_times.sort();
+    let mut room_count = 0;
+    let mut max_room_count = 0;
+    let mut start = 0;
+    let mut end = 0;
+    
+
+    0
+}
+
+//Reformat given array of timing in the format &["9:00", "10:45"] -> vec![900, 1045]
+fn reformat_timings(timings: &[&str]) -> Vec<usize> {
+    let mut result = Vec::<usize>::with_capacity(timings.len());
+    for timing in timings {
+        let colon_index = timing.chars().position(|c| c == ':').unwrap();
+        let pre_colon = &timing[..colon_index];
+        let post_colon = &timing[colon_index + 1..];
+        let timing_reformatted = String::from(pre_colon) + post_colon;
+        let timing_as_usize = timing_reformatted.parse::<usize>().unwrap();
+        result.push(timing_as_usize);
+    }
+    result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::reformat_timings;
+    #[test]
+    fn test_reformat_timings() {
+        let timings = ["9:00", "10:45"];
+        assert_eq!(reformat_timings(&timings), vec![900, 1045]);
+    }
+}
