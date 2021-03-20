@@ -1,0 +1,26 @@
+///Count the primes upto a given number n
+
+pub fn count_primes(n: usize) -> usize {
+  let mut primes = vec![true; n];
+  let mut i = 2;
+  while i*i < primes.len() {
+    if primes[i] {
+      let mut j = i;
+      while i*j < primes.len(){
+        primes[i*j] = false;
+        j += 1;
+      }
+    }
+    i += 1;
+  }
+  primes.iter().all(|p| p == &true).count()
+}
+
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
+}
