@@ -1,10 +1,11 @@
-pub mod graphs;
 pub mod dfs;
+pub mod graphs;
 
 #[cfg(test)]
 mod tests {
+    use crate::graphs::Graph;
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn it_works_within_lib() {
+        Graph::new(1);
     }
 }

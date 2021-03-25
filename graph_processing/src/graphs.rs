@@ -32,7 +32,7 @@ impl<Item: fmt::Display> fmt::Display for Node<Item> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Bag<Item> {
     first: Option<Box<Node<Item>>>,
     element_count: usize,
@@ -89,10 +89,11 @@ impl<'a, ItemType> Iterator for Iter<'a, ItemType> {
 
 const NEWLINE: char = '\n';
 
+#[derive(Debug)]
 pub struct Graph {
     vertices: usize,
     edges: usize,
-    bag_of_adjacent_nodes: Vec<Bag<usize>>,
+    neighbours: Vec<Bag<usize>>,
 }
 
 impl Graph {
@@ -100,7 +101,7 @@ impl Graph {
         Graph {
             vertices: size,
             edges: 0,
-            bag_of_adjacent_nodes: vec![Bag::new(); size],
+            neighbours: vec![Bag::new(); size],
         }
     }
     pub fn vertices(&self) -> usize {
@@ -109,28 +110,39 @@ impl Graph {
     pub fn edges(&self) -> usize {
         self.edges
     }
-    fn validate_vertex(&self, vertex: usize) {
+    fn validate_vertex(&self, vertex: usize) -> Result<bool, String> {
         if vertex >= self.vertices {
-            panic!(
+            let err = format!(
                 "Vertex {} is greater than graph size {}",
                 vertex, self.vertices
             );
+            println!("{}", err);
+            Err(err)
+        } else {
+            Ok(true)
         }
     }
-    pub fn adjacents<'a>(&'a self, vertex: usize) -> Iter<'a, usize> {
-        self.validate_vertex(vertex);
-        self.bag_of_adjacent_nodes[vertex].iter()
+    pub fn adjacents<'a>(&'a self, vertex: usize) -> Option<Iter<'a, usize>> {
+        match self.validate_vertex(vertex) {
+            Err(_) => None,
+            Ok(_) => Some(self.neighbours[vertex].iter()),
+        }
     }
-    pub fn add_edge(&mut self, u: usize, v: usize) {
-        self.validate_vertex(u);
-        self.validate_vertex(v);
-        self.bag_of_adjacent_nodes[u].add_item(v);
-        self.bag_of_adjacent_nodes[v].add_item(u);
-        self.edges += 1;
+    pub fn add_edge(&mut self, u: usize, v: usize) -> bool {
+        if self.validate_vertex(u).and(self.validate_vertex(v)).is_ok() {
+            self.neighbours[u].add_item(v);
+            self.neighbours[v].add_item(u);
+            self.edges += 1;
+            true
+        } else {
+            false
+        }
     }
-    pub fn degree(&self, vertex: usize) -> usize {
-        self.validate_vertex(vertex);
-        self.bag_of_adjacent_nodes[vertex].size()
+    pub fn degree(&self, vertex: usize) -> Option<usize> {
+        match self.validate_vertex(vertex) {
+            Ok(_) => Some(self.neighbours[vertex].size()),
+            Err(_) => None,
+        }
     }
     pub fn to_string(&self) -> String {
         let mut graph = String::from("Vertices: ");
@@ -141,7 +153,7 @@ impl Graph {
         for v in 0..self.vertices {
             let vs = v.to_string() + " -> ";
             graph.push_str(&vs);
-            for e in self.bag_of_adjacent_nodes[v].iter() {
+            for e in self.neighbours[v].iter() {
                 let es = e.to_string() + " ";
                 graph.push_str(&es);
             }

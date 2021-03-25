@@ -1,15 +1,16 @@
 use crate::graphs::Graph;
+#[derive(Debug)]
 
 pub struct DfsRecursive<'a> {
     visited: Vec<bool>,
-    predecessors: Vec<usize>,
+    predecessors: Vec<Option<usize>>,
     graph: &'a Graph,
 }
 impl<'a> DfsRecursive<'a> {
     pub fn new(graph: &'a Graph) -> Self {
         DfsRecursive {
             visited: vec![false; graph.vertices()],
-            predecessors: vec![usize::MAX, graph.vertices()],
+            predecessors: vec![None; graph.vertices()],
             graph: graph,
         }
     }
@@ -22,7 +23,7 @@ impl<'a> DfsRecursive<'a> {
                     *v = false;
                 }
                 for i in &mut self.predecessors {
-                    *i = usize::MAX;
+                    *i = None;
                 }
                 self.do_dfs(vertex);
                 return Ok(true);
@@ -31,11 +32,14 @@ impl<'a> DfsRecursive<'a> {
     }
 
     fn do_dfs(&mut self, vertex: usize) {
-        self.visited[vertex] = true;
-        for vert in self.graph.adjacents(vertex) {
-            if !self.visited[*vert] {
-                self.predecessors[*vert] = vertex;
-                self.do_dfs(*vert);
+        let adjacents = self.graph.adjacents(vertex);
+        if adjacents.is_some() {
+            self.visited[vertex] = true;
+            for vert in adjacents.unwrap() {
+                if !self.visited[*vert] {
+                    self.predecessors[*vert] = Some(vertex);
+                    self.do_dfs(*vert);
+                }
             }
         }
     }
@@ -58,7 +62,7 @@ impl<'a> DfsRecursive<'a> {
                     let mut p = from;
                     while p != to {
                         path.push(p);
-                        p = self.predecessors[p];
+                        p = self.predecessors[p].unwrap();
                     }
                     path.push(to);
                     Some(path)
@@ -80,5 +84,21 @@ impl<'a> DfsRecursive<'a> {
         } else {
             Ok(true)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::DfsRecursive;
+    use crate::graphs::Graph;
+    #[test]
+    fn it_works_in_dfs() {
+        let mut graph = Graph::new(4);
+        graph.add_edge(0, 1);
+        graph.add_edge(2, 1);
+        graph.add_edge(2, 3);
+        graph.add_edge(2, 30);
+        let mut dfsr = DfsRecursive::new(&graph);
+        assert_eq!(dfsr.dfs(0), Ok(true));
     }
 }
