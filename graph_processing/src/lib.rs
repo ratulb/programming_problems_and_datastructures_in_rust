@@ -1,4 +1,5 @@
 pub mod graphs;
+pub mod dfs;
 
 #[cfg(test)]
 mod tests {
