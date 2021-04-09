@@ -1,21 +1,16 @@
-///Check if end of an array can be reached - if so - in how many minimum jumps
+///Check if end of an array can be reached
 ///array_jumps contains max allowed jumps
-pub fn reach_end_in_min_jumps(array_jumps: &[u32]) -> (bool, usize) {
-    let mut reachable_in_jumps = (false, usize::MAX);
+pub fn reach_end_in_min_jumps(array_jumps: &[u32]) -> bool {
     if array_jumps.len() == 0 {
-        return reachable_in_jumps;
+        return false;
     }
-    let mut min_jumps = 0;
     let mut indices = Vec::<usize>::with_capacity(array_jumps.len());
     indices.push(0);
     while !indices.is_empty() {
         let index = indices.pop().unwrap();
-        min_jumps += 1;
         let steps = array_jumps[index];
         if index + steps as usize >= array_jumps.len() - 1 {
-            reachable_in_jumps.0 = true;
-            reachable_in_jumps.1 = min_jumps;
-            return reachable_in_jumps;
+            return true;
         }
         for step in 1..=steps {
             let next_jump = index + step as usize;
@@ -24,7 +19,7 @@ pub fn reach_end_in_min_jumps(array_jumps: &[u32]) -> (bool, usize) {
             }
         }
     }
-    reachable_in_jumps
+    false
 }
 
 #[cfg(test)]
@@ -32,18 +27,18 @@ mod tests {
     use super::reach_end_in_min_jumps;
     #[test]
     fn test_reach_end_in_min_jumps_1() {
-        assert_eq!(reach_end_in_min_jumps(&[1, 0, 1]), (false, usize::MAX));
+        assert_eq!(reach_end_in_min_jumps(&[1, 0, 1]), false);
     }
     #[test]
     fn test_reach_end_in_min_jumps_2() {
-        assert_eq!(reach_end_in_min_jumps(&[1, 3, 0, 0, 2, 0, 1]), (true, 3));
+        assert_eq!(reach_end_in_min_jumps(&[1, 3, 0, 0, 2, 0, 1]), true);
     }
     #[test]
     fn test_reach_end_in_min_jumps_3() {
-        assert_eq!(reach_end_in_min_jumps(&[1, 1, 1, 1]), (true, 3));
+        assert_eq!(reach_end_in_min_jumps(&[1, 1, 1, 1]), true);
     }
     #[test]
     fn test_reach_end_in_min_jumps_4() {
-        assert_eq!(reach_end_in_min_jumps(&[1, 1, 4, 3, 0, 2, 0]), (true, 3));
+        assert_eq!(reach_end_in_min_jumps(&[1, 1, 4, 3, 0, 2, 0]), true);
     }
 }
