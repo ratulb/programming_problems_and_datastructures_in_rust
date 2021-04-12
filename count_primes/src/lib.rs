@@ -16,7 +16,6 @@ pub fn count_primes(n: usize) -> usize {
     println!("{:?}", primes);
     primes[2..].iter().filter(|p| true == **p).count()
 }
-
 #[cfg(test)]
 mod tests {
     use super::count_primes;
