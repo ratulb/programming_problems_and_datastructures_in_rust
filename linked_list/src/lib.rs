@@ -2,7 +2,6 @@
 pub struct LinkedList<T> {
     head: Link<T>,
 }
-
 impl<T: std::fmt::Display> LinkedList<T> {
     pub fn new(value: T) -> LinkedList<T> {
         let link = Some(Box::new(LinkNode::new(value)));
