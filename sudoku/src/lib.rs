@@ -1,4 +1,4 @@
-///Determine if a 9 by 9 sudo board is valid. Empty cells are filled with '.' char
+///Determine if a 9 by 9 sudoku board is valid. Empty cells are filled with '.' char
 use std::collections::HashMap;
 pub fn is_valid(board: &Vec<Vec<char>>) -> bool {
     if board.len() != 9 || board[0].len() != 9 {
