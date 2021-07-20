@@ -6,18 +6,15 @@ pub fn max_range_by_sort(arr: &mut [i32]) -> Vec<i32> {
     }
     arr.sort();
     let mut i = 0;
-    let mut j = 0;
     let mut indices = (0, 0);
-    for k in 1..arr.len() {
-        if arr[k] == arr[k - 1] + 1 {
-            j = k;
-        } else {
+    for j in 1..arr.len() {
+        if arr[j] == arr[j - 1] + 1 {
             if indices.1 - indices.0 < j - i {
                 indices.0 = i;
                 indices.1 = j;
             }
-            i = k;
-            j = k;
+        } else {
+            i = j;
         }
     }
     arr[indices.0..indices.1 + 1].to_vec()
@@ -33,5 +30,12 @@ mod tests {
         let v = max_range_by_sort(&mut arr);
         assert_eq!(arr, [0, 1, 2, 4, 7, 10, 11, 12, 13, 22, 22]);
         assert_eq!(v, vec![10, 11, 12, 13]);
+    }
+    #[test]
+    fn max_range_test_2() {
+        let mut arr = [10, 24, 25, 4, 21, 22, 11, 0, 23, 12, 13];
+        let v = max_range_by_sort(&mut arr);
+        assert_eq!(arr, [0, 4, 10, 11, 12, 13, 21, 22, 23, 24, 25]);
+        assert_eq!(v, vec![21, 22, 23, 24, 25]);
     }
 }
