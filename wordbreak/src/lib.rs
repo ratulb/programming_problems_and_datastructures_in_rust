@@ -8,7 +8,6 @@ pub fn wordbreak(s: String, set: HashSet<String>) -> Vec<String> {
     let mut curr_str = String::new();
     let len = s.len();
     break_words(s, &mut result, &mut curr_str, &set, len);
-    println!("The result is {:?} ", result);
     result
 }
 
