@@ -1,7 +1,7 @@
 ///Find the longest common prefix among array of strings
 
 pub fn longest_common_prefix(strings: &[String]) -> String {
-    if strings.len() == 0 {
+    if strings.is_empty() {
         return String::new();
     }
     let mut longest_common_prefix = String::new();
