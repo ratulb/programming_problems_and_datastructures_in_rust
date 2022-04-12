@@ -1,0 +1,32 @@
+/***
+ * Given a string and a pattern, find the starting indices of all occurrences of the pattern in the string. For example, given the string "abracadabra" and the pattern "abr", you should return [0, 7]
+ *
+ ***/
+
+pub fn pattern_indices(s: String, pat: &str) -> Vec<usize> {
+    if s.len() == 0 || pat.len() == 0 || s.len() < pat.len() {
+        return vec![];
+    }
+    let mut s = s;
+    let mut result = vec![];
+    let mut start = 0;
+    while let Some(index) = s.find(pat) {
+        start += index;
+        result.push(start);
+        let (_, rest) = s.split_at(index);
+        s = rest.to_string();
+        println!("The s is {}", s);
+    }
+    result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test1() {
+        let result = pattern_indices("abracadabra".to_string(), "abr");
+        //assert_eq!(result, 4);
+        println!("The result is {:?}", result);
+    }
+}
