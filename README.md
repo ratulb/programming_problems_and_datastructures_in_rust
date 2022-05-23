@@ -11,7 +11,6 @@
     - [Deploy to testnet](#deploy-to-testnet)
     - [Run the rust client](#run-the-rust-client)
     - [Expected output](#expected-output)
-      - [Not seeing the expected output?](#not-seeing-the-expected-output)
     - [Project structure](#project-structure)
 
   - [More about the client](#more-about-the-client)
