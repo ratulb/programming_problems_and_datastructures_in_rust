@@ -1,7 +1,6 @@
 # Commonly encountered programming interview questions in rust
 
 ## Table of Contents
-- [On-chain program and client](#on-chain_program_and_client)
   - [Table of Contents](#table-of-contents)
   - [Quick Start](#quick-start)
     - [Configure CLI](#configure-cli)
