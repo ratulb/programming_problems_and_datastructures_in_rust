@@ -3,7 +3,7 @@
 ## Programming problems
   - [Programming problems](#programming-problems)
     - [Segregate negatives & positives](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/segregate_pos_and_negs/src/lib.rs)
-    - [Start local Solana cluster](#start-local-solana-cluster)
+    - [Segregate RGB characters](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/segregate_rgb_characters/src/lib.rs)
     - [Build the on-chain program](#build-the-on-chain-program)
     - [Deploy the on-chain program locally](#deploy-the-on-chain-program-locally)
     - [Deploy to devnet](#deploy-to-devnet)
