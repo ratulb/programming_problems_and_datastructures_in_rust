@@ -4,7 +4,7 @@
  ***/
 
 pub fn sort_characters(arr: &mut [char]) {
-    if arr.len() == 0 || arr.len() == 0 {
+    if arr.len() == 0 || arr.len() == 1 {
         return;
     }
     let mut red = 0;
