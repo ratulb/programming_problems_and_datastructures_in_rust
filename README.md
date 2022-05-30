@@ -2,7 +2,6 @@
 
 ## Table of Contents
   - [Table of Contents](#table-of-contents)
-  - [Quick Start](#quick-start)
     - [Configure CLI](#configure-cli)
     - [Start local Solana cluster](#start-local-solana-cluster)
     - [Build the on-chain program](#build-the-on-chain-program)
