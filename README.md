@@ -1,8 +1,8 @@
 # Commonly encountered programming interview questions in rust
 
-## Table of Contents
-  - [Table of Contents](#table-of-contents)
-    - [Configure CLI](#configure-cli)
+## Programming problems
+  - [Programming problems](#programming-problems)
+    - [Segregate negatives & positives](#configure-cli)
     - [Start local Solana cluster](#start-local-solana-cluster)
     - [Build the on-chain program](#build-the-on-chain-program)
     - [Deploy the on-chain program locally](#deploy-the-on-chain-program-locally)
