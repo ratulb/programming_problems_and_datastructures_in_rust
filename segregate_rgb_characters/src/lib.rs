@@ -30,6 +30,14 @@ mod tests {
     use super::*;
     #[test]
     fn sort_characters_test_1() {
+        let mut arr = ['B', 'G'];
+        sort_characters(&mut arr);
+        assert_eq!(arr, ['G', 'B']);
+
+        let mut arr = ['B', 'G', 'R'];
+        sort_characters(&mut arr);
+        assert_eq!(arr, ['R', 'G', 'B']);
+
         let mut arr = ['G', 'B', 'R', 'R', 'B', 'R', 'G'];
         sort_characters(&mut arr);
         assert_eq!(arr, ['R', 'R', 'R', 'G', 'G', 'B', 'B']);
