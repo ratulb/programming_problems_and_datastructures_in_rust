@@ -18,9 +18,7 @@ pub fn segregate(arr: &mut [i32]) -> &[i32] {
         if i >= j {
             break;
         }
-        let temp = arr[i];
-        arr[i] = arr[j];
-        arr[j] = temp;
+        arr.swap(i,j);
         i += 1;
         j -= 1;
     }
