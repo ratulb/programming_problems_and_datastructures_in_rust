@@ -7,23 +7,18 @@ pub fn longest_common_prefix(arr: &[&str]) -> String {
         return String::new();
     }
     let mut result = String::new();
-    let first: Vec<char> = arr[0].chars().collect();
-    let rests: Vec<Vec<char>> = arr[1..].iter().map(|s| s.chars().collect()).collect();
-    let mut i = 0;
-
-    while i < first.len() {
-        let ch = first[i];
-        for j in 0..rests.len() {
-            if i < rests[j].len() && ch == rests[j][i] {
-                continue;
-            } else {
-                return result;
+    let mut first = arr[0].chars();
+    let mut rests: Vec<_> = arr[1..].iter().map(|s| s.chars()).collect();
+    while let Some(ch) = first.next() {
+        for i in 0..rests.len() {
+            let current = &mut rests[i];
+            match current.next() {
+                Some(c) if c == ch => continue,
+                _ => return result,
             }
         }
         result.push(ch);
-        i += 1;
     }
-
     result
 }
 
