@@ -9,14 +9,17 @@ pub fn min(arr: &[i32]) -> i32 {
     let mut left = 0;
     let mut right = arr.len() - 1;
     while left <= right {
+        //Either whole array is sorted or we are in right sorted portion
         if arr[left] <= arr[right] {
             result = cmp::min(result, arr[left]);
             break;
         }
         let mid = left + (right - left) / 2;
         result = cmp::min(result, arr[mid]);
+        //We are int left half - go right
         if arr[mid] >= arr[left] {
             left = mid + 1;
+        //Go left
         } else {
             right = mid - 1;
         }

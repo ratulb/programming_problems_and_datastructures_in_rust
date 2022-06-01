@@ -6,7 +6,7 @@
     - [Segregate RGB characters](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/segregate_rgb_characters/src/lib.rs)
     - [Longest common prefix](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/longest_common_prefix/src/lib.rs)
     - [Longest common suffix](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/longest_common_suffix/src/lib.rs)
-    - [Deploy to devnet](#deploy-to-devnet)
+    - [Minimum in sorted rotated array](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/min_in_sorted_rotated_array/src/lib.rs)
     - [Deploy to testnet](#deploy-to-testnet)
     - [Run the rust client](#run-the-rust-client)
     - [Expected output](#expected-output)
