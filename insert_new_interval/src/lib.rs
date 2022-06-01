@@ -19,8 +19,8 @@ use std::cmp::max;
 use std::cmp::min;
 
 pub fn insert(intervals: Vec<Vec<i32>>, new_interval: Vec<i32>) -> Vec<Vec<i32>> {
-    if intervals.len() == 0 || new_interval.len() == 0 {
-        return vec![];
+    if intervals.len() == 0 {
+        return vec![new_interval];
     }
     let mut result = Vec::with_capacity(intervals.len() + 1);
     let mut new_interval = new_interval;
