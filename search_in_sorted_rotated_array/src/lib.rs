@@ -42,18 +42,15 @@ mod tests {
         let target = 10;
         let result = search(&arr, target);
         assert_eq!(result, Some(0));
-
-        let arr = [10, 11, 13, 5, 7, 8, 9];
+        
         let target = 13;
         let result = search(&arr, target);
         assert_eq!(result, Some(2));
 
-        let arr = [10, 11, 13, 5, 7, 8, 9];
         let target = 9;
         let result = search(&arr, target);
         assert_eq!(result, Some(6));
 
-        let arr = [10, 11, 13, 5, 7, 8, 9];
         let target = 100;
         let result = search(&arr, target);
         assert_eq!(result, None);
