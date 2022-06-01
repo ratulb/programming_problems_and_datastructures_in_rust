@@ -28,8 +28,8 @@ pub fn num_ways_to_reach_matrix_end(rows: usize, cols: usize) -> usize {
     for i in 0..rows {
         matrix[i][0] = 1;
     }
-    //Now we fill the rest of the cells. Any of the rest of the cells can be reached either
-    //comming from the top or from the left the cell.
+    //Now we fill the rest of the cells. Any of the rest of the cells can be reached
+    //either comming from the top or from the left the cell.
     for i in 1..rows {
         for j in 1..cols {
             matrix[i][j] = matrix[i - 1][j] + matrix[i][j - 1];
