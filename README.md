@@ -9,7 +9,7 @@
     - [Minimum in sorted rotated array](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/min_in_sorted_rotated_array/src/lib.rs)
     - [Insert a new interval to a list of sorted interval](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/insert_new_interval/src/lib.rs)
     - [Search in a row and column wise sorted matrix](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/search_in_sorted_matrix/src/lib.rs)
-    - [Expected output](#expected-output)
+    - [Search a target in a sorted rotated array](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/search_in_sorted_rotated_array/src/lib.rs)
     - [Project structure](#project-structure)
 
   - [More about the client](#more-about-the-client)
