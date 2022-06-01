@@ -8,7 +8,7 @@
     - [Longest common suffix](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/longest_common_suffix/src/lib.rs)
     - [Minimum in sorted rotated array](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/min_in_sorted_rotated_array/src/lib.rs)
     - [Insert a new interval to a list of sorted interval](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/insert_new_interval/src/lib.rs)
-    - [Search in row and column wise sorted matrix]([#run-the-rust-client](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/search_in_sorted_matrix/src/lib.rs))
+    - [Search in row and column wise sorted matrix](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/search_in_sorted_matrix/src/lib.rs)
     - [Expected output](#expected-output)
     - [Project structure](#project-structure)
 
