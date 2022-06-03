@@ -13,7 +13,7 @@
     - [Number of ways to reach matrix end](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/num_ways_to_reach_matrix_end/src/lib.rs)
     - [Subsets - backtracking](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/subsets_backtracking/src/lib.rs)
     - [Subsets - Iterative](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/subsets_iterative/src/lib.rs)
-    - [Subsets using bit manipulation](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/subsets_bit_manipulatiion/src/lib.rs)
+    - [Subsets - bit manipulation](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/subsets_bit_manipulatiion/src/lib.rs)
     
 ## Quick Start
 
