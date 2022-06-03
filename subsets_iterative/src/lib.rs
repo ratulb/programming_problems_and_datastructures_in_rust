@@ -8,8 +8,7 @@ pub fn subsets(arr: &[i32]) -> Vec<Vec<i32>> {
     let mut subsets = Vec::<Vec<i32>>::with_capacity(1 << arr.len());
     subsets.push(vec![]);
     for elem in arr {
-        let size = subsets.len();
-        for i in 0..size {
+        for i in 0..subsets.len() {
             let subset = &subsets[i];
             let mut new_subset = subset.to_vec();
             new_subset.push(*elem);
