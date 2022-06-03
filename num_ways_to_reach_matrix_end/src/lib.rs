@@ -1,11 +1,14 @@
 /***
- There is an N by M matrix of zeroes. Given N and M, write a function to count the number of ways of starting at the top-left corner and getting to the bottom-right corner. You can only move right or down.
+ There is an N by M matrix of zeroes. Given N and M, write a function to count the 
+ number of ways of starting at the top-left corner and getting to the bottom-right 
+ corner. You can only move right or down.
 
-For example, given a 2 by 2 matrix, you should return 2, since there are two ways to get to the bottom-right:
+ For example, given a 2 by 2 matrix, you should return 2, since there are two ways
+ to get to the bottom-right:
 
-Right, then down
-Down, then right
-Given a 5 by 5 matrix, there are 70 ways to get to the bottom-right.
+ Right, then down
+ Down, then right
+ Given a 5 by 5 matrix, there are 70 ways to get to the bottom-right.
 
 ***/
 
@@ -25,8 +28,8 @@ pub fn num_ways_to_reach_matrix_end(rows: usize, cols: usize) -> usize {
     for i in 0..rows {
         matrix[i][0] = 1;
     }
-    //Now we fill the rest of the cells. Any of the rest of the cells can be reached either
-    //comming from the top or from the left the cell.
+    //Now we fill the rest of the cells. Any of the rest of the cells can be reached
+    //either comming from the top or from the left the cell.
     for i in 1..rows {
         for j in 1..cols {
             matrix[i][j] = matrix[i - 1][j] + matrix[i][j - 1];
