@@ -6,6 +6,7 @@ pub fn longest_common_prefix(arr: &[&str]) -> String {
     if arr.len() == 0 {
         return String::new();
     }
+    //Prefix would be as long as the min length of all the strings
     let mut result = String::with_capacity(
         arr.iter()
             .min_by(|p, n| p.len().cmp(&n.len()))
