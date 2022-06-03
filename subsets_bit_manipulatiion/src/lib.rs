@@ -5,7 +5,7 @@ pub fn subsets(arr: &[i32]) -> Vec<Vec<i32>> {
     if arr.len() == 0 {
         return vec![];
     }
-    //We would have 2^^n -1 subsets/patterns 
+    //We would have 2^^n subsets/patterns 
     let mut subsets = Vec::with_capacity(1 << arr.len());
     for set in 0..1 << arr.len() {
         let mut subset = Vec::with_capacity(arr.len());
