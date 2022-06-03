@@ -11,10 +11,7 @@
     - [Search in a row and column wise sorted matrix](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/search_in_sorted_matrix/src/lib.rs)
     - [Search a target in a sorted rotated array](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/search_in_sorted_rotated_array/src/lib.rs)
     - [Number of ways to reach matrix end](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/num_ways_to_reach_matrix_end/src/lib.rs)
-
-  - [More about the client](#more-about-the-client)
-    
-  - [More about the on-chain program](#more-about-the-on-chain-program)
+    - [Subsets - backtracking](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/subsets_backtracking/src/lib.rs)
     
 ## Quick Start
 
