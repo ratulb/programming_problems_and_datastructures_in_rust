@@ -16,6 +16,7 @@
     - [Subsets - bit manipulation](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/subsets_bit_manipulatiion/src/lib.rs)
     - [N queens probem](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/n_queens/src/lib.rs)
     - [Palinedrome partitioning](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/palinedrome_partitioning/src/lib.rs)
+    - [Combination sum 1](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/combination_sum_1/src/lib.rs)
     
 ## Quick Start
 
