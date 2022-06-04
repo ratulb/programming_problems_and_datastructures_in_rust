@@ -15,6 +15,7 @@
     - [Subsets - Iterative](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/subsets_iterative/src/lib.rs)
     - [Subsets - bit manipulation](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/subsets_bit_manipulatiion/src/lib.rs)
     - [N queens probem](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/n_queens/src/lib.rs)
+    - [Palinedrome partitioning](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/palinedrome_partitioning/src/lib.rs)
     
 ## Quick Start
 
