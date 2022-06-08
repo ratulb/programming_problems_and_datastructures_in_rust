@@ -19,6 +19,7 @@
     - [Combination sum 1](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/combination_sum_1/src/lib.rs)
     - [Combination sum 2](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/combination_sum_2/src/lib.rs)
     - [Word search 1](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/word_search_1/src/lib.rs)
+    - [Word search 2](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/word_search_2/src/lib.rs)
     - [Trie data structure](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/trie/src/lib.rs)
     
 ## Quick Start
