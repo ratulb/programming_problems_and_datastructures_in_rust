@@ -23,6 +23,7 @@
     - [Trie data structure](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/trie/src/lib.rs)
     - [Min heap data structure](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/min_heap/src/lib.rs)
     - [Max heap data structure](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/max_heap/src/lib.rs)
+    - [Two sum](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/two_sum/src/lib.rs)
     
 ## Quick Start
 
