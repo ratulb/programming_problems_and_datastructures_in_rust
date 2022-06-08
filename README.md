@@ -5,6 +5,7 @@
     - [Segregate negatives & positives](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/segregate_pos_and_negs/src/lib.rs)
     - [Buy and sell stock once](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/buy_and_sell_stock_once/src/lib.rs)
     - [Contains duplicate](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/contains_duplicate/src/lib.rs)
+    - [Two sum](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/two_sum/src/lib.rs)
     - [Segregate RGB characters](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/segregate_rgb_characters/src/lib.rs)
     - [Longest common prefix](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/longest_common_prefix/src/lib.rs)
     - [Longest common suffix](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/longest_common_suffix/src/lib.rs)
@@ -25,7 +26,7 @@
     - [Trie data structure](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/trie/src/lib.rs)
     - [Min heap data structure](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/min_heap/src/lib.rs)
     - [Max heap data structure](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/max_heap/src/lib.rs)
-    - [Two sum](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/two_sum/src/lib.rs)
+   
     
 ## Quick Start
 
