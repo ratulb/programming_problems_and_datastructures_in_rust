@@ -4,7 +4,7 @@
 
  Each word must be constructed from letters of sequentially adjacent cells,
  where adjacent cells are horizontally or vertically neighboring. The same letter
- cell may not be used more than once in a word.
+ cell may not be used more than once in a word. This implementation returns duplicates.
 ***/
 
 use std::collections::HashMap;
