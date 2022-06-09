@@ -6,6 +6,7 @@
     - [Buy and sell stock once](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/buy_and_sell_stock_once/src/lib.rs)
     - [Contains duplicate](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/contains_duplicate/src/lib.rs)
     - [Contains near by duplicate](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/contains_near_by_duplicate/src/lib.rs)
+    - [Max sub array sum 1](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/max_subarray_sum_1/src/lib.rs)
     - [Two sum](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/two_sum/src/lib.rs)
     - [Segregate RGB characters](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/segregate_rgb_characters/src/lib.rs)
     - [Longest common prefix](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/longest_common_prefix/src/lib.rs)
