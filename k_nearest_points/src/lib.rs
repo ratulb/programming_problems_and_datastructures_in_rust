@@ -41,7 +41,7 @@ pub fn k_closest(points: Vec<Vec<i32>>, k: i32, from: (i32, i32)) -> Vec<Vec<i32
             _ => continue,
         }
     }
-    assert_eq!(heap.len(), k);
+    //assert_eq!(heap.len(), k);
     let mut queue = Vec::with_capacity(k);
     while !heap.is_empty() {
         queue.push(heap.pop().unwrap());
@@ -95,5 +95,11 @@ mod tests {
         let from = (0, 0);
         let result = k_closest(points, k, from);
         assert_eq!(result, vec![vec![3, 3], vec![-2, 4]]);
+
+        let points = vec![vec![2,2],vec![2,2],vec![3,3],vec![2,-2],vec![1,1]];
+        let k = 4;
+        let from = (0, 0);
+        let result = k_closest(points, k, from);
+        assert_eq!(result, vec![vec![1, 1], vec![2, 2], vec![2, 2], vec![2, -2]]);
     }
 }
