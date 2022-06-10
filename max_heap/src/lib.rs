@@ -8,11 +8,21 @@ pub struct MaxHeap<T: Ord> {
 }
 
 impl<T: Ord> MaxHeap<T> {
-    pub fn new(capacity: usize) -> Self {
+    pub fn new() -> Self {
+        MaxHeap {
+            elements: Vec::new(),
+        }
+    }
+    pub fn with_capacity(capacity: usize) -> Self {
         MaxHeap {
             elements: Vec::with_capacity(capacity),
         }
     }
+    
+    pub fn size(&self) -> usize {
+      self.elements.len()
+    }
+
     fn get_parent_index(index: usize) -> Option<usize> {
         if index == 0 {
             None
@@ -73,13 +83,25 @@ impl<T: Ord> MaxHeap<T> {
     }
 
     pub fn remove(&mut self) -> Option<T> {
-        if self.elements.len() == 0 {
+        if self.is_empty() {
             return None;
         }
         let t = self.elements.swap_remove(0);
         self.heapify_down();
         Some(t)
     }
+    
+    pub fn is_empty(&self) -> bool {
+      self.elements.len() == 0 
+    }
+
+    pub fn top(&self) -> Option<&T> {
+      match self.is_empty() {
+        true => None,
+        false => self.elements.get(0),
+      }
+    }
+
     fn heapify_down(&mut self) {
         let mut index = 0;
         while self.has_left_child(index) {
@@ -102,7 +124,7 @@ mod tests {
     use super::MaxHeap;
     #[test]
     fn max_heap_test() {
-        let mut max_heap = MaxHeap::new(10);
+        let mut max_heap = MaxHeap::with_capacity(10);
         max_heap.insert(20);
         max_heap.insert(5);
         max_heap.insert(7);
