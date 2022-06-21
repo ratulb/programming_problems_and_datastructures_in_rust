@@ -183,16 +183,42 @@ impl<K: Ord + Default + Clone + std::fmt::Debug + std::fmt::Display> Node<K> {
                     min = next_left;
                     next_left
                 }
-                None => {
-                    let x = return min.clone();
-                    println!("x = {:?}", x);
-                    return x;
-                }
+                None => return min.clone(),
             };
         }
-        let y = min.clone();
-        println!("y = {:?}", y);
-        y
+        min.clone()
+    }
+
+    pub fn min_node(node: Node<K>) -> Self {
+        let mut current = node;
+        if let Some(left) = current.left {
+            current = Self::min_node(*left);
+        }
+        current
+    }
+
+    pub fn min_node_mut(node: &mut Node<K>) -> Self {
+        let mut current = node;
+        if let Some(ref mut left) = current.left {
+            *current = Self::min_node_mut(left);
+        }
+        std::mem::take(current)
+    }
+
+    pub fn min_node_mut_self(&mut self) -> Self {
+        let mut current = self;
+        if let Some(ref mut left) = current.left {
+            *current = Self::min_node_mut_self(left);
+        }
+        std::mem::take(current)
+    }
+
+    pub fn min_node_match(&mut self) -> Self {
+        let mut current = self;
+        while let Some(ref mut left) = current.left {
+           *current = Self::min_node_match(left);
+        }
+        std::mem::take(current)
     }
 
     pub fn max(&self) -> &K {
@@ -283,10 +309,14 @@ mod tests {
         tree_node.insert(1);
         tree_node.insert(25);
         tree_node.insert(50);
-        tree_node.insert(0);
+        tree_node.insert(-400);
         tree_node.insert(10);
         tree_node.in_order();
         println!("Level order");
+        tree_node.level_order();
+        //let min_node = Node::min_node(tree_node);
+        let min_node = tree_node.min_node_match();
+        println!("The min node is {:?}", min_node);
         tree_node.level_order();
     }
 }
