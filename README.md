@@ -12,6 +12,7 @@
     - [Segregate RGB characters](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/segregate_rgb_characters/src/lib.rs)
     - [Longest common prefix](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/longest_common_prefix/src/lib.rs)
     - [Longest common suffix](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/longest_common_suffix/src/lib.rs)
+    - [Logengest increasing subsequence](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/longest_increasing_subsequence/src/lib.rs)
     - [Minimum in sorted rotated array](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/min_in_sorted_rotated_array/src/lib.rs)
     - [Insert a new interval to a list of sorted interval](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/insert_new_interval/src/lib.rs)
     - [Search in a row and column wise sorted matrix](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/search_in_sorted_matrix/src/lib.rs)
