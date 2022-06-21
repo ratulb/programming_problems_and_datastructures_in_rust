@@ -4,50 +4,50 @@
 ///of "aaaabcccaa" is "4alb3c2a". The decoding of "3e4f2e" returns "eeeffffee".
 use std::char::from_digit;
 
-pub fn encode(clear_text: &String) -> String {
-    if clear_text.len() == 0 {
-        return clear_text.to_string();
+pub fn encode(s: &str) -> String {
+    if s.len() == 0 {
+        return String::new();
     }
-    let mut encoded = String::new();
-    let chars: Vec<char> = clear_text.chars().collect();
-    let mut repeat_count = 1;
-    for i in 1..clear_text.len() {
+    let mut result = String::with_capacity(s.len());
+    let chars: Vec<char> = s.chars().collect();
+    let mut count = 1;
+    for i in 1..s.len() {
         if chars[i - 1] != chars[i] {
-            encoded.push(from_digit(repeat_count, 10).unwrap());
-            encoded.push(chars[i - 1]);
-            repeat_count = 1;
+            result.push(from_digit(count, 10).unwrap());
+            result.push(chars[i - 1]);
+            count = 1;
         } else {
-            repeat_count += 1;
+            count += 1;
         }
     }
-    if clear_text.len() == 1 {
-        encoded.push_str("1");
-        encoded.push_str(&clear_text[..]);
-        return encoded;
+    if s.len() == 1 {
+        result.push_str("1");
+        result.push_str(&s[..]);
+        return result;
     }
-    encoded.push(from_digit(repeat_count, 10).unwrap());
-    encoded.push(chars[clear_text.len() - 1]);
-    encoded
+    result.push(from_digit(count, 10).unwrap());
+    result.push(chars[s.len() - 1]);
+    result
 }
 
-pub fn decode(cipher_text: &String) -> String {
-    if cipher_text.len() == 0 {
-        return cipher_text.to_string();
+pub fn decode(s: &str) -> String {
+    if s.len() == 0 {
+        return s.to_string();
     }
-    let mut repeat_count = 0;
-    let mut clear_text = String::new();
-    let chars: Vec<char> = cipher_text.chars().collect();
+    let mut count = 0;
+    let mut result = String::with_capacity(s.len() * 3);//Try avoiding re-allocation
+    let chars: Vec<char> = s.chars().collect();
     for i in 0..chars.len() {
         if chars[i].is_digit(10) {
-            repeat_count = repeat_count * 10 + chars[i].to_digit(10).unwrap();
+            count = count * 10 + chars[i].to_digit(10).unwrap();
         } else {
-            while repeat_count > 0 {
-                clear_text.push(chars[i]);
-                repeat_count -= 1;
+            while count > 0 {
+                result.push(chars[i]);
+                count -= 1;
             }
         }
     }
-    clear_text
+    result
 }
 
 #[cfg(test)]
@@ -56,18 +56,18 @@ mod tests {
     use super::encode;
     #[test]
     fn test_encoding_1() {
-        assert_eq!(encode(&String::from("aaaabcccaa")), "4a1b3c2a");
+        assert_eq!(encode("aaaabcccaa"), "4a1b3c2a");
     }
     #[test]
     fn test_encoding_2() {
-        assert_eq!(encode(&String::from("eeeffffee")), "3e4f2e");
+        assert_eq!(encode("eeeffffee"), "3e4f2e");
     }
     #[test]
     fn test_decoding_1() {
-        assert_eq!(decode(&String::from("4a1b3c2a")), "aaaabcccaa");
+        assert_eq!(decode("4a1b3c2a"), "aaaabcccaa");
     }
     #[test]
     fn test_decoding_2() {
-        assert_eq!(decode(&String::from("3e4f2e")), "eeeffffee");
+        assert_eq!(decode("3e4f2e"), "eeeffffee");
     }
 }
