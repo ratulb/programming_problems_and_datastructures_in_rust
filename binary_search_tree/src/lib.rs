@@ -42,15 +42,6 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         }
     }
 
-    /***fn to_node(mut node: Option<&mut Rc<RefCell<Tree<T>>>>) -> Option<Node<T>> {
-        match node.take() {
-            None => None,
-            Some(cell) => Some(cell.replace(Tree::default()).0)
-                .map(Node::to_node)
-                .flatten(),
-        }
-    }***/
-
     pub fn min(&self) -> Option<T> {
         match self.0 {
             Some(ref cell) => match cell.borrow().left {
@@ -110,14 +101,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
             parent: None,
         }
     }
-
-    /***fn to_node(node: Option<Rc<RefCell<Node<T>>>>) -> Option<Node<T>> {
-        match node {
-            None => None,
-            Some(cell) => Some(cell.replace(Node::default())),
-        }
-    }***/
-
+    
     fn evict_min(&mut self) -> Option<T> {
         self.left
             .take() //Default is replacing inner in 'take' - No issues left is wiped out anyway
