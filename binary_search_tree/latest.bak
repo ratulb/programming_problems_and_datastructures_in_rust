@@ -1,0 +1,254 @@
+use std::cell::RefCell;
+use std::rc::{Rc, Weak};
+
+#[derive(Debug, Default)]
+pub struct Tree<T: Ord + Default + std::fmt::Debug + Clone>(Option<Rc<RefCell<Node<T>>>>);
+
+impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
+    pub fn new(value: T) -> Self {
+        Tree(Some(Rc::new(RefCell::new(Node::new(value)))))
+    }
+
+    /***fn parent(cell: &Rc<RefCell<Node<T>>>, left: bool) -> Option<Weak<RefCell<Node<T>>>> {
+        let node = cell.borrow();
+        let node = if left {
+            node.right.as_ref()
+        } else {
+            node.left.as_ref()
+        };
+        let mut parent = match node {
+            Some(ref tree) => match tree.borrow().0 {
+                Some(ref node) => match node.borrow().parent {
+                    Some(ref parent) => Some(Weak::clone(parent)),
+                    None => None,
+                },
+                None => None,
+            },
+            None => None,
+        };
+        match parent {
+            parent @ Some(_) => return parent,
+            None => {
+                parent = Some(Rc::downgrade(&Rc::clone(cell)));
+                return parent;
+            }
+        }
+    }***/
+
+    pub fn insert(&mut self, value: T) {
+        match self.0 {
+            Some(ref mut cell) => {
+                let mut node = cell.borrow_mut();
+                if node.key > value {
+                    match node.left {
+                        Some(ref mut tree) => Self::insert(&mut tree.borrow_mut(), value),
+                        None => {
+                            let parent = Some(Rc::downgrade(&Rc::clone(cell)));
+                            let mut left = Node::new(value);
+                            left.parent = parent;
+                            node.left = Some(Rc::new(RefCell::new(Tree(Some(Rc::new(
+                                RefCell::new(left),
+                            ))))));
+                        }
+                    }
+                } else if node.key < value {
+                    match node.right {
+                        Some(ref mut tree) => Self::insert(&mut tree.borrow_mut(), value),
+                        None => {
+                            let parent = Some(Rc::downgrade(&Rc::clone(cell)));
+                            let mut right = Node::new(value);
+                            right.parent = parent;
+                            node.right = Some(Rc::new(RefCell::new(Tree(Some(Rc::new(
+                                RefCell::new(right),
+                            ))))));
+                        }
+                    }
+                }
+            }
+            None => self.0 = Some(Rc::new(RefCell::new(Node::new(value)))),
+        }
+    }
+
+    pub fn min(&self) -> Option<T> {
+        match self.0 {
+            Some(ref cell) => match cell.borrow().left {
+                Some(ref left) => Self::min(&left.borrow()),
+                //We are cloning T here
+                None => {
+                    let b = &cell.borrow().parent.as_ref().map(|p| p.upgrade());
+                    //let b = &cell.borrow().parent;
+                    //let b = &cell.borrow();
+                    //println!("This is none {:?}", b);
+                    Some(cell.borrow().key.clone())
+                }
+            },
+            None => None,
+        }
+    }
+
+    fn get_parent(node: &Rc<RefCell<Node<T>>>) -> Option<Rc<RefCell<Node<T>>>> {
+        node.borrow()
+            .parent
+            .as_ref()
+            .map(|parent| parent.upgrade())
+            .flatten()
+    }
+
+    pub fn remove_min(&mut self) -> Option<T> {
+        let mut parent = Self::prepare_remove_min(self);
+        if let Some(ref mut ancestor) = parent {
+            let mut parent_node = ancestor.borrow_mut();
+            let evicted = parent_node.evict_left();
+            parent_node.swap_right_to_left();
+            return evicted;
+        } else {
+            return None;
+        }
+    }
+
+    fn prepare_remove_min(&self) -> Option<Rc<RefCell<Node<T>>>> {
+        if let Some(ref cell) = self.0 {
+            let node = cell.borrow();
+            let left = node.left.as_ref();
+            if let Some(ref left_node) = left {
+                return Self::prepare_remove_min(&left_node.borrow());
+            } else {
+                return Self::get_parent(cell);
+            }
+        } else {
+            return None;
+        }
+    }
+
+    pub fn remove_min_curr(&self) -> Option<T> {
+        match self.0 {
+            Some(ref cell) => {
+                let node = cell.borrow();
+                match node.left {
+                    Some(ref left) => Self::remove_min_curr(&left.borrow()),
+                    None => {
+                        /***let has_right_child = node.right.is_some();
+                        println!("Has right child  = {:?}", has_right_child);
+                        println!("Left most = {:?}", node);
+                        let evicted = node.evict_left();
+                        println!("Evicted = {:?}", evicted);***/
+                        /***let parent = cell
+                        .borrow()
+                        .parent
+                        .as_ref()
+                        .map(|parent| parent.upgrade())
+                        .flatten();***/
+                        let parent = Self::get_parent(cell);
+                        /***parent.iter()
+                        .for_each(|p| {
+                            let k = &p.borrow().key;
+                            println!("Hello {:?}", k);
+                        });***/
+                        if let Some(_) = parent {
+                            cell.borrow_mut();
+                        }
+
+                        //println!("parent = {:?}", parent);
+                        /***match parent {
+                           Some(ref ancestor) => {
+                              let parent_node = ancestor.borrow_mut();
+                              println!("The parent node is1 = {:?}", parent_node);
+                              println!("The parent node is2 = {:?}", cell);
+                           }
+                           None => return None,
+                        }***/
+                        None
+                    }
+                }
+            }
+            None => None,
+        }
+    }
+
+    pub fn remove_min_old(&self) -> Option<T> {
+        if let Some(ref cell) = self.0 {
+            let borrowed = cell.borrow_mut();
+            println!("Borrowed at start = {:?}", borrowed);
+            match borrowed.left {
+                Some(ref left) => return Self::remove_min_old(&left.borrow()),
+                None => {
+                    let has_right_child = borrowed.right.is_some();
+                    let mut removed: Option<T> = None;
+                    let mut borrowed = borrowed
+                        .parent
+                        .as_ref()
+                        .map(|parent| parent.upgrade())
+                        .flatten();
+                    let mut borrowed = borrowed.unwrap();
+                    println!("Borrowed here = {:?}", borrowed);
+                    /***match borrowed {
+                        Some(ref mut borrowed) => {
+                            //let mut borrowed = borrowed;
+                            let evicted = borrowed.evict_left();
+                            if has_right_child {
+                                borrowed.swap_right_to_left();
+                            }
+                            return evicted;
+                        }
+                        None => return None,
+                    }***/
+                    return removed;
+                }
+            }
+        }
+        None
+    }
+}
+
+#[derive(Debug, Default)]
+struct Node<T: Ord + Default + std::fmt::Debug + Clone> {
+    key: T,
+    left: Option<Rc<RefCell<Tree<T>>>>,
+    right: Option<Rc<RefCell<Tree<T>>>>,
+    parent: Option<Weak<RefCell<Node<T>>>>,
+}
+
+impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
+    pub fn new(value: T) -> Self {
+        Self {
+            key: value,
+            left: None,
+            right: None,
+            parent: None,
+        }
+    }
+
+    fn evict_left(&mut self) -> Option<T> {
+        self.left
+            .take() //Default being used here in below 'inner.take'
+            .map(|cell| cell.borrow().0.as_ref().map(|inner| inner.take().key))
+            .flatten()
+    }
+
+    fn swap_right_to_left(&mut self) {
+        self.left = self.right.take();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_binary_search_tree() {
+        let mut tree = Tree::new(200);
+
+        tree.insert(100);
+        tree.insert(500);
+        tree.insert(-500);
+        tree.insert(-400);
+        tree.insert(600);
+        println!("Tree = {:?}", tree);
+        //println!("Min = {:?}", tree.min());
+        //let tree1 = Tree::new(None::<i32>);
+        //println!("Min = {:?}", tree1.min());
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+        println!("Tree now = {:?}", tree);
+        println!("Min now = {:?}", tree.min());
+    }
+}
