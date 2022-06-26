@@ -67,9 +67,19 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         match Self::parent_of_min(self) {
             Some(ref mut parent) => {
                 let mut parent = parent.borrow_mut();
-                parent.evict_min()
+                parent.evict_left()
             }
-            None => None,
+            None => match self.0 {
+                None => None,
+                Some(_) => self.0.take().map(|root_cell| {
+                    let mut root_node = root_cell.borrow_mut();
+                    root_node.right.as_ref().map(|tree| match tree.take() {
+                        Tree(None) => self.0 = None,
+                        Tree(right_tree_node) => self.0 = right_tree_node,
+                    });
+                    std::mem::take(&mut root_node.key)
+                }),
+            },
         }
     }
 
@@ -101,8 +111,8 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
             parent: None,
         }
     }
-    
-    fn evict_min(&mut self) -> Option<T> {
+
+    fn evict_left(&mut self) -> Option<T> {
         self.left
             .take() //Default is replacing inner in 'take' - No issues left is wiped out anyway
             .map(|cell| {
@@ -135,11 +145,15 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn test_binary_search_tree() {
+    //  #[test]
+    fn test_binary_search_tree_1() {
+        println!();
+        println!();
+        println!();
         let mut tree = Tree::new(6);
-
+        println!("The min 1 ={:?}", tree.min());
         tree.insert(5);
+        println!("The min 2 ={:?}", tree.min());
         tree.insert(-4);
         tree.insert(-3);
         tree.insert(4);
@@ -174,6 +188,108 @@ mod tests {
         tree.insert(-100);
         let removed = tree.remove_min();
         println!("Removed = {:?}", removed);
+        println!("Tree = {:?}", tree);
+    }
+    //#[test]
+    fn test_binary_search_tree_2() {
+        println!();
+        println!();
+        println!();
+        let mut tree = Tree::new(6);
+        tree.insert(4);
+        tree.insert(5);
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+        println!("Tree now = {:?}", tree);
+        println!("Min now = {:?}", tree.min());
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+        println!("Tree = {:?}", tree);
+
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+        println!();
+        println!();
+        println!();
+    }
+    //#[test]
+    fn test_binary_search_tree_3() {
+        println!();
+        println!();
+        println!();
+        let mut tree = Tree::new(1);
+        tree.insert(2);
+        tree.insert(3);
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+        println!("Tree now = {:?}", tree);
+        println!("Min now = {:?}", tree.min());
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+        println!("Tree = {:?}", tree);
+
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+        println!();
+        println!();
+        println!();
+    }
+
+    #[test]
+    fn test_binary_search_tree_4() {
+        println!();
+        println!();
+        println!();
+        let mut tree = Tree::new(1);
+        tree.insert(2);
+        tree.insert(3);
+        tree.insert(-30);
+        tree.insert(-20);
+        tree.insert(-40);
+        tree.insert(4);
+        tree.insert(5);
+        tree.insert(6);
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+        //println!("Tree now = {:?}", tree);
+        //println!("Min now = {:?}", tree.min());
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+        //println!("Tree = {:?}", tree);
+
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+        let removed = tree.remove_min();
+        println!("Removed = {:?}", removed);
+        println!();
+        println!();
+        println!();
+        tree.insert(100);
+        tree.insert(200);
         println!("Tree = {:?}", tree);
     }
 }
