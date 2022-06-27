@@ -66,6 +66,97 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         }
     }
 
+    pub fn in_order(&self) -> Vec<T> {
+        let mut traversed = Vec::new();
+        Self::inorder(self, &mut traversed);
+        traversed
+    }
+
+    fn inorder(&self, traversed: &mut Vec<T>) {
+        if let Some(ref node) = self.0 {
+            if let Some(ref left) = node.borrow().left {
+                Self::inorder(&left.borrow(), traversed);
+            }
+            traversed.push(node.borrow().key.clone());
+            if let Some(ref right) = node.borrow().right {
+                Self::inorder(&right.borrow(), traversed);
+            }
+        }
+    }
+
+    pub fn contains(&self, other: &Self) -> bool {
+        match self {
+            Tree(None) => match other {
+                Tree(None) => false,
+                Tree(Some(_)) => false,
+            },
+            Tree(Some(ref this)) => match other {
+                Tree(None) => true,
+                that @ Tree(_) => {
+                    if Self::is_identical(self, &that) {
+                        return true;
+                    }
+                    let left_contains = match this.borrow().left {
+                        Some(ref tree) => Self::contains(&tree.borrow(), &that),
+                        None => false,
+                    };
+                    let right_contains = match this.borrow().right {
+                        Some(ref tree) => Self::contains(&tree.borrow(), &that),
+                        None => false,
+                    };
+                    left_contains || right_contains
+                }
+            },
+        }
+    }
+
+    pub fn is_identical(&self, other: &Self) -> bool {
+        match self.0 {
+            Some(ref this) => match other {
+                Tree(Some(ref that)) => {
+                    if this.borrow().key == that.borrow().key {
+                        let this_left = &this.borrow().left;
+                        let that_left = &that.borrow().left;
+                        let this_right = &this.borrow().right;
+                        let that_right = &that.borrow().right;
+                        let left_matched = match this_left {
+                            Some(ref this_tree) => match that_left {
+                                Some(ref that_tree) => {
+                                    return Self::is_identical(
+                                        &this_tree.borrow(),
+                                        &that_tree.borrow(),
+                                    );
+                                }
+                                None => false,
+                            },
+                            None => that_left.is_none(),
+                        };
+                        let right_matched = match this_right {
+                            Some(ref this_tree) => match that_right {
+                                Some(ref that_tree) => {
+                                    return Self::is_identical(
+                                        &this_tree.borrow(),
+                                        &that_tree.borrow(),
+                                    );
+                                }
+                                None => false,
+                            },
+                            None => that_right.is_none(),
+                        };
+                        left_matched && right_matched
+                    } else {
+                        false
+                    }
+                }
+                Tree(None) => false,
+            },
+
+            None => match other {
+                Tree(Some(_)) => false,
+                Tree(None) => true,
+            },
+        }
+    }
     fn parent_of(node: &Rc<RefCell<Node<T>>>) -> Option<Rc<RefCell<Node<T>>>> {
         node.borrow()
             .parent
@@ -230,7 +321,9 @@ mod tests {
         tree.insert(20);
         tree.insert(15);
         tree.insert(18);
+        assert_eq!(tree.min(), Some(10));
         assert_eq!(tree.remove_min(), Some(10));
+        assert_eq!(tree.min(), Some(15));
         assert_eq!(tree.remove_min(), Some(15));
         assert_eq!(tree.remove_min(), Some(18));
         assert_eq!(tree.remove_min(), Some(20));
@@ -245,6 +338,7 @@ mod tests {
         tree.insert(14);
         tree.insert(13);
         assert_eq!(tree.remove_min(), Some(10));
+        assert_eq!(tree.min(), Some(13));
         assert_eq!(tree.remove_min(), Some(13));
         assert_eq!(tree.remove_min(), Some(14));
         assert_eq!(tree.remove_min(), Some(15));
@@ -263,5 +357,45 @@ mod tests {
         tree.insert(1);
         assert_eq!(tree.remove_min(), Some(1));
         assert_eq!(tree.remove_min(), None);
+    }
+
+    #[test]
+    fn test_identical() {
+        let mut tree1 = Tree::new(1);
+        tree1.insert(2);
+        tree1.insert(3);
+        assert!(!tree1.is_identical(&Tree(None)));
+        let mut tree2 = Tree::new(1);
+        assert!(!tree1.is_identical(&tree2));
+        tree2.insert(2);
+        tree2.insert(3);
+        assert!(tree1.is_identical(&tree2));
+        assert!(Tree::new(None::<String>).is_identical(&Tree::new(None)));
+    }
+
+    #[test]
+    fn test_in_order() {
+        let mut tree = Tree::new(42);
+        tree.insert(24);
+        tree.insert(40);
+        tree.insert(35);
+        assert_eq!(tree.in_order(), vec![24, 35, 40, 42]);
+    }
+
+    #[test]
+    fn test_contains() {
+        let mut tree = Tree::new(42);
+        tree.insert(24);
+        tree.insert(40);
+        tree.insert(35);
+        assert!(tree.contains(&Tree(None)));
+        assert!(tree.contains(&Tree::new(35)));
+        assert!(!tree.contains(&Tree::new(40)));
+
+        let mut subtree = Tree::new(24);
+        subtree.insert(40);
+        subtree.insert(35);
+        assert!(tree.contains(&subtree));
+        assert!(!subtree.contains(&Tree::new(24)));
     }
 }
