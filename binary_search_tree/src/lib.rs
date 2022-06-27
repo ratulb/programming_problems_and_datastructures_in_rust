@@ -2,6 +2,17 @@ use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
 #[derive(Debug, Default)]
+//Default is for the case when we delete a node. We get the value out of the deleted node by
+//pushing a default value into it.
+
+struct Node<T: Ord + Default + std::fmt::Debug + Clone> {
+    key: T,
+    left: Option<Rc<RefCell<Tree<T>>>>,
+    right: Option<Rc<RefCell<Tree<T>>>>,
+    parent: Option<Weak<RefCell<Node<T>>>>,
+}
+
+#[derive(Debug, Default)]
 pub struct Tree<T: Ord + Default + std::fmt::Debug + Clone>(Option<Rc<RefCell<Node<T>>>>);
 
 impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
@@ -94,14 +105,6 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
     }
 }
 
-#[derive(Debug, Default)]
-struct Node<T: Ord + Default + std::fmt::Debug + Clone> {
-    key: T,
-    left: Option<Rc<RefCell<Tree<T>>>>,
-    right: Option<Rc<RefCell<Tree<T>>>>,
-    parent: Option<Weak<RefCell<Node<T>>>>,
-}
-
 impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
     pub fn new(value: T) -> Self {
         Self {
@@ -114,7 +117,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
 
     fn evict_left(&mut self) -> Option<T> {
         self.left
-            .take() //Default is replacing inner in 'take' - No issues left is wiped out anyway
+            .take() //Default is replacing inner in 'take' - No issues - left is wiped out anyway
             .map(|cell| {
                 //Left child(child to be deleted) inner cell
                 cell.borrow().0.as_ref().map(|inner| {
@@ -145,151 +148,120 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    //  #[test]
+    #[test]
     fn test_binary_search_tree_1() {
-        println!();
-        println!();
-        println!();
-        let mut tree = Tree::new(6);
-        println!("The min 1 ={:?}", tree.min());
-        tree.insert(5);
-        println!("The min 2 ={:?}", tree.min());
-        tree.insert(-4);
-        tree.insert(-3);
-        tree.insert(4);
-        tree.insert(3);
-        tree.insert(2);
-        tree.insert(1);
-        println!("Tree = {:?}", tree);
-        //println!("Min = {:?}", tree.min());
-        //let tree1 = Tree::new(None::<i32>);
-        //println!("Min = {:?}", tree1.min());
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        println!("Tree now = {:?}", tree);
-        println!("Min now = {:?}", tree.min());
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        println!("Tree = {:?}", tree);
-
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        println!("Tree = {:?}", tree);
-        tree.insert(-100);
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        println!("Tree = {:?}", tree);
+        let mut tree = Tree::new(None::<i32>);
+        assert_eq!(tree.remove_min(), Some(None));
     }
-    //#[test]
+    #[test]
     fn test_binary_search_tree_2() {
-        println!();
-        println!();
-        println!();
-        let mut tree = Tree::new(6);
-        tree.insert(4);
-        tree.insert(5);
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        println!("Tree now = {:?}", tree);
-        println!("Min now = {:?}", tree.min());
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        println!("Tree = {:?}", tree);
-
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        println!();
-        println!();
-        println!();
+        let mut tree = Tree::new(42);
+        assert_eq!(tree.remove_min(), Some(42));
+        assert_eq!(tree.remove_min(), None);
     }
-    //#[test]
+    #[test]
     fn test_binary_search_tree_3() {
-        println!();
-        println!();
-        println!();
         let mut tree = Tree::new(1);
         tree.insert(2);
         tree.insert(3);
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        println!("Tree now = {:?}", tree);
-        println!("Min now = {:?}", tree.min());
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        println!("Tree = {:?}", tree);
-
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        println!();
-        println!();
-        println!();
+        assert_eq!(tree.remove_min(), Some(1));
+        assert_eq!(tree.remove_min(), Some(2));
+        assert_eq!(tree.remove_min(), Some(3));
+        assert_eq!(tree.remove_min(), None);
     }
 
     #[test]
     fn test_binary_search_tree_4() {
-        println!();
-        println!();
-        println!();
+        let mut tree = Tree::new(3);
+        tree.insert(2);
+        tree.insert(1);
+        assert_eq!(tree.remove_min(), Some(1));
+        assert_eq!(tree.remove_min(), Some(2));
+        assert_eq!(tree.remove_min(), Some(3));
+        assert_eq!(tree.remove_min(), None);
+    }
+    #[test]
+    fn test_binary_search_tree_5() {
+        let mut tree = Tree::new(42);
+        tree.insert(42);
+        tree.insert(42);
+        assert_eq!(tree.remove_min(), Some(42));
+        assert_eq!(tree.remove_min(), None);
+    }
+
+    #[test]
+    fn test_binary_search_tree_6() {
+        let mut tree = Tree::new(42);
+        tree.insert(24);
+        assert_eq!(tree.remove_min(), Some(24));
+        assert_eq!(tree.remove_min(), Some(42));
+        assert_eq!(tree.remove_min(), None);
+    }
+
+    #[test]
+    fn test_binary_search_tree_7() {
+        let mut tree = Tree::new(42);
+        tree.insert(24);
+        tree.insert(40);
+        tree.insert(35);
+        assert_eq!(tree.remove_min(), Some(24));
+        assert_eq!(tree.remove_min(), Some(35));
+        assert_eq!(tree.remove_min(), Some(40));
+        assert_eq!(tree.remove_min(), Some(42));
+        assert_eq!(tree.remove_min(), None);
+    }
+
+    #[test]
+    fn test_binary_search_tree_8() {
         let mut tree = Tree::new(1);
         tree.insert(2);
         tree.insert(3);
-        tree.insert(-30);
-        tree.insert(-20);
-        tree.insert(-40);
         tree.insert(4);
-        tree.insert(5);
-        tree.insert(6);
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        //println!("Tree now = {:?}", tree);
-        //println!("Min now = {:?}", tree.min());
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        //println!("Tree = {:?}", tree);
+        assert_eq!(tree.remove_min(), Some(1));
+        assert_eq!(tree.remove_min(), Some(2));
+        assert_eq!(tree.remove_min(), Some(3));
+        assert_eq!(tree.remove_min(), Some(4));
+        assert_eq!(tree.remove_min(), None);
+    }
 
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
+    #[test]
+    fn test_binary_search_tree_9() {
+        let mut tree = Tree::new(10);
+        tree.insert(20);
+        tree.insert(15);
+        tree.insert(18);
+        assert_eq!(tree.remove_min(), Some(10));
+        assert_eq!(tree.remove_min(), Some(15));
+        assert_eq!(tree.remove_min(), Some(18));
+        assert_eq!(tree.remove_min(), Some(20));
+        assert_eq!(tree.remove_min(), None);
+    }
 
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
+    #[test]
+    fn test_binary_search_tree_10() {
+        let mut tree = Tree::new(10);
+        tree.insert(20);
+        tree.insert(15);
+        tree.insert(14);
+        tree.insert(13);
+        assert_eq!(tree.remove_min(), Some(10));
+        assert_eq!(tree.remove_min(), Some(13));
+        assert_eq!(tree.remove_min(), Some(14));
+        assert_eq!(tree.remove_min(), Some(15));
+        assert_eq!(tree.remove_min(), Some(20));
+        assert_eq!(tree.remove_min(), None);
+    }
 
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        let removed = tree.remove_min();
-        println!("Removed = {:?}", removed);
-        println!();
-        println!();
-        println!();
-        tree.insert(100);
-        tree.insert(200);
-        println!("Tree = {:?}", tree);
+    #[test]
+    fn test_binary_search_tree_11() {
+        let mut tree = Tree::new(1);
+        tree.insert(2);
+        tree.insert(3);
+        assert_eq!(tree.remove_min(), Some(1));
+        assert_eq!(tree.remove_min(), Some(2));
+        assert_eq!(tree.remove_min(), Some(3));
+        tree.insert(1);
+        assert_eq!(tree.remove_min(), Some(1));
+        assert_eq!(tree.remove_min(), None);
     }
 }
