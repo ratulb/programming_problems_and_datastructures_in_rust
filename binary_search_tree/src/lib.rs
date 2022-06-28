@@ -92,7 +92,12 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                                         node.left.as_ref().map(|inner_tree| {
                                             match inner_tree.take() {
                                                 Tree(None) => tree.0 = None,
-                                                Tree(left_tree) => tree.0 = left_tree,
+                                                Tree(mut left_tree) => {
+                                                    tree.0 = left_tree.map(|inner| {
+                                                        inner.borrow_mut().parent.take();
+                                                        inner
+                                                    })
+                                                }
                                             }
                                         });
                                         std::mem::take(&mut node.key)
@@ -100,7 +105,25 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                                 }
                             }
 
-                            (false, false, true, false) => return None,
+                            (false, false, true, false) => {
+                                return {
+                                    tree.0.take().map(|root| {
+                                        let mut node = root.borrow_mut();
+                                        node.right.as_ref().map(|inner_tree| {
+                                            match inner_tree.take() {
+                                                Tree(None) => tree.0 = None,
+                                                Tree(mut right_tree) => {
+                                                    tree.0 = right_tree.map(|inner| {
+                                                        inner.borrow_mut().parent.take();
+                                                        inner
+                                                    })
+                                                }
+                                            }
+                                        });
+                                        std::mem::take(&mut node.key)
+                                    })
+                                }
+                            }
                             (false, true, true, true) => return None,
                             (_, _, _, _) => return None,
                         };
@@ -602,7 +625,7 @@ mod tests {
         println!("{:?}", tree);
         assert!(Tree::find(&tree, &42).is_none());
         assert_eq!(result, Some(42));
-
+        //Left only tree
         let mut tree = Tree::new(3);
         tree.insert(2);
         tree.insert(1);
@@ -611,6 +634,18 @@ mod tests {
         println!("{:?}", tree);
         assert!(Tree::find(&tree, &3).is_none());
         assert_eq!(result, Some(3));
+        let result = Tree::delete(&mut tree, &2);
+        assert_eq!(result, Some(2));
+        println!("{:?}", tree);
+        //Right only tree
+        let mut tree = Tree::new(1);
+        tree.insert(2);
+        tree.insert(3);
+        println!("{:?}", tree);
+        let result = Tree::delete(&mut tree, &1);
+        println!("{:?}", tree);
+        assert!(Tree::find(&tree, &1).is_none());
+        assert_eq!(result, Some(1));
         let result = Tree::delete(&mut tree, &2);
         assert_eq!(result, Some(2));
         println!("{:?}", tree);
