@@ -53,6 +53,41 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         }
     }
 
+    fn find(tree: &Tree<T>, key: &T) -> Option<Rc<RefCell<Node<T>>>> {
+        match tree.0 {
+            Some(ref node) if node.borrow().key == *key => Some(Rc::clone(node)),
+            Some(ref node) => match node.borrow().left {
+                Some(ref left) => Self::find(&left.borrow(), key),
+                None => match node.borrow().right {
+                    Some(ref right) => Self::find(&right.borrow(), key),
+                    None => None,
+                },
+            },
+            None => None,
+        }
+    }
+
+    pub fn exists(&self, key: &T) -> bool {
+        match self.0 {
+            Some(ref node) => {
+                node.borrow().key == *key || {
+                    let in_left = match node.borrow().left {
+                        Some(ref tree) => Self::exists(&tree.borrow(), key),
+                        None => false,
+                    };
+
+                    let in_right = match node.borrow().right {
+                        Some(ref tree) => Self::exists(&tree.borrow(), key),
+                        None => false,
+                    };
+
+                    in_left || in_right
+                }
+            }
+            None => false,
+        }
+    }
+
     pub fn min(&self) -> Option<T> {
         match self.0 {
             Some(ref cell) => match cell.borrow().left {
@@ -157,7 +192,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
             },
         }
     }
-    fn parent_of(node: &Rc<RefCell<Node<T>>>) -> Option<Rc<RefCell<Node<T>>>> {
+    fn parent_strong_ref(node: &Rc<RefCell<Node<T>>>) -> Option<Rc<RefCell<Node<T>>>> {
         node.borrow()
             .parent
             .as_ref()
@@ -189,7 +224,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         match self.0 {
             Some(ref cell) => match cell.borrow().left {
                 Some(ref left) => Self::parent_of_min(&left.borrow()),
-                None => Self::parent_of(cell),
+                None => Self::parent_strong_ref(cell),
             },
             None => None,
         }
@@ -397,5 +432,31 @@ mod tests {
         subtree.insert(35);
         assert!(tree.contains(&subtree));
         assert!(!subtree.contains(&Tree::new(24)));
+    }
+
+    #[test]
+    fn test_exists() {
+        let mut tree = Tree::new(42);
+        tree.insert(24);
+        tree.insert(40);
+        tree.insert(35);
+        assert!(tree.exists(&42));
+        assert!(tree.exists(&24));
+        assert!(tree.exists(&40));
+        assert!(tree.exists(&35));
+        assert!(!tree.exists(&100));
+    }
+
+    #[test]
+    fn test_find() {
+        let mut tree = Tree::new(42);
+        tree.insert(24);
+        tree.insert(40);
+        tree.insert(35);
+        assert!(Tree::find(&tree, &42).is_some());
+        assert!(Tree::find(&tree, &24).is_some());
+        assert!(Tree::find(&tree, &40).is_some());
+        assert!(Tree::find(&tree, &35).is_some());
+        assert!(Tree::find(&tree, &100).is_none());
     }
 }
