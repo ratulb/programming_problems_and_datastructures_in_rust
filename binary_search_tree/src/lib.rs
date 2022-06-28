@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
-
 #[derive(Debug, Default)]
 //Default is for the case when we delete a node. We get the value out of the deleted node by
 //pushing a default value into it.
@@ -67,7 +66,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         }
     }
 
-    fn delete(tree: &mut Tree<T>, key: &T) -> Option<Rc<RefCell<Node<T>>>> {
+    pub fn delete(tree: &mut Tree<T>, key: &T) -> Option<T> {
         let mut being_deleted = Self::find(tree, key);
         match being_deleted {
             None => None,
@@ -79,7 +78,33 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                 let no_child = !has_left && !has_right;
                 let mut parent = Self::parent_strong_ref(node);
                 match parent {
-                    None => None,
+                    None => {
+                        //Delete root
+                        match (no_child, has_left, has_right, has_both) {
+                            (true, false, false, false) => {
+                                return tree.0.take().map(|root| root.take().key)
+                            }
+
+                            (false, true, false, false) => {
+                                return {
+                                    tree.0.take().map(|root| {
+                                        let mut node = root.borrow_mut();
+                                        node.left.as_ref().map(|inner_tree| {
+                                            match inner_tree.take() {
+                                                Tree(None) => tree.0 = None,
+                                                Tree(left_tree) => tree.0 = left_tree,
+                                            }
+                                        });
+                                        std::mem::take(&mut node.key)
+                                    })
+                                }
+                            }
+
+                            (false, false, true, false) => return None,
+                            (false, true, true, true) => return None,
+                            (_, _, _, _) => return None,
+                        };
+                    }
 
                     Some(ref mut parent) => {
                         match (no_child, has_left, has_right, has_both) {
@@ -253,17 +278,18 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
             }
             None => match self.0 {
                 None => None,
-                Some(_) => Self::remove_root(self),
+                Some(ref mut node) => Self::remove_root_one_child(self, false),
             },
         }
     }
-
-    fn remove_root(&mut self) -> Option<T> {
-        self.0.take().map(|root| {
+    //Remove root node with only left or right child
+    fn remove_root_one_child(tree: &mut Tree<T>, left: bool) -> Option<T> {
+        tree.0.take().map(|root| {
             let mut node = root.borrow_mut();
-            node.right.as_ref().map(|tree| match tree.take() {
-                Tree(None) => self.0 = None,
-                Tree(right_tree) => self.0 = right_tree,
+            let mut left_or_right = if left { &node.left } else { &node.right };
+            left_or_right.as_ref().map(|tree_| match tree_.take() {
+                Tree(None) => tree.0 = None,
+                Tree(left_or_right_tree) => tree.0 = left_or_right_tree,
             });
             std::mem::take(&mut node.key)
         })
@@ -566,5 +592,27 @@ mod tests {
         assert!(Tree::find(&tree, &24).is_some());
         tree.0.as_mut().unwrap().borrow_mut().delete_child(true);
         assert!(Tree::find(&tree, &24).is_none());
+    }
+
+    #[test]
+    fn test_delete() {
+        let mut tree = Tree::new(42);
+        println!("{:?}", tree);
+        let result = Tree::delete(&mut tree, &42);
+        println!("{:?}", tree);
+        assert!(Tree::find(&tree, &42).is_none());
+        assert_eq!(result, Some(42));
+
+        let mut tree = Tree::new(3);
+        tree.insert(2);
+        tree.insert(1);
+        println!("{:?}", tree);
+        let result = Tree::delete(&mut tree, &3);
+        println!("{:?}", tree);
+        assert!(Tree::find(&tree, &3).is_none());
+        assert_eq!(result, Some(3));
+        let result = Tree::delete(&mut tree, &2);
+        assert_eq!(result, Some(2));
+        println!("{:?}", tree);
     }
 }
