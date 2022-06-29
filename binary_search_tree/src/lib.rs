@@ -150,7 +150,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                 let mut parent = node.borrow().upgraded_parent();
                 match parent {
                     None => {
-                        //Delete root
+                        //Delete root - root has no parent ref - hence differential treatment
                         match (no_child, has_left, has_right, has_both) {
                             (true, false, false, false) => {
                                 tree.0.take().map(|root| root.take().key)
@@ -189,18 +189,25 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                             }),
                             (false, true, true, true) => {
                                 let root = tree.root();
+                                //Parent of minimum node in the root's right tree
                                 let parent = root.as_ref().and_then(|root| {
                                     root.borrow()
-                                        .right_node()
+                                        .right_node()//Root's right tree
                                         .as_ref()
-                                        .and_then(Self::find_min)
-                                        .and_then(|min| min.borrow().upgraded_parent())
+                                        .and_then(Self::find_min)//find the min
+                                        .and_then(|min| min.borrow().upgraded_parent())//Min's parent
                                 });
-
+                                //Root itself could be the parent of min or some other node 
+                                //on root's right side
                                 let right_parent =
                                     Node::right_parent(root.as_ref(), parent.as_ref());
+                                //Tell the appropriate parent to evict its left side which is
+                                //minimum on the right side of root
+                                //Rewiring of any subtree underneath minimum will happen during 
+                                //eviction
                                 let evicted =
                                     right_parent.and_then(|rp| rp.borrow_mut().evict_left());
+                                //Flush out the root's content with evicted node's content
                                 root.and_then(|r| r.borrow_mut().replace_key(evicted))
                             }
                             (_, _, _, _) => None,
