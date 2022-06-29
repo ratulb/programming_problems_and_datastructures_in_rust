@@ -32,6 +32,20 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
             .and_then(|tree| tree.borrow().0.as_ref().map(Rc::clone))
     }
 
+    fn is_left_child(&self, key: &T) -> bool {
+        self.left
+            .as_ref()
+            .and_then(|tree| tree.borrow().0.as_ref().map(|n| n.borrow().key() == key))
+            .unwrap_or(false)
+    }
+
+    fn is_right_child(&self, key: &T) -> bool {
+        self.right
+            .as_ref()
+            .and_then(|tree| tree.borrow().0.as_ref().map(|n| n.borrow().key() == key))
+            .unwrap_or(false)
+    }
+
     fn right_node(&self) -> Option<Rc<RefCell<Node<T>>>> {
         self.right
             .as_ref()
@@ -192,18 +206,19 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                                 //Parent of minimum node in the root's right tree
                                 let parent = root.as_ref().and_then(|root| {
                                     root.borrow()
-                                        .right_node()//Root's right tree
+                                        .right_node() //Root's right tree
                                         .as_ref()
-                                        .and_then(Self::find_min)//find the min
-                                        .and_then(|min| min.borrow().upgraded_parent())//Min's parent
+                                        .and_then(Self::find_min) //find the min
+                                        .and_then(|min| min.borrow().upgraded_parent())
+                                    //Min's parent
                                 });
-                                //Root itself could be the parent of min or some other node 
+                                //Root itself could be the parent of min or some other node
                                 //on root's right side
                                 let right_parent =
                                     Node::right_parent(root.as_ref(), parent.as_ref());
                                 //Tell the appropriate parent to evict its left side which is
-                                //minimum on the right side of root
-                                //Rewiring of any subtree underneath minimum will happen during 
+                                //the minimum
+                                //Rewiring of any subtree underneath minimum will happen during
                                 //eviction
                                 let evicted =
                                     right_parent.and_then(|rp| rp.borrow_mut().evict_left());
@@ -214,15 +229,16 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                         }
                     }
 
-                    Some(ref mut parent) => {
-                        match (no_child, has_left, has_right, has_both) {
-                            (true, false, false, false) => None,
-                            (false, true, false, false) => None,
-                            (false, false, true, false) => None,
-                            (false, true, true, true) => None,
-                            (_, _, _, _) =>  None,
+                    Some(ref mut parent) => match (no_child, has_left, has_right, has_both) {
+                        (true, false, false, false) => {
+                            let left = parent.borrow().is_left_child(key);
+                            parent.borrow_mut().delete_child(left)
                         }
-                    }
+                        (false, true, false, false) => None,
+                        (false, false, true, false) => None,
+                        (false, true, true, true) => None,
+                        (_, _, _, _) => None,
+                    },
                 }
             }
         }
@@ -405,7 +421,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
             parent: None,
         }
     }
-    fn delete_child(&mut self, left: bool) {
+    fn delete_child(&mut self, left: bool) -> Option<T> {
         let mut child = if left {
             self.left.take()
         } else {
@@ -433,6 +449,9 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
                 }
             }
         }
+        child
+            .and_then(|tree| tree.borrow_mut().root().take())
+            .map(|node| node.take().key)
     }
 
     fn evict_left(&mut self) -> Option<T> {
@@ -733,6 +752,22 @@ mod tests {
         println!("{:?}", tree);
         let result = Tree::delete(&mut tree, &20);
         assert_eq!(result, Some(20));
+        println!("Here it is ************{:?}", tree);
+    }
+    #[test]
+    fn delete_node_with_parent_no_child() {
+        //Right and left tree - evict root
+        let mut tree = Tree::new(20);
+        tree.insert(10);
+        tree.insert(30);
+        let result = Tree::delete(&mut tree, &10);
+        assert_eq!(result, Some(10));
+        assert!(Tree::find(&tree, &10).is_none());
+        println!("Here it is ************{:?}", tree);
+
+        let result = Tree::delete(&mut tree, &30);
+        assert_eq!(result, Some(30));
+        assert!(Tree::find(&tree, &30).is_none());
         println!("Here it is ************{:?}", tree);
     }
 }
