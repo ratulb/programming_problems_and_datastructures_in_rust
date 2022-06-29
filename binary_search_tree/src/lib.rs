@@ -209,20 +209,11 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
 
                     Some(ref mut parent) => {
                         match (no_child, has_left, has_right, has_both) {
-                            (true, false, false, false) => return None,
-                            (false, true, false, false) => return None,
-                            (false, false, true, false) => return None,
-                            (false, true, true, true) => return None,
-                            (_, _, _, _) => return None,
-                        };
-                        let mut min_on_left = Self::find_min(node);
-
-                        match min_on_left {
-                            None => None,
-                            Some(ref n) => {
-                                let mut parent = n.borrow().upgraded_parent();
-                                None
-                            }
+                            (true, false, false, false) => None,
+                            (false, true, false, false) => None,
+                            (false, false, true, false) => None,
+                            (false, true, true, true) => None,
+                            (_, _, _, _) =>  None,
                         }
                     }
                 }
@@ -231,14 +222,12 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
     }
 
     fn find_min(node: &Rc<RefCell<Node<T>>>) -> Option<Rc<RefCell<Node<T>>>> {
-        match node.borrow().left {
-            Some(ref tree) => match tree.borrow().0 {
-                Some(ref inner_node) => Self::find_min(inner_node),
-                None => Some(Rc::clone(node)),
-            },
+        match node.borrow().left_node() {
+            Some(ref left_node) => Self::find_min(left_node),
             None => Some(Rc::clone(node)),
         }
     }
+
     pub fn exists(&self, key: &T) -> bool {
         match self.0 {
             Some(ref node) => {
