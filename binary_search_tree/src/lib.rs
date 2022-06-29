@@ -11,6 +11,65 @@ struct Node<T: Ord + Default + std::fmt::Debug + Clone> {
     parent: Option<Weak<RefCell<Node<T>>>>,
 }
 
+impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
+    fn key(&self) -> &T {
+        &self.key
+    }
+    fn has_left(&self) -> bool {
+        self.left.is_some()
+    }
+    fn has_right(&self) -> bool {
+        self.right.is_some()
+    }
+
+    fn has_parent(&self) -> bool {
+        self.parent.is_some()
+    }
+
+    fn left_node(&self) -> Option<Rc<RefCell<Node<T>>>> {
+        self.left
+            .as_ref()
+            .and_then(|tree| tree.borrow().0.as_ref().map(Rc::clone))
+    }
+
+    fn right_node(&self) -> Option<Rc<RefCell<Node<T>>>> {
+        self.right
+            .as_ref()
+            .and_then(|tree| tree.borrow().0.as_ref().map(Rc::clone))
+    }
+
+    fn upgraded_parent(&self) -> Option<Rc<RefCell<Node<T>>>> {
+        self.parent.as_ref().and_then(|weak| weak.upgrade())
+    }
+
+    fn replace_key(&mut self, key: Option<T>) -> Option<T> {
+        key.map(|k| std::mem::replace(&mut self.key, k))
+    }
+
+    //To avoid already borrowed error - if Rc<RefCell> pointing to same location
+    fn right_parent<'a>(
+        this: Option<&'a Rc<RefCell<Node<T>>>>,
+        that: Option<&'a Rc<RefCell<Node<T>>>>,
+    ) -> Option<&'a Rc<RefCell<Node<T>>>> {
+        match (this, that) {
+            (None, None) => None,
+            (Some(_), None) => this,
+            (None, Some(_)) => that,
+            (Some(ref this_one), Some(ref that_one)) => {
+                if Rc::ptr_eq(this_one, that_one) {
+                    this
+                } else {
+                    that
+                }
+            }
+        }
+    }
+
+    fn parent(&self) -> Option<Weak<RefCell<Node<T>>>> {
+        self.parent.as_ref().map(Weak::clone)
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct Tree<T: Ord + Default + std::fmt::Debug + Clone>(Option<Rc<RefCell<Node<T>>>>);
 
@@ -52,9 +111,9 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         }
     }
 
-    fn find(tree: &Tree<T>, key: &T) -> Option<Rc<RefCell<Node<T>>>> {
-        match tree.0 {
-            Some(ref node) if node.borrow().key == *key => Some(Rc::clone(node)),
+    fn find(&self, key: &T) -> Option<Rc<RefCell<Node<T>>>> {
+        match self.root() {
+            Some(ref node) if node.borrow().key() == key => Some(Rc::clone(node)),
             Some(ref node) => match node.borrow().left {
                 Some(ref left) => Self::find(&left.borrow(), key),
                 None => match node.borrow().right {
@@ -66,67 +125,86 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         }
     }
 
+    fn root(&self) -> Option<Rc<RefCell<Node<T>>>> {
+        self.0.as_ref().map(Rc::clone)
+    }
+
+    fn left_node(&self) -> Option<Rc<RefCell<Node<T>>>> {
+        Self::root(self).and_then(|root| root.borrow().left_node())
+    }
+
+    fn right_node(&self) -> Option<Rc<RefCell<Node<T>>>> {
+        Self::root(self).and_then(|root| root.borrow().right_node())
+    }
+
     pub fn delete(tree: &mut Tree<T>, key: &T) -> Option<T> {
         let mut being_deleted = Self::find(tree, key);
         match being_deleted {
             None => None,
             Some(ref node) => {
-                let has_left = node.borrow().left.is_some();
-                let has_right = node.borrow().right.is_some();
+                let has_left = node.borrow().has_left();
+                let has_right = node.borrow().has_right();
 
                 let has_both = has_left && has_right;
                 let no_child = !has_left && !has_right;
-                let mut parent = Self::parent_strong_ref(node);
+                let mut parent = node.borrow().upgraded_parent();
                 match parent {
                     None => {
                         //Delete root
                         match (no_child, has_left, has_right, has_both) {
                             (true, false, false, false) => {
-                                return tree.0.take().map(|root| root.take().key)
+                                tree.0.take().map(|root| root.take().key)
                             }
 
-                            (false, true, false, false) => {
-                                return {
-                                    tree.0.take().map(|root| {
-                                        let mut node = root.borrow_mut();
-                                        node.left.as_ref().map(|inner_tree| {
-                                            match inner_tree.take() {
-                                                Tree(None) => tree.0 = None,
-                                                Tree(mut left_tree) => {
-                                                    tree.0 = left_tree.map(|inner| {
-                                                        inner.borrow_mut().parent.take();
-                                                        inner
-                                                    })
-                                                }
-                                            }
-                                        });
-                                        std::mem::take(&mut node.key)
-                                    })
-                                }
-                            }
+                            (false, true, false, false) => tree.0.take().map(|root| {
+                                let mut node = root.borrow_mut();
+                                node.left
+                                    .as_ref()
+                                    .map(|inner_tree| match inner_tree.take() {
+                                        Tree(None) => tree.0 = None,
+                                        Tree(mut left_tree) => {
+                                            tree.0 = left_tree.map(|inner| {
+                                                inner.borrow_mut().parent.take();
+                                                inner
+                                            })
+                                        }
+                                    });
+                                std::mem::take(&mut node.key)
+                            }),
 
-                            (false, false, true, false) => {
-                                return {
-                                    tree.0.take().map(|root| {
-                                        let mut node = root.borrow_mut();
-                                        node.right.as_ref().map(|inner_tree| {
-                                            match inner_tree.take() {
-                                                Tree(None) => tree.0 = None,
-                                                Tree(mut right_tree) => {
-                                                    tree.0 = right_tree.map(|inner| {
-                                                        inner.borrow_mut().parent.take();
-                                                        inner
-                                                    })
-                                                }
-                                            }
-                                        });
-                                        std::mem::take(&mut node.key)
-                                    })
-                                }
+                            (false, false, true, false) => tree.0.take().map(|root| {
+                                let mut node = root.borrow_mut();
+                                node.right
+                                    .as_ref()
+                                    .map(|inner_tree| match inner_tree.take() {
+                                        Tree(None) => tree.0 = None,
+                                        Tree(mut right_tree) => {
+                                            tree.0 = right_tree.map(|inner| {
+                                                inner.borrow_mut().parent.take();
+                                                inner
+                                            })
+                                        }
+                                    });
+                                std::mem::take(&mut node.key)
+                            }),
+                            (false, true, true, true) => {
+                                let root = tree.root();
+                                let parent = root.as_ref().and_then(|root| {
+                                    root.borrow()
+                                        .right_node()
+                                        .as_ref()
+                                        .and_then(Self::find_min)
+                                        .and_then(|min| min.borrow().upgraded_parent())
+                                });
+
+                                let right_parent =
+                                    Node::right_parent(root.as_ref(), parent.as_ref());
+                                let evicted =
+                                    right_parent.and_then(|rp| rp.borrow_mut().evict_left());
+                                root.and_then(|r| r.borrow_mut().replace_key(evicted))
                             }
-                            (false, true, true, true) => return None,
-                            (_, _, _, _) => return None,
-                        };
+                            (_, _, _, _) => None,
+                        }
                     }
 
                     Some(ref mut parent) => {
@@ -142,7 +220,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                         match min_on_left {
                             None => None,
                             Some(ref n) => {
-                                let mut parent = Tree::parent_strong_ref(n);
+                                let mut parent = n.borrow().upgraded_parent();
                                 None
                             }
                         }
@@ -155,7 +233,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
     fn find_min(node: &Rc<RefCell<Node<T>>>) -> Option<Rc<RefCell<Node<T>>>> {
         match node.borrow().left {
             Some(ref tree) => match tree.borrow().0 {
-                Some(ref inner_node) => Self::find_min(&inner_node),
+                Some(ref inner_node) => Self::find_min(inner_node),
                 None => Some(Rc::clone(node)),
             },
             None => Some(Rc::clone(node)),
@@ -221,15 +299,15 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
             Tree(Some(ref this)) => match other {
                 Tree(None) => true,
                 that @ Tree(_) => {
-                    if Self::is_identical(self, &that) {
+                    if Self::is_identical(self, that) {
                         return true;
                     }
                     let left_contains = match this.borrow().left {
-                        Some(ref tree) => Self::contains(&tree.borrow(), &that),
+                        Some(ref tree) => Self::contains(&tree.borrow(), that),
                         None => false,
                     };
                     let right_contains = match this.borrow().right {
-                        Some(ref tree) => Self::contains(&tree.borrow(), &that),
+                        Some(ref tree) => Self::contains(&tree.borrow(), that),
                         None => false,
                     };
                     left_contains || right_contains
@@ -285,13 +363,6 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
             },
         }
     }
-    fn parent_strong_ref(node: &Rc<RefCell<Node<T>>>) -> Option<Rc<RefCell<Node<T>>>> {
-        node.borrow()
-            .parent
-            .as_ref()
-            .map(|parent| parent.upgrade())
-            .flatten()
-    }
 
     pub fn remove_min(&mut self) -> Option<T> {
         match Self::parent_of_min(self) {
@@ -309,7 +380,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
     fn remove_root_one_child(tree: &mut Tree<T>, left: bool) -> Option<T> {
         tree.0.take().map(|root| {
             let mut node = root.borrow_mut();
-            let mut left_or_right = if left { &node.left } else { &node.right };
+            let left_or_right = if left { &node.left } else { &node.right };
             left_or_right.as_ref().map(|tree_| match tree_.take() {
                 Tree(None) => tree.0 = None,
                 Tree(left_or_right_tree) => tree.0 = left_or_right_tree,
@@ -322,7 +393,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         match self.0 {
             Some(ref cell) => match cell.borrow().left {
                 Some(ref left) => Self::parent_of_min(&left.borrow()),
-                None => Self::parent_strong_ref(cell),
+                None => cell.borrow().upgraded_parent(),
             },
             None => None,
         }
@@ -371,7 +442,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
     fn evict_left(&mut self) -> Option<T> {
         self.left
             .take() //Default is replacing inner in 'take' - No issues - left is wiped out anyway
-            .map(|cell| {
+            .and_then(|cell| {
                 //Left child(child to be deleted) inner cell
                 cell.borrow().0.as_ref().map(|inner| {
                     let mut left_node = inner.take(); //Min node
@@ -381,12 +452,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
                             if let Some(ref mut right_child_node) =
                                 right_cell.borrow_mut().0.as_mut()
                             {
-                                right_child_node.borrow_mut().parent = match left_node.parent {
-                                    Some(ref left_node_parent) => {
-                                        Some(Weak::clone(left_node_parent))
-                                    }
-                                    None => None,
-                                };
+                                right_child_node.borrow_mut().parent = left_node.parent();
                             }
                             right_cell
                         })
@@ -394,7 +460,6 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
                     left_node.key
                 })
             })
-            .flatten()
     }
 }
 
@@ -622,7 +687,7 @@ mod tests {
         let mut tree = Tree::new(42);
         println!("{:?}", tree);
         let result = Tree::delete(&mut tree, &42);
-        println!("{:?}", tree);
+        println!("Tree now {:?}", tree);
         assert!(Tree::find(&tree, &42).is_none());
         assert_eq!(result, Some(42));
         //Left only tree
@@ -649,5 +714,29 @@ mod tests {
         let result = Tree::delete(&mut tree, &2);
         assert_eq!(result, Some(2));
         println!("{:?}", tree);
+    }
+    #[test]
+    fn delete_root_with_both_subtrees() {
+        //Right and left tree - evict root
+        let mut tree = Tree::new(20);
+        tree.insert(10);
+        tree.insert(30);
+        tree.insert(25);
+        println!("{:?}", tree);
+        let result = Tree::delete(&mut tree, &20);
+        assert_eq!(result, Some(20));
+        println!("Here it is ************{:?}", tree);
+    }
+
+    #[test]
+    fn delete_root_with_both_subtree_1_level() {
+        //Right and left tree - evict root
+        let mut tree = Tree::new(20);
+        tree.insert(10);
+        tree.insert(30);
+        println!("{:?}", tree);
+        let result = Tree::delete(&mut tree, &20);
+        assert_eq!(result, Some(20));
+        println!("Here it is ************{:?}", tree);
     }
 }
