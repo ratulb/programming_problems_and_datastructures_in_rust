@@ -178,7 +178,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                                     .as_ref()
                                     .map(|inner_tree| match inner_tree.take() {
                                         Tree(None) => tree.0 = None,
-                                        Tree(mut left_tree) => {
+                                        Tree(left_tree) => {
                                             tree.0 = left_tree.map(|inner| {
                                                 inner.borrow_mut().parent.take();
                                                 inner
@@ -194,7 +194,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                                     .as_ref()
                                     .map(|inner_tree| match inner_tree.take() {
                                         Tree(None) => tree.0 = None,
-                                        Tree(mut right_tree) => {
+                                        Tree(right_tree) => {
                                             tree.0 = right_tree.map(|inner| {
                                                 //Take out the out going parent ref
                                                 inner.borrow_mut().parent.take();
@@ -233,15 +233,9 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                     }
 
                     Some(ref mut parent) => match (no_child, has_left, has_right, has_both) {
-                        (true, false, false, false) => {
-                            let left = parent.borrow().is_left_child(key);
-                            parent.borrow_mut().delete_child(left)
-                        }
-                        (false, true, false, false) => {
-                            let left = parent.borrow().is_left_child(key);
-                            parent.borrow_mut().delete_child(left)
-                        }
-                        (false, false, true, false) => {
+                        (true, false, false, false)
+                        | (false, true, false, false)
+                        | (false, false, true, false) => {
                             let left = parent.borrow().is_left_child(key);
                             parent.borrow_mut().delete_child(left)
                         }
@@ -407,7 +401,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
             }
             None => match self.0 {
                 None => None,
-                Some(ref mut node) => Self::remove_root_one_child(self, false),
+                Some(ref mut _node) => Self::remove_root_one_child(self, false),
             },
         }
     }
@@ -775,7 +769,6 @@ mod tests {
         let mut tree = Tree::new(20);
         tree.insert(10);
         tree.insert(30);
-        let result = Tree::delete(&mut tree, &100);
         let result = Tree::delete(&mut tree, &10);
         assert_eq!(result, Some(10));
         assert!(Tree::find(&tree, &10).is_none());
