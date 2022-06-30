@@ -433,10 +433,9 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
     }
     //Delete a node with single child
     fn delete_child(&mut self, left: bool) -> Option<T> {
-        let deleted = if left {
-            self.left.take()
-        } else {
-            self.right.take()
+        let deleted = match left {
+            true => self.left.take(),
+            false => self.right.take(),
         };
 
         let result = match deleted
@@ -454,11 +453,9 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
             }
             None => (None, None),
         };
-
-        if left {
-            self.left = result.1;
-        } else {
-            self.right = result.1;
+        match left {
+            true => self.left = result.1,
+            false => self.right = result.1,
         }
         result.0
     }
