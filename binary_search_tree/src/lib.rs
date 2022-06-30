@@ -746,10 +746,8 @@ mod tests {
         tree.insert(10);
         tree.insert(30);
         tree.insert(25);
-        println!("{:?}", tree);
         let result = Tree::delete(&mut tree, &20);
         assert_eq!(result, Some(20));
-        println!("Here it is ************{:?}", tree);
     }
 
     #[test]
@@ -758,10 +756,8 @@ mod tests {
         let mut tree = Tree::new(20);
         tree.insert(10);
         tree.insert(30);
-        println!("{:?}", tree);
         let result = Tree::delete(&mut tree, &20);
         assert_eq!(result, Some(20));
-        println!("Here it is ************{:?}", tree);
     }
     #[test]
     fn delete_node_with_parent_no_child() {
@@ -773,12 +769,10 @@ mod tests {
         let result = Tree::delete(&mut tree, &10);
         assert_eq!(result, Some(10));
         assert!(Tree::find(&tree, &10).is_none());
-        println!("Here it is ************{:?}", tree);
 
         let result = Tree::delete(&mut tree, &30);
         assert_eq!(result, Some(30));
         assert!(Tree::find(&tree, &30).is_none());
-        println!("Here it is ************{:?}", tree);
     }
 
     #[test]
