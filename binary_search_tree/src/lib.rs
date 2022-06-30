@@ -196,6 +196,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                                         Tree(None) => tree.0 = None,
                                         Tree(mut right_tree) => {
                                             tree.0 = right_tree.map(|inner| {
+                                                //Take out the out going parent ref
                                                 inner.borrow_mut().parent.take();
                                                 inner
                                             })
@@ -236,7 +237,10 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                             let left = parent.borrow().is_left_child(key);
                             parent.borrow_mut().delete_child(left)
                         }
-                        (false, true, false, false) => None,
+                        (false, true, false, false) => {
+                            let left = parent.borrow().is_left_child(key);
+                            parent.borrow_mut().delete_child(left)
+                        }
                         (false, false, true, false) => {
                             let left = parent.borrow().is_left_child(key);
                             parent.borrow_mut().delete_child(left)
@@ -427,37 +431,36 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
             parent: None,
         }
     }
+    //Delete a node with single child
     fn delete_child(&mut self, left: bool) -> Option<T> {
-        let mut child = if left {
+        let deleted = if left {
             self.left.take()
         } else {
             self.right.take()
         };
 
-        if let Some(ref mut child) = child {
-            if let Some(ref node) = child.borrow().0 {
-                let mut deleted = node.borrow_mut();
-                let (lp, rp) = match deleted.parent {
-                    None => (None, None),
-                    Some(ref p) => (Some(p.clone()), Some(p.clone())),
-                };
-                if let Some(ref mut left_node) = deleted.left {
-                    if let Some(ref mut child_node) = left_node.borrow_mut().0 {
-                        child_node.borrow_mut().parent = lp;
+        let result = match deleted
+            .and_then(|tree| tree.take().0)
+            .map(|node| node.take())
+            .map(|node| (node.key, node.parent, node.left.or(node.right)))
+        {
+            Some((key, parent, mut tree)) => {
+                if let Some(ref mut inner_tree) = tree {
+                    if let Some(ref mut tree_node) = inner_tree.borrow_mut().0 {
+                        tree_node.borrow_mut().parent = parent.map(|parent| parent.clone());
                     }
-                    self.left = Some(std::mem::take(left_node));
                 }
-                if let Some(ref mut right_node) = deleted.right {
-                    if let Some(ref mut child_node) = right_node.borrow_mut().0 {
-                        child_node.borrow_mut().parent = rp;
-                    }
-                    self.right = Some(std::mem::take(right_node));
-                }
+                (Some(key), tree)
             }
+            None => (None, None),
+        };
+
+        if left {
+            self.left = result.1;
+        } else {
+            self.right = result.1;
         }
-        child
-            .and_then(|tree| tree.borrow_mut().root().take())
-            .map(|node| node.take().key)
+        result.0
     }
 
     fn evict_left(&mut self) -> Option<T> {
@@ -465,7 +468,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
             .take() //Default is replacing node in 'take' - No issues - left is wiped out anyway
             .and_then(|tree| {
                 //Left child to be deleted is inner cell
-                tree.borrow().root().map(|node| {
+                tree.borrow().0.as_ref().map(|node| {
                     //Rc<RefCell>
                     let mut node = node.take(); //Min node, Rc.take
                                                 //Take out the right tree if any under the min node being evicted
@@ -786,16 +789,24 @@ mod tests {
         tree.insert(15);
         tree.insert(20);
         tree.insert(30);
-        let result = Tree::delete(&mut tree, &100);
-        //let result = Tree::delete(&mut tree, &10);
-        //assert_eq!(result, Some(10));
-        //assert!(Tree::find(&tree, &10).is_none());
-        println!("Here it is ************yes {:?}", tree);
+        let result = Tree::delete(&mut tree, &10);
+        assert_eq!(result, Some(10));
+        assert!(Tree::find(&tree, &10).is_none());
 
         assert!(Tree::find(&tree, &30).is_some());
         let result = Tree::delete(&mut tree, &30);
         assert_eq!(result, Some(30));
         assert!(Tree::find(&tree, &30).is_none());
-        println!("Here it is ************{:?}", tree);
+
+        let result = Tree::delete(&mut tree, &25);
+        assert_eq!(result, Some(25));
+        assert!(Tree::find(&tree, &25).is_none());
+        let result = Tree::delete(&mut tree, &20);
+        assert_eq!(result, Some(20));
+        assert!(Tree::find(&tree, &20).is_none());
+        let result = Tree::delete(&mut tree, &15);
+        assert_eq!(result, Some(15));
+        assert!(Tree::find(&tree, &15).is_none());
+        assert!(tree.0.is_none())
     }
 }
