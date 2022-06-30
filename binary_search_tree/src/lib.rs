@@ -69,7 +69,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
             (None, None) => None,
             (Some(_), None) => this,
             (None, Some(_)) => that,
-            (Some(ref this_one), Some(ref that_one)) => {
+            (Some(this_one), Some(that_one)) => {
                 if Rc::ptr_eq(this_one, that_one) {
                     this
                 } else {
@@ -154,7 +154,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
     }
 
     pub fn delete(tree: &mut Tree<T>, key: &T) -> Option<T> {
-        let mut target = Self::find(tree, key);
+        let target = Self::find(tree, key);
         match target {
             None => None,
             Some(ref node) => {
@@ -163,8 +163,8 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
 
                 let has_both = has_left && has_right;
                 let no_child = !has_left && !has_right;
-                let mut parent = node.borrow().upgraded_parent();
-                match parent {
+                let mut node_parent = node.borrow().upgraded_parent();
+                match node_parent {
                     None => {
                         //Delete root - root has no parent ref - hence differential treatment
                         match (no_child, has_left, has_right, has_both) {
@@ -245,7 +245,20 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                             let left = parent.borrow().is_left_child(key);
                             parent.borrow_mut().delete_child(left)
                         }
-                        (false, true, true, true) => None,
+                        (false, true, true, true) => {
+                            let min_parent = node
+                                .borrow()
+                                .right_node()
+                                .as_ref()
+                                .and_then(Self::find_min)
+                                .as_ref()
+                                .and_then(|min_on_right| min_on_right.borrow().upgraded_parent());
+                            let right_parent =
+                                Node::right_parent(node_parent.as_ref(), min_parent.as_ref());
+                            let evicted = right_parent.and_then(|rp| rp.borrow_mut().evict_left());
+                            //Flush out the node's content with evicted node's content
+                            node.borrow_mut().replace_key(evicted)
+                        }
                         (_, _, _, _) => None,
                     },
                 }
@@ -282,11 +295,11 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
 
     pub fn min(&self) -> Option<T> {
         match self.0 {
-            Some(ref cell) => match cell.borrow().left {
+            Some(ref node) => match node.borrow().left {
                 Some(ref left) => Self::min(&left.borrow()),
                 None => {
                     //We are cloning key  here
-                    Some(cell.borrow().key.clone())
+                    Some(node.borrow().key.clone())
                 }
             },
             None => None,
@@ -444,9 +457,9 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
             .map(|node| (node.key, node.parent, node.left.or(node.right)))
         {
             Some((key, parent, mut tree)) => {
-                if let Some(ref mut inner_tree) = tree {
-                    if let Some(ref mut tree_node) = inner_tree.borrow_mut().0 {
-                        tree_node.borrow_mut().parent = parent.map(|parent| parent.clone());
+                if let Some(ref mut inner) = tree {
+                    if let Some(ref mut tree_node) = inner.borrow_mut().0 {
+                        tree_node.borrow_mut().parent = parent;
                     }
                 }
                 (Some(key), tree)
@@ -799,5 +812,22 @@ mod tests {
         assert_eq!(result, Some(15));
         assert!(Tree::find(&tree, &15).is_none());
         assert!(tree.0.is_none())
+    }
+
+    #[test]
+    fn delete_node_with_parent_both_childrent() {
+        let mut tree = Tree::new(25);
+        tree.insert(10);
+        tree.insert(15);
+        tree.insert(20);
+        tree.insert(5);
+        println!("The tree = {:?}", tree);
+        let result = Tree::delete(&mut tree, &10);
+        assert_eq!(result, Some(10));
+        assert!(Tree::find(&tree, &10).is_none());
+        println!();
+        println!();
+        println!();
+        println!("The tree = {:?}", tree);
     }
 }
