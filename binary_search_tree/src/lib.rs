@@ -814,13 +814,28 @@ mod tests {
         tree.insert(15);
         tree.insert(20);
         tree.insert(5);
-        println!("The tree = {:?}", tree);
         let result = Tree::delete(&mut tree, &10);
         assert_eq!(result, Some(10));
         assert!(Tree::find(&tree, &10).is_none());
-        println!();
-        println!();
-        println!();
-        println!("The tree = {:?}", tree);
+
+        let result = Tree::delete(&mut tree, &25);
+        assert_eq!(result, Some(25));
+        assert!(Tree::find(&tree, &25).is_none());
+
+        let result = Tree::delete(&mut tree, &20);
+        assert_eq!(result, Some(20));
+        assert!(Tree::find(&tree, &20).is_none());
+
+        let result = Tree::delete(&mut tree, &5);
+        assert_eq!(result, Some(5));
+        assert!(Tree::find(&tree, &5).is_none());
+
+        let result = Tree::delete(&mut tree, &15);
+        assert_eq!(result, Some(15));
+        assert!(Tree::find(&tree, &15).is_none());
+
+        let result = Tree::delete(&mut tree, &15);
+        assert_eq!(result, None);
+        assert!(Tree::find(&tree, &15).is_none());
     }
 }
