@@ -4,14 +4,14 @@ use std::rc::{Rc, Weak};
 //Default is for the case when we delete a node. We get the value out of the deleted node by
 //pushing a default value into it.
 
-struct Node<T: Ord + Default + std::fmt::Debug + Clone> {
+struct Node<T: Ord + Default + std::fmt::Debug> {
     key: T,
     left: Option<Rc<RefCell<Tree<T>>>>,
     right: Option<Rc<RefCell<Tree<T>>>>,
     parent: Option<Weak<RefCell<Node<T>>>>,
 }
 
-impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
+impl<T: Ord + Default + std::fmt::Debug> Node<T> {
     fn key(&self) -> &T {
         &self.key
     }
@@ -22,10 +22,6 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
         self.right.is_some()
     }
 
-    fn has_parent(&self) -> bool {
-        self.parent.is_some()
-    }
-
     fn left_node(&self) -> Option<Rc<RefCell<Node<T>>>> {
         self.left
             .as_ref()
@@ -34,13 +30,6 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
 
     fn is_left_child(&self, key: &T) -> bool {
         self.left
-            .as_ref()
-            .and_then(|tree| tree.borrow().0.as_ref().map(|n| n.borrow().key() == key))
-            .unwrap_or(false)
-    }
-
-    fn is_right_child(&self, key: &T) -> bool {
-        self.right
             .as_ref()
             .and_then(|tree| tree.borrow().0.as_ref().map(|n| n.borrow().key() == key))
             .unwrap_or(false)
@@ -69,13 +58,10 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
             (None, None) => None,
             (Some(_), None) => this,
             (None, Some(_)) => that,
-            (Some(this_one), Some(that_one)) => {
-                if Rc::ptr_eq(this_one, that_one) {
-                    this
-                } else {
-                    that
-                }
-            }
+            (Some(this_one), Some(that_one)) => match Rc::ptr_eq(this_one, that_one) {
+                true => this,
+                false => that,
+            },
         }
     }
 
@@ -85,9 +71,9 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
 }
 
 #[derive(Debug, Default)]
-pub struct Tree<T: Ord + Default + std::fmt::Debug + Clone>(Option<Rc<RefCell<Node<T>>>>);
+pub struct Tree<T: Ord + Default + std::fmt::Debug>(Option<Rc<RefCell<Node<T>>>>);
 
-impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
+impl<T: Ord + Default + std::fmt::Debug> Tree<T> {
     pub fn new(value: T) -> Self {
         Tree(Some(Rc::new(RefCell::new(Node::new(value)))))
     }
@@ -125,8 +111,8 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         }
     }
 
-    fn find(tree: &Tree<T>, key: &T) -> Option<Rc<RefCell<Node<T>>>> {
-        match tree.0 {
+    fn find(&self, key: &T) -> Option<Rc<RefCell<Node<T>>>> {
+        match self.0 {
             Some(ref node) if node.borrow().key() == key => Some(Rc::clone(node)),
             Some(ref node) if node.borrow().key() > key => match node.borrow().left {
                 Some(ref left) => Self::find(&left.borrow(), key),
@@ -145,16 +131,8 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         self.0.as_ref().map(Rc::clone)
     }
 
-    fn left_node(&self) -> Option<Rc<RefCell<Node<T>>>> {
-        Self::root(self).and_then(|root| root.borrow().left_node())
-    }
-
-    fn right_node(&self) -> Option<Rc<RefCell<Node<T>>>> {
-        Self::root(self).and_then(|root| root.borrow().right_node())
-    }
-
-    pub fn delete(tree: &mut Tree<T>, key: &T) -> Option<T> {
-        let target = Self::find(tree, key);
+    pub fn delete(&mut self, key: &T) -> Option<T> {
+        let target = Self::find(self, key);
         match target {
             None => None,
             Some(ref node) => {
@@ -169,17 +147,17 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                         //Delete root - root has no parent ref - hence differential treatment
                         match (no_child, has_left, has_right, has_both) {
                             (true, false, false, false) => {
-                                tree.0.take().map(|root| root.take().key)
+                                self.0.take().map(|root| root.take().key)
                             }
 
-                            (false, true, false, false) => tree.0.take().map(|root| {
+                            (false, true, false, false) => self.0.take().map(|root| {
                                 let mut node = root.borrow_mut();
                                 node.left
                                     .as_ref()
                                     .map(|inner_tree| match inner_tree.take() {
-                                        Tree(None) => tree.0 = None,
+                                        Tree(None) => self.0 = None,
                                         Tree(left_tree) => {
-                                            tree.0 = left_tree.map(|inner| {
+                                            self.0 = left_tree.map(|inner| {
                                                 inner.borrow_mut().parent.take();
                                                 inner
                                             })
@@ -188,14 +166,14 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                                 std::mem::take(&mut node.key)
                             }),
 
-                            (false, false, true, false) => tree.0.take().map(|root| {
+                            (false, false, true, false) => self.0.take().map(|root| {
                                 let mut node = root.borrow_mut();
                                 node.right
                                     .as_ref()
                                     .map(|inner_tree| match inner_tree.take() {
-                                        Tree(None) => tree.0 = None,
+                                        Tree(None) => self.0 = None,
                                         Tree(right_tree) => {
-                                            tree.0 = right_tree.map(|inner| {
+                                            self.0 = right_tree.map(|inner| {
                                                 //Take out the out going parent ref
                                                 inner.borrow_mut().parent.take();
                                                 inner
@@ -205,13 +183,13 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                                 std::mem::take(&mut node.key)
                             }),
                             (false, true, true, true) => {
-                                let root = tree.root();
+                                let root = self.root();
                                 //Parent of minimum node in the root's right tree
                                 let parent = root.as_ref().and_then(|root| {
                                     root.borrow()
                                         .right_node() //Root's right tree
                                         .as_ref()
-                                        .and_then(Self::find_min) //find the min
+                                        .and_then(Self::min) //find the min
                                         .and_then(|min| min.borrow().upgraded_parent())
                                     //Min's parent
                                 });
@@ -244,7 +222,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                                 .borrow()
                                 .right_node()
                                 .as_ref()
-                                .and_then(Self::find_min)
+                                .and_then(Self::min)
                                 .as_ref()
                                 .and_then(|min_on_right| min_on_right.borrow().upgraded_parent());
                             let right_parent =
@@ -260,9 +238,9 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         }
     }
 
-    fn find_min(node: &Rc<RefCell<Node<T>>>) -> Option<Rc<RefCell<Node<T>>>> {
+    fn min(node: &Rc<RefCell<Node<T>>>) -> Option<Rc<RefCell<Node<T>>>> {
         match node.borrow().left_node() {
-            Some(ref left_node) => Self::find_min(left_node),
+            Some(ref left_node) => Self::min(left_node),
             None => Some(Rc::clone(node)),
         }
     }
@@ -284,38 +262,6 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                 }
             }
             None => false,
-        }
-    }
-
-    pub fn min(&self) -> Option<T> {
-        match self.0 {
-            Some(ref node) => match node.borrow().left {
-                Some(ref left) => Self::min(&left.borrow()),
-                None => {
-                    //We are cloning key  here
-                    Some(node.borrow().key.clone())
-                }
-            },
-            None => None,
-        }
-    }
-
-    pub fn in_order(&self) -> Vec<T> {
-        let mut traversed = Vec::new();
-        Self::inorder(self, &mut traversed);
-        traversed
-    }
-
-    fn inorder(&self, traversed: &mut Vec<T>) {
-        if let Some(ref node) = self.0 {
-            if let Some(ref left) = node.borrow().left {
-                Self::inorder(&left.borrow(), traversed);
-            }
-            //Cloning is needed for this
-            traversed.push(node.borrow().key.clone());
-            if let Some(ref right) = node.borrow().right {
-                Self::inorder(&right.borrow(), traversed);
-            }
         }
     }
 
@@ -392,44 +338,9 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
             },
         }
     }
-
-    pub fn remove_min(&mut self) -> Option<T> {
-        match Self::parent_of_min(self) {
-            Some(ref mut parent) => {
-                let mut parent = parent.borrow_mut();
-                parent.evict_left()
-            }
-            None => match self.0 {
-                None => None,
-                Some(ref mut _node) => Self::remove_root_one_child(self, false),
-            },
-        }
-    }
-    //Remove root node with only left or right child
-    fn remove_root_one_child(tree: &mut Tree<T>, left: bool) -> Option<T> {
-        tree.0.take().map(|root| {
-            let mut node = root.borrow_mut();
-            let left_or_right = if left { &node.left } else { &node.right };
-            left_or_right.as_ref().map(|tree_| match tree_.take() {
-                Tree(None) => tree.0 = None,
-                Tree(left_or_right_tree) => tree.0 = left_or_right_tree,
-            });
-            std::mem::take(&mut node.key)
-        })
-    }
-
-    fn parent_of_min(&self) -> Option<Rc<RefCell<Node<T>>>> {
-        match self.0 {
-            Some(ref cell) => match cell.borrow().left {
-                Some(ref left) => Self::parent_of_min(&left.borrow()),
-                None => cell.borrow().upgraded_parent(),
-            },
-            None => None,
-        }
-    }
 }
 
-impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
+impl<T: Ord + Default + std::fmt::Debug> Node<T> {
     pub fn new(value: T) -> Self {
         Self {
             key: value,
@@ -500,133 +411,6 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn test_binary_search_tree_1() {
-        let mut tree = Tree::new(None::<i32>);
-        assert_eq!(tree.remove_min(), Some(None));
-    }
-    #[test]
-    fn test_binary_search_tree_2() {
-        let mut tree = Tree::new(42);
-        assert_eq!(tree.remove_min(), Some(42));
-        assert_eq!(tree.remove_min(), None);
-    }
-    #[test]
-    fn test_binary_search_tree_3() {
-        let mut tree = Tree::new(1);
-        tree.insert(2);
-        tree.insert(3);
-        assert_eq!(tree.remove_min(), Some(1));
-        assert_eq!(tree.remove_min(), Some(2));
-        assert_eq!(tree.remove_min(), Some(3));
-        assert_eq!(tree.remove_min(), None);
-    }
-
-    #[test]
-    fn test_binary_search_tree_4() {
-        let mut tree = Tree::new(3);
-        tree.insert(2);
-        tree.insert(1);
-        assert_eq!(tree.remove_min(), Some(1));
-        assert_eq!(tree.remove_min(), Some(2));
-        assert_eq!(tree.remove_min(), Some(3));
-        assert_eq!(tree.remove_min(), None);
-    }
-    #[test]
-    fn test_binary_search_tree_5() {
-        let mut tree = Tree::new(42);
-        tree.insert(42);
-        tree.insert(42);
-        assert_eq!(tree.remove_min(), Some(42));
-        assert_eq!(tree.remove_min(), None);
-    }
-
-    #[test]
-    fn test_binary_search_tree_6() {
-        let mut tree = Tree::new(42);
-        tree.insert(24);
-        assert_eq!(tree.remove_min(), Some(24));
-        assert_eq!(tree.remove_min(), Some(42));
-        assert_eq!(tree.remove_min(), None);
-    }
-
-    #[test]
-    fn test_binary_search_tree_7() {
-        let mut tree = Tree::new(42);
-        tree.insert(24);
-        tree.insert(40);
-        tree.insert(35);
-        assert_eq!(tree.remove_min(), Some(24));
-        assert_eq!(tree.remove_min(), Some(35));
-        assert_eq!(tree.remove_min(), Some(40));
-        assert_eq!(tree.remove_min(), Some(42));
-        assert_eq!(tree.remove_min(), None);
-    }
-
-    #[test]
-    fn test_binary_search_tree_8() {
-        let mut tree = Tree::new(1);
-        tree.insert(2);
-        tree.insert(3);
-        tree.insert(4);
-        assert_eq!(tree.remove_min(), Some(1));
-        assert_eq!(tree.remove_min(), Some(2));
-        assert_eq!(tree.remove_min(), Some(3));
-        assert_eq!(tree.remove_min(), Some(4));
-        assert_eq!(tree.remove_min(), None);
-    }
-
-    #[test]
-    fn test_binary_search_tree_9() {
-        let mut tree = Tree::new(10);
-        tree.insert(20);
-        tree.insert(15);
-        tree.insert(18);
-        assert_eq!(tree.min(), Some(10));
-        assert_eq!(tree.remove_min(), Some(10));
-        assert_eq!(tree.min(), Some(15));
-        assert_eq!(tree.remove_min(), Some(15));
-        assert_eq!(tree.remove_min(), Some(18));
-        assert_eq!(tree.remove_min(), Some(20));
-        assert_eq!(tree.remove_min(), None);
-    }
-
-    #[test]
-    fn test_binary_search_tree_10() {
-        let mut tree = Tree::new(10);
-        tree.insert(20);
-        tree.insert(15);
-        tree.insert(14);
-        tree.insert(13);
-        assert_eq!(tree.remove_min(), Some(10));
-        assert_eq!(tree.min(), Some(13));
-        assert_eq!(tree.remove_min(), Some(13));
-        assert_eq!(tree.remove_min(), Some(14));
-        assert_eq!(tree.remove_min(), Some(15));
-        assert_eq!(tree.remove_min(), Some(20));
-        assert_eq!(tree.remove_min(), None);
-    }
-
-    #[test]
-    fn test_binary_search_tree_11() {
-        let mut tree = Tree::new(1);
-        tree.insert(2);
-        tree.insert(3);
-        assert_eq!(tree.remove_min(), Some(1));
-        assert_eq!(tree.remove_min(), Some(2));
-        assert_eq!(tree.remove_min(), Some(3));
-        tree.insert(1);
-        assert_eq!(tree.remove_min(), Some(1));
-        assert_eq!(tree.remove_min(), None);
-
-        tree.insert(1);
-        tree.insert(2);
-        tree.insert(3);
-        assert_eq!(tree.remove_min(), Some(1));
-        assert_eq!(tree.remove_min(), Some(2));
-        assert_eq!(tree.remove_min(), Some(3));
-        assert_eq!(tree.remove_min(), None);
-    }
 
     #[test]
     fn test_identical() {
@@ -640,15 +424,6 @@ mod tests {
         tree2.insert(3);
         assert!(tree1.is_identical(&tree2));
         assert!(Tree::new(None::<String>).is_identical(&Tree::new(None)));
-    }
-
-    #[test]
-    fn test_in_order() {
-        let mut tree = Tree::new(42);
-        tree.insert(24);
-        tree.insert(40);
-        tree.insert(35);
-        assert_eq!(tree.in_order(), vec![24, 35, 40, 42]);
     }
 
     #[test]
@@ -688,22 +463,22 @@ mod tests {
         tree.insert(40);
         tree.insert(35);
         tree.insert(200);
-        assert!(Tree::find(&tree, &200).is_some());
-        assert!(Tree::find(&tree, &42).is_some());
-        assert!(Tree::find(&tree, &24).is_some());
-        assert!(Tree::find(&tree, &40).is_some());
-        assert!(Tree::find(&tree, &35).is_some());
-        assert!(Tree::find(&tree, &100).is_none());
+        assert!(tree.find(&200).is_some());
+        assert!(tree.find(&42).is_some());
+        assert!(tree.find(&24).is_some());
+        assert!(tree.find(&40).is_some());
+        assert!(tree.find(&35).is_some());
+        assert!(tree.find(&100).is_none());
     }
 
     #[test]
-    fn test_find_min() {
+    fn test_min() {
         let mut tree = Tree::new(42);
         tree.insert(24);
         tree.insert(40);
         tree.insert(35);
         tree.insert(5);
-        assert_eq!(Tree::find_min(&tree.0.unwrap()).unwrap().take().key, 5);
+        assert_eq!(Tree::min(&tree.0.unwrap()).unwrap().take().key, 5);
     }
 
     #[test]
@@ -713,34 +488,34 @@ mod tests {
         tree.insert(40);
         tree.insert(35);
         tree.insert(50);
-        assert!(Tree::find(&tree, &24).is_some());
+        assert!(tree.find(&24).is_some());
         tree.0.as_mut().unwrap().borrow_mut().delete_child(true);
-        assert!(Tree::find(&tree, &24).is_none());
+        assert!(tree.find(&24).is_none());
     }
 
     #[test]
     fn test_delete() {
         let mut tree = Tree::new(42);
-        let result = Tree::delete(&mut tree, &42);
-        assert!(Tree::find(&tree, &42).is_none());
+        let result = tree.delete(&42);
+        assert!(tree.find(&42).is_none());
         assert_eq!(result, Some(42));
         //Left only tree
         let mut tree = Tree::new(3);
         tree.insert(2);
         tree.insert(1);
-        let result = Tree::delete(&mut tree, &3);
-        assert!(Tree::find(&tree, &3).is_none());
+        let result = tree.delete(&3);
+        assert!(tree.find(&3).is_none());
         assert_eq!(result, Some(3));
-        let result = Tree::delete(&mut tree, &2);
+        let result = tree.delete(&2);
         assert_eq!(result, Some(2));
         //Right only tree
         let mut tree = Tree::new(1);
         tree.insert(2);
         tree.insert(3);
-        let result = Tree::delete(&mut tree, &1);
-        assert!(Tree::find(&tree, &1).is_none());
+        let result = tree.delete(&1);
+        assert!(tree.find(&1).is_none());
         assert_eq!(result, Some(1));
-        let result = Tree::delete(&mut tree, &2);
+        let result = tree.delete(&2);
         assert_eq!(result, Some(2));
     }
     #[test]
@@ -750,7 +525,7 @@ mod tests {
         tree.insert(10);
         tree.insert(30);
         tree.insert(25);
-        let result = Tree::delete(&mut tree, &20);
+        let result = tree.delete(&20);
         assert_eq!(result, Some(20));
     }
 
@@ -760,7 +535,7 @@ mod tests {
         let mut tree = Tree::new(20);
         tree.insert(10);
         tree.insert(30);
-        let result = Tree::delete(&mut tree, &20);
+        let result = tree.delete(&20);
         assert_eq!(result, Some(20));
     }
     #[test]
@@ -769,13 +544,13 @@ mod tests {
         let mut tree = Tree::new(20);
         tree.insert(10);
         tree.insert(30);
-        let result = Tree::delete(&mut tree, &10);
+        let result = tree.delete(&10);
         assert_eq!(result, Some(10));
-        assert!(Tree::find(&tree, &10).is_none());
+        assert!(tree.find(&10).is_none());
 
-        let result = Tree::delete(&mut tree, &30);
+        let result = tree.delete(&30);
         assert_eq!(result, Some(30));
-        assert!(Tree::find(&tree, &30).is_none());
+        assert!(tree.find(&30).is_none());
     }
 
     #[test]
@@ -786,24 +561,24 @@ mod tests {
         tree.insert(15);
         tree.insert(20);
         tree.insert(30);
-        let result = Tree::delete(&mut tree, &10);
+        let result = tree.delete(&10);
         assert_eq!(result, Some(10));
-        assert!(Tree::find(&tree, &10).is_none());
+        assert!(tree.find(&10).is_none());
 
-        assert!(Tree::find(&tree, &30).is_some());
-        let result = Tree::delete(&mut tree, &30);
+        assert!(tree.find(&30).is_some());
+        let result = tree.delete(&30);
         assert_eq!(result, Some(30));
-        assert!(Tree::find(&tree, &30).is_none());
+        assert!(tree.find(&30).is_none());
 
-        let result = Tree::delete(&mut tree, &25);
+        let result = tree.delete(&25);
         assert_eq!(result, Some(25));
-        assert!(Tree::find(&tree, &25).is_none());
-        let result = Tree::delete(&mut tree, &20);
+        assert!(tree.find(&25).is_none());
+        let result = tree.delete(&20);
         assert_eq!(result, Some(20));
-        assert!(Tree::find(&tree, &20).is_none());
-        let result = Tree::delete(&mut tree, &15);
+        assert!(tree.find(&20).is_none());
+        let result = tree.delete(&15);
         assert_eq!(result, Some(15));
-        assert!(Tree::find(&tree, &15).is_none());
+        assert!(tree.find(&15).is_none());
         assert!(tree.0.is_none())
     }
 
@@ -814,28 +589,28 @@ mod tests {
         tree.insert(15);
         tree.insert(20);
         tree.insert(5);
-        let result = Tree::delete(&mut tree, &10);
+        let result = tree.delete(&10);
         assert_eq!(result, Some(10));
-        assert!(Tree::find(&tree, &10).is_none());
+        assert!(tree.find(&10).is_none());
 
-        let result = Tree::delete(&mut tree, &25);
+        let result = tree.delete(&25);
         assert_eq!(result, Some(25));
-        assert!(Tree::find(&tree, &25).is_none());
+        assert!(tree.find(&25).is_none());
 
-        let result = Tree::delete(&mut tree, &20);
+        let result = tree.delete(&20);
         assert_eq!(result, Some(20));
-        assert!(Tree::find(&tree, &20).is_none());
+        assert!(tree.find(&20).is_none());
 
-        let result = Tree::delete(&mut tree, &5);
+        let result = tree.delete(&5);
         assert_eq!(result, Some(5));
-        assert!(Tree::find(&tree, &5).is_none());
+        assert!(tree.find(&5).is_none());
 
-        let result = Tree::delete(&mut tree, &15);
+        let result = tree.delete(&15);
         assert_eq!(result, Some(15));
-        assert!(Tree::find(&tree, &15).is_none());
+        assert!(tree.find(&15).is_none());
 
-        let result = Tree::delete(&mut tree, &15);
+        let result = tree.delete(&15);
         assert_eq!(result, None);
-        assert!(Tree::find(&tree, &15).is_none());
+        assert!(tree.find(&15).is_none());
     }
 }
