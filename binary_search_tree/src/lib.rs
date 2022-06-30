@@ -125,32 +125,18 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         }
     }
 
-    /***fn find(tree: &Tree<T>, key: &T) -> Option<Rc<RefCell<Node<T>>>> {
-        match tree.0 {
-            Some(ref node) if node.borrow().key == *key => Some(Rc::clone(node)),
-            Some(ref node) => match node.borrow().left {
-                Some(ref left) => Self::find(&left.borrow(), key),
-                None => match node.borrow().right {
-                    Some(ref right) => Self::find(&right.borrow(), key),
-                    None => None,
-                },
-            },
-            None => None,
-        }
-    }***/
-
     fn find(tree: &Tree<T>, key: &T) -> Option<Rc<RefCell<Node<T>>>> {
         match tree.0 {
-            Some(ref node) if node.borrow().key == *key => Some(Rc::clone(node)),
-            Some(ref node) if node.borrow().key > *key => match node.borrow().left {
+            Some(ref node) if node.borrow().key() == key => Some(Rc::clone(node)),
+            Some(ref node) if node.borrow().key() > key => match node.borrow().left {
                 Some(ref left) => Self::find(&left.borrow(), key),
                 None => None,
             },
-            Some(ref node) if node.borrow().key < *key => match node.borrow().right {
+            Some(ref node) if node.borrow().key() < key => match node.borrow().right {
                 Some(ref right) => Self::find(&right.borrow(), key),
                 None => None,
             },
-            Some(_) => None,
+            Some(_) => None,//Make the comiler happy
             None => None,
         }
     }
@@ -168,12 +154,10 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
     }
 
     pub fn delete(tree: &mut Tree<T>, key: &T) -> Option<T> {
-        let mut being_deleted = Self::find(tree, key);
-        println!("Check 1 $$$$$$$$$$$$$$$$$$$$$$$$$ {:?}", being_deleted);
-        match being_deleted {
+        let mut target = Self::find(tree, key);
+        match target {
             None => None,
             Some(ref node) => {
-                println!("Check 2 $$$$$$$$$$$$$$$$$$$$$$$$$");
                 let has_left = node.borrow().has_left();
                 let has_right = node.borrow().has_right();
 
@@ -250,21 +234,16 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
                     Some(ref mut parent) => match (no_child, has_left, has_right, has_both) {
                         (true, false, false, false) => {
                             let left = parent.borrow().is_left_child(key);
-                            println!("Is it left 1? ######### = {:?}", left);
                             parent.borrow_mut().delete_child(left)
                         }
                         (false, true, false, false) => {
-                            println!("Is it left???????????");
                             None
                         }
                         (false, false, true, false) => {
-                            println!("Failing here");
                             let left = parent.borrow().is_left_child(key);
-                            println!("Is it left ^^^^^^^^^^? = {:?}", left);
                             parent.borrow_mut().delete_child(left)
                         }
                         (false, true, true, true) => {
-                            println!("Gurur are you here");
                             None
                         }
                         (_, _, _, _) => None,
@@ -274,19 +253,9 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
         }
     }
 
-    /***fn find_min(node: &Rc<RefCell<Node<T>>>) -> Option<Rc<RefCell<Node<T>>>> {
+    fn find_min(node: &Rc<RefCell<Node<T>>>) -> Option<Rc<RefCell<Node<T>>>> {
         match node.borrow().left_node() {
             Some(ref left_node) => Self::find_min(left_node),
-            None => Some(Rc::clone(node)),
-        }
-    }***/
-
-    fn find_min(node: &Rc<RefCell<Node<T>>>) -> Option<Rc<RefCell<Node<T>>>> {
-        match node.borrow().left {
-            Some(ref tree) => match tree.borrow().0 {
-                Some(ref inner_node) => Self::find_min(inner_node),
-                None => Some(Rc::clone(node)),
-            },
             None => Some(Rc::clone(node)),
         }
     }
@@ -294,7 +263,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
     pub fn exists(&self, key: &T) -> bool {
         match self.0 {
             Some(ref node) => {
-                node.borrow().key == *key || {
+                node.borrow().key() == key || {
                     let in_left = match node.borrow().left {
                         Some(ref tree) => Self::exists(&tree.borrow(), key),
                         None => false,
@@ -335,6 +304,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Tree<T> {
             if let Some(ref left) = node.borrow().left {
                 Self::inorder(&left.borrow(), traversed);
             }
+            //Cloning is needed for this
             traversed.push(node.borrow().key.clone());
             if let Some(ref right) = node.borrow().right {
                 Self::inorder(&right.borrow(), traversed);
@@ -498,7 +468,7 @@ impl<T: Ord + Default + std::fmt::Debug + Clone> Node<T> {
         self.left
             .take() //Default is replacing inner in 'take' - No issues - left is wiped out anyway
             .and_then(|cell| {
-                //Left child(child to be deleted) inner cell
+                //Left child to be deleted is inner cell
                 cell.borrow().0.as_ref().map(|inner| {
                     let mut left_node = inner.take(); //Min node
                     let right_child_tree = left_node.right.take();
