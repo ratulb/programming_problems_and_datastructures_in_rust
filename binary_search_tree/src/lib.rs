@@ -78,6 +78,13 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
     pub fn new(value: T) -> Self {
         Tree(Some(Rc::new(RefCell::new(Node::new(value)))))
     }
+
+    fn new_branch(node: Node<T>) -> Option<Rc<RefCell<Tree<T>>>> {
+        Some(Rc::new(RefCell::new(Tree(Some(Rc::new(RefCell::new(
+            node,
+        )))))))
+    }
+
     pub fn insert(&mut self, value: T) {
         match self.0 {
             Some(ref mut cell) => {
@@ -89,9 +96,7 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                             let parent = Some(Rc::downgrade(&Rc::clone(cell)));
                             let mut left = Node::new(value);
                             left.parent = parent;
-                            node.left = Some(Rc::new(RefCell::new(Tree(Some(Rc::new(
-                                RefCell::new(left),
-                            ))))));
+                            node.left = Tree::new_branch(left);
                         }
                     }
                 } else if node.key < value {
@@ -101,14 +106,12 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                             let parent = Some(Rc::downgrade(&Rc::clone(cell)));
                             let mut right = Node::new(value);
                             right.parent = parent;
-                            node.right = Some(Rc::new(RefCell::new(Tree(Some(Rc::new(
-                                RefCell::new(right),
-                            ))))));
+                            node.right = Tree::new_branch(right);
                         }
                     }
                 }
             }
-            None => self.0 = Some(Rc::new(RefCell::new(Node::new(value)))),
+            None => self.0 = Node::wrapped_node(value),
         }
     }
 
@@ -421,7 +424,7 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Iterator for IterMut<'_, T> {
 }
 
 impl<T: Clone + Ord + Default + std::fmt::Debug> Node<T> {
-    pub fn new(value: T) -> Self {
+    fn new(value: T) -> Self {
         Self {
             key: value,
             left: None,
@@ -429,6 +432,11 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Node<T> {
             parent: None,
         }
     }
+
+    fn wrapped_node(value: T) -> Option<Rc<RefCell<Self>>> {
+        Some(Rc::new(RefCell::new(Node::new(value))))
+    }
+
     //Delete a node with single child
     fn delete_child(&mut self, left: bool) -> Option<T> {
         let deleted = match left {
