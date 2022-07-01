@@ -357,6 +357,15 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
             }),
         }
     }
+
+    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
+        IterMut {
+            tree: match self {
+                Tree(None) => None,
+                Tree(_) => Some(self),
+            },
+        }
+    }
 }
 #[derive(Debug)]
 pub struct Iter<T: Clone + Ord + Default + std::fmt::Debug> {
@@ -365,7 +374,7 @@ pub struct Iter<T: Clone + Ord + Default + std::fmt::Debug> {
 
 impl<T: Clone + Ord + Default + std::fmt::Debug> Iterator for Iter<T> {
     type Item = T;
-
+    //Level wise iterator
     fn next(&mut self) -> Option<Self::Item> {
         match self.next {
             None => None,
@@ -385,6 +394,28 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Iterator for Iter<T> {
                     }
                 }
             }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct IterMut<'a, T: Clone + Ord + Default + std::fmt::Debug> {
+    tree: Option<&'a mut Tree<T>>,
+}
+
+impl<T: Clone + Ord + Default + std::fmt::Debug> Iterator for IterMut<'_, T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.tree {
+            None => None,
+            Some(ref mut tree) => match tree.0 {
+                None => None,
+                Some(ref mut node) => {
+                    let key = node.borrow().key.clone();
+                    tree.delete(&key);
+                    Some(key)
+                }
+            },
         }
     }
 }
@@ -691,6 +722,21 @@ mod tests {
         tree.insert(20);
         tree.insert(5);
         let mut iter = tree.iter();
+        assert_eq!(iter.next(), Some(25));
+        assert_eq!(iter.next(), Some(10));
+        assert_eq!(iter.next(), Some(5));
+        assert_eq!(iter.next(), Some(15));
+        assert_eq!(iter.next(), Some(20));
+        assert_eq!(iter.next(), None);
+    }
+    #[test]
+    fn itermut_test() {
+        let mut tree = Tree::new(25);
+        tree.insert(10);
+        tree.insert(15);
+        tree.insert(20);
+        tree.insert(5);
+        let mut iter = tree.iter_mut();
         assert_eq!(iter.next(), Some(25));
         assert_eq!(iter.next(), Some(10));
         assert_eq!(iter.next(), Some(5));
