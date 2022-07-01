@@ -1,17 +1,18 @@
 use std::cell::RefCell;
+use std::collections::VecDeque;
 use std::rc::{Rc, Weak};
 #[derive(Debug, Default)]
 //Default is for the case when we delete a node. We get the value out of the deleted node by
 //pushing a default value into it.
 
-struct Node<T: Ord + Default + std::fmt::Debug> {
+struct Node<T: Clone + Ord + Default + std::fmt::Debug> {
     key: T,
     left: Option<Rc<RefCell<Tree<T>>>>,
     right: Option<Rc<RefCell<Tree<T>>>>,
     parent: Option<Weak<RefCell<Node<T>>>>,
 }
 
-impl<T: Ord + Default + std::fmt::Debug> Node<T> {
+impl<T: Clone + Ord + Default + std::fmt::Debug> Node<T> {
     fn key(&self) -> &T {
         &self.key
     }
@@ -71,9 +72,9 @@ impl<T: Ord + Default + std::fmt::Debug> Node<T> {
 }
 
 #[derive(Debug, Default)]
-pub struct Tree<T: Ord + Default + std::fmt::Debug>(Option<Rc<RefCell<Node<T>>>>);
+pub struct Tree<T: Clone + Ord + Default + std::fmt::Debug>(Option<Rc<RefCell<Node<T>>>>);
 
-impl<T: Ord + Default + std::fmt::Debug> Tree<T> {
+impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
     pub fn new(value: T) -> Self {
         Tree(Some(Rc::new(RefCell::new(Node::new(value)))))
     }
@@ -245,6 +246,14 @@ impl<T: Ord + Default + std::fmt::Debug> Tree<T> {
         }
     }
 
+    pub fn minimum(&self) -> Option<T> {
+        let node = self.root();
+        match node {
+            None => None,
+            Some(ref inner) => Self::min(inner).map(|n| n.borrow().key.clone()),
+        }
+    }
+
     pub fn exists(&self, key: &T) -> bool {
         match self.0 {
             Some(ref node) => {
@@ -338,9 +347,49 @@ impl<T: Ord + Default + std::fmt::Debug> Tree<T> {
             },
         }
     }
+
+    pub fn iter(&self) -> Iter<T> {
+        Iter {
+            next: self.root().map(|node| {
+                let mut next = VecDeque::new();
+                next.push_front(node);
+                next
+            }),
+        }
+    }
+}
+#[derive(Debug)]
+pub struct Iter<T: Clone + Ord + Default + std::fmt::Debug> {
+    next: Option<VecDeque<Rc<RefCell<Node<T>>>>>,
 }
 
-impl<T: Ord + Default + std::fmt::Debug> Node<T> {
+impl<T: Clone + Ord + Default + std::fmt::Debug> Iterator for Iter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.next {
+            None => None,
+            Some(ref mut queue) => {
+                let popped = queue.pop_back();
+                match popped {
+                    None => None,
+                    Some(ref node) => {
+                        let node = node.borrow();
+                        if let Some(ref left) = node.left_node() {
+                            queue.push_front(Rc::clone(left));
+                        }
+                        if let Some(ref right) = node.right_node() {
+                            queue.push_front(Rc::clone(right));
+                        }
+                        Some(node.key.clone())
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl<T: Clone + Ord + Default + std::fmt::Debug> Node<T> {
     pub fn new(value: T) -> Self {
         Self {
             key: value,
@@ -612,5 +661,41 @@ mod tests {
         let result = tree.delete(&15);
         assert_eq!(result, None);
         assert!(tree.find(&15).is_none());
+    }
+
+    #[test]
+    fn minimum_test() {
+        let mut tree = Tree::new(25);
+        tree.insert(10);
+        tree.insert(15);
+        tree.insert(20);
+        tree.insert(5);
+        assert_eq!(tree.minimum(), Some(5));
+        let _ = tree.delete(&5);
+        assert_eq!(tree.minimum(), Some(10));
+        let _ = tree.delete(&10);
+        assert_eq!(tree.minimum(), Some(15));
+        let _ = tree.delete(&15);
+        assert_eq!(tree.minimum(), Some(20));
+        let _ = tree.delete(&20);
+        assert_eq!(tree.minimum(), Some(25));
+        let _ = tree.delete(&25);
+        assert_eq!(tree.minimum(), None);
+    }
+
+    #[test]
+    fn iter_test() {
+        let mut tree = Tree::new(25);
+        tree.insert(10);
+        tree.insert(15);
+        tree.insert(20);
+        tree.insert(5);
+        let mut iter = tree.iter();
+        assert_eq!(iter.next(), Some(25));
+        assert_eq!(iter.next(), Some(10));
+        assert_eq!(iter.next(), Some(5));
+        assert_eq!(iter.next(), Some(15));
+        assert_eq!(iter.next(), Some(20));
+        assert_eq!(iter.next(), None);
     }
 }
