@@ -186,9 +186,7 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                                     });
                                 std::mem::take(&mut node.key)
                             }),
-                            (false, true, true, true) => {
-                                Node::delete_right_min(target)
-                            }
+                            (false, true, true, true) => Node::delete_right_min(target),
                             (_, _, _, _) => None,
                         }
                     }
@@ -203,9 +201,7 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                                 .map_or(false, |parent| parent.borrow().is_left_child(key));
                             parent.and_then(|parent| parent.borrow_mut().delete_child(left))
                         }
-                        (false, true, true, true) => {
-                            Node::delete_right_min(target)
-                        }
+                        (false, true, true, true) => Node::delete_right_min(target),
                         (_, _, _, _) => None,
                     },
                 }
