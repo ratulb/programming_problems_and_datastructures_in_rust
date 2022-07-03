@@ -145,9 +145,9 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
 
                 let has_both = has_left && has_right;
                 let no_child = !has_left && !has_right;
-                let mut node_parent = node.borrow().upgradded_parent();
-                match node_parent {
-                    None => {
+                let mut has_parent = node.borrow().parent.is_some();
+                match has_parent {
+                    false => {
                         //Delete root - root has no parent ref - hence differential treatment
                         match (no_child, has_left, has_right, has_both) {
                             (true, false, false, false) => {
@@ -187,9 +187,9 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                                 std::mem::take(&mut node.key)
                             }),
                             (false, true, true, true) => {
-                                let root = self.root();
+                                //    let root = self.root();
                                 //Parent of minimum node in the root's right tree
-                                let parent = root.as_ref().and_then(|root| {
+                                /***let parent = root.as_ref().and_then(|root| {
                                     root.borrow()
                                         .right_node() //Root's right tree
                                         .as_ref()
@@ -208,32 +208,38 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                                 let evicted =
                                     right_parent.and_then(|rp| rp.borrow_mut().evict_left());
                                 //Flush out the root's content with evicted node's content
-                                root.and_then(|r| r.borrow_mut().replace_key(evicted))
+                                root.and_then(|r| r.borrow_mut().replace_key(evicted))***/
+                                Node::delete_right_min(target)
                             }
                             (_, _, _, _) => None,
                         }
                     }
 
-                    Some(ref mut parent) => match (no_child, has_left, has_right, has_both) {
+                    true => match (no_child, has_left, has_right, has_both) {
                         (true, false, false, false)
                         | (false, true, false, false)
                         | (false, false, true, false) => {
-                            let left = parent.borrow().is_left_child(key);
-                            parent.borrow_mut().delete_child(left)
+                            let mut parent = node.borrow().upgradded_parent();
+                            let left = parent
+                                .as_ref()
+                                .map_or(false, |parent| parent.borrow().is_left_child(key));
+                            parent.and_then(|parent| parent.borrow_mut().delete_child(left))
                         }
                         (false, true, true, true) => {
-                            let min_parent = node
+                            /***let min_parent = node
                                 .borrow()
                                 .right_node()
                                 .as_ref()
                                 .and_then(Self::min)
                                 .as_ref()
                                 .and_then(|min_on_right| min_on_right.borrow().upgradded_parent());
+                            let node_parent = node.borrow().upgradded_parent();
                             let right_parent =
                                 Node::right_parent(node_parent.as_ref(), min_parent.as_ref());
                             let evicted = right_parent.and_then(|rp| rp.borrow_mut().evict_left());
                             //Flush out the node's content with evicted node's content
-                            node.borrow_mut().replace_key(evicted)
+                            node.borrow_mut().replace_key(evicted)***/
+                            Node::delete_right_min(target)
                         }
                         (_, _, _, _) => None,
                     },
@@ -518,6 +524,34 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Node<T> {
             min.map(|min| min.take().key)
         })
     }
+
+    fn delete_right_min(mut node: Option<Rc<RefCell<Node<T>>>>) -> Option<T> {
+        let min = node
+            .as_ref()
+            .and_then(|node| node.borrow().right_node().as_ref().and_then(Tree::min));
+        let min_parent = min.as_ref().and_then(|min| min.borrow().upgradded_parent());
+        let mut min_right_child = min.as_ref().and_then(|min| {
+            min.borrow_mut()
+                .right
+                .take()
+                .as_ref()
+                .and_then(|child| child.borrow().root())
+        });
+        if let Some(ref mut child_node) = min_right_child {
+            child_node.borrow_mut().parent = min
+                .as_ref()
+                .and_then(|min| min.borrow().parent.as_ref().map(|parent| parent.clone()));
+        }
+        let mut right_parent = Node::right_parent(node.as_ref(), min_parent.as_ref());
+        if let Some(ref mut parent) = right_parent {
+            parent.borrow_mut().right =
+                min_right_child.map(|right_child| Rc::new(RefCell::new(Tree(Some(right_child)))));
+        }
+        match node {
+            Some(ref mut node) => node.borrow_mut().replace_key(min.map(|min| min.take().key)),
+            None => None,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -778,7 +812,7 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_min_on_right() {
+    fn test_delete_right_min() {
         let mut tree = Tree::new(25);
 
         tree.insert(10);
@@ -791,8 +825,46 @@ mod tests {
                 .and_then(|left| left.borrow().right_node())
         });
 
-        let deleted = Node::delete_min_on_right(node10);
+        println!("Target = {:?}", node10);
+        let deleted = Node::delete_right_min(node10);
         println!("Deleted = {:?}", deleted);
+        println!("Tree = {:?}", tree);
+    }
+
+    #[test]
+    fn test_delete_2() {
+        let mut tree = Tree::new(25);
+        tree.insert(10);
+        tree.insert(15);
+        tree.insert(20);
+        tree.insert(5);
+        let result = tree.delete(&10);
+        assert_eq!(result, Some(10));
+        println!("Tree = {:?}", tree);
+        let result = tree.delete(&15);
+        assert_eq!(result, Some(15));
+        println!("Tree = {:?}", tree);
+        let result = tree.delete(&25);
+        assert_eq!(result, Some(25));
+        println!("Tree = {:?}", tree);
+    }
+
+    #[test]
+    fn test_delete_3() {
+        let mut tree = Tree::new(27);
+        tree.insert(18);
+        tree.insert(24);
+        tree.insert(21);
+        tree.insert(25);
+        tree.insert(30);
+        let result = tree.delete(&24);
+        assert_eq!(result, Some(24));
+        println!("Tree = {:?}", tree);
+        let result = tree.delete(&21);
+        assert_eq!(result, Some(21));
+        println!("Tree = {:?}", tree);
+        let result = tree.delete(&27);
+        assert_eq!(result, Some(27));
         println!("Tree = {:?}", tree);
     }
 }
