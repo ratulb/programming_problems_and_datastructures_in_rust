@@ -187,28 +187,6 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                                 std::mem::take(&mut node.key)
                             }),
                             (false, true, true, true) => {
-                                //    let root = self.root();
-                                //Parent of minimum node in the root's right tree
-                                /***let parent = root.as_ref().and_then(|root| {
-                                    root.borrow()
-                                        .right_node() //Root's right tree
-                                        .as_ref()
-                                        .and_then(Self::min) //find the min
-                                        .and_then(|min| min.borrow().upgradded_parent())
-                                    //Min's parent
-                                });
-                                //Root itself could be the parent of min or some other node
-                                //on root's right side
-                                let right_parent =
-                                    Node::right_parent(root.as_ref(), parent.as_ref());
-                                //Tell the appropriate parent to evict its left side which is
-                                //the minimum
-                                //Rewiring of any subtree underneath minimum will happen during
-                                //eviction
-                                let evicted =
-                                    right_parent.and_then(|rp| rp.borrow_mut().evict_left());
-                                //Flush out the root's content with evicted node's content
-                                root.and_then(|r| r.borrow_mut().replace_key(evicted))***/
                                 Node::delete_right_min(target)
                             }
                             (_, _, _, _) => None,
@@ -226,19 +204,6 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                             parent.and_then(|parent| parent.borrow_mut().delete_child(left))
                         }
                         (false, true, true, true) => {
-                            /***let min_parent = node
-                                .borrow()
-                                .right_node()
-                                .as_ref()
-                                .and_then(Self::min)
-                                .as_ref()
-                                .and_then(|min_on_right| min_on_right.borrow().upgradded_parent());
-                            let node_parent = node.borrow().upgradded_parent();
-                            let right_parent =
-                                Node::right_parent(node_parent.as_ref(), min_parent.as_ref());
-                            let evicted = right_parent.and_then(|rp| rp.borrow_mut().evict_left());
-                            //Flush out the node's content with evicted node's content
-                            node.borrow_mut().replace_key(evicted)***/
                             Node::delete_right_min(target)
                         }
                         (_, _, _, _) => None,
@@ -805,9 +770,9 @@ mod tests {
         let mut iter = tree.iter_mut();
         assert_eq!(iter.next(), Some(25));
         assert_eq!(iter.next(), Some(10));
-        assert_eq!(iter.next(), Some(5));
         assert_eq!(iter.next(), Some(15));
         assert_eq!(iter.next(), Some(20));
+        assert_eq!(iter.next(), Some(5));
         assert_eq!(iter.next(), None);
     }
 
