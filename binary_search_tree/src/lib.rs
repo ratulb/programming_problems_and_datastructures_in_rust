@@ -42,7 +42,7 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Node<T> {
             .and_then(|tree| tree.borrow().0.as_ref().map(Rc::clone))
     }
 
-    fn upgraded_parent(&self) -> Option<Rc<RefCell<Node<T>>>> {
+    fn upgradded_parent(&self) -> Option<Rc<RefCell<Node<T>>>> {
         self.parent.as_ref().and_then(|weak| weak.upgrade())
     }
 
@@ -87,13 +87,13 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
 
     pub fn insert(&mut self, value: T) {
         match self.0 {
-            Some(ref mut cell) => {
-                let mut node = cell.borrow_mut();
+            Some(ref mut curr_tree_root) => {
+                let mut node = curr_tree_root.borrow_mut();
                 if node.key > value {
                     match node.left {
                         Some(ref mut tree) => Self::insert(&mut tree.borrow_mut(), value),
                         None => {
-                            let parent = Some(Rc::downgrade(&Rc::clone(cell)));
+                            let parent = Some(Rc::downgrade(&Rc::clone(curr_tree_root)));
                             let mut left = Node::new(value);
                             left.parent = parent;
                             node.left = Tree::new_branch(left);
@@ -103,7 +103,7 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                     match node.right {
                         Some(ref mut tree) => Self::insert(&mut tree.borrow_mut(), value),
                         None => {
-                            let parent = Some(Rc::downgrade(&Rc::clone(cell)));
+                            let parent = Some(Rc::downgrade(&Rc::clone(curr_tree_root)));
                             let mut right = Node::new(value);
                             right.parent = parent;
                             node.right = Tree::new_branch(right);
@@ -145,7 +145,7 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
 
                 let has_both = has_left && has_right;
                 let no_child = !has_left && !has_right;
-                let mut node_parent = node.borrow().upgraded_parent();
+                let mut node_parent = node.borrow().upgradded_parent();
                 match node_parent {
                     None => {
                         //Delete root - root has no parent ref - hence differential treatment
@@ -194,7 +194,7 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                                         .right_node() //Root's right tree
                                         .as_ref()
                                         .and_then(Self::min) //find the min
-                                        .and_then(|min| min.borrow().upgraded_parent())
+                                        .and_then(|min| min.borrow().upgradded_parent())
                                     //Min's parent
                                 });
                                 //Root itself could be the parent of min or some other node
@@ -228,7 +228,7 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                                 .as_ref()
                                 .and_then(Self::min)
                                 .as_ref()
-                                .and_then(|min_on_right| min_on_right.borrow().upgraded_parent());
+                                .and_then(|min_on_right| min_on_right.borrow().upgradded_parent());
                             let right_parent =
                                 Node::right_parent(node_parent.as_ref(), min_parent.as_ref());
                             let evicted = right_parent.and_then(|rp| rp.borrow_mut().evict_left());
@@ -494,6 +494,30 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Node<T> {
                 })
             })
     }
+
+    fn delete_min_on_right(right: Option<Rc<RefCell<Node<T>>>>) -> Option<T> {
+        right.as_ref().and_then(|node| {
+            let min = Tree::min(node);
+            let mut right_child = min.as_ref().and_then(|min| {
+                min.borrow_mut()
+                    .right
+                    .take()
+                    .as_ref()
+                    .and_then(|child| child.borrow().root())
+            });
+            let mut parent = min.as_ref().and_then(|min| min.borrow().upgradded_parent());
+            if let Some(ref mut child_node) = right_child {
+                child_node.borrow_mut().parent = min
+                    .as_ref()
+                    .and_then(|min| min.borrow().parent.as_ref().map(|parent| parent.clone()));
+            }
+            if let Some(ref mut parent) = parent {
+                parent.borrow_mut().right =
+                    right_child.map(|right_child| Rc::new(RefCell::new(Tree(Some(right_child)))));
+            }
+            min.map(|min| min.take().key)
+        })
+    }
 }
 
 #[cfg(test)]
@@ -751,5 +775,24 @@ mod tests {
         assert_eq!(iter.next(), Some(15));
         assert_eq!(iter.next(), Some(20));
         assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_delete_min_on_right() {
+        let mut tree = Tree::new(25);
+
+        tree.insert(10);
+        tree.insert(15);
+        tree.insert(20);
+        tree.insert(5);
+        let node10 = tree.root().and_then(|root| {
+            root.borrow()
+                .left_node()
+                .and_then(|left| left.borrow().right_node())
+        });
+
+        let deleted = Node::delete_min_on_right(node10);
+        println!("Deleted = {:?}", deleted);
+        println!("Tree = {:?}", tree);
     }
 }
