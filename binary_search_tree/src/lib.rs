@@ -462,10 +462,10 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Node<T> {
             })
     }
 
-    fn delete(mut node: Option<Rc<RefCell<Node<T>>>>) -> Option<T> {
-        let min = node
+    fn delete(mut target: Option<Rc<RefCell<Node<T>>>>) -> Option<T> {
+        let min = target
             .as_ref()
-            .and_then(|node| node.borrow().right_node().as_ref().and_then(Tree::min));
+            .and_then(|target| target.borrow().right_node().as_ref().and_then(Tree::min));
         let min_parent = min.as_ref().and_then(|min| min.borrow().upgrade_parent());
         let mut min_right_child = min.as_ref().and_then(|min| {
             min.borrow_mut()
@@ -479,13 +479,15 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Node<T> {
                 .as_ref()
                 .and_then(|min| min.borrow().parent().as_ref().map(|parent| parent.clone()));
         }
-        let mut right_parent = Node::right_parent(node.as_ref(), min_parent.as_ref());
+        let mut right_parent = Node::right_parent(target.as_ref(), min_parent.as_ref());
         if let Some(ref mut parent) = right_parent {
             parent.borrow_mut().right =
                 min_right_child.map(|right_child| Rc::new(RefCell::new(Tree(Some(right_child)))));
         }
-        match node {
-            Some(ref mut node) => node.borrow_mut().replace_key(min.map(|min| min.take().key)),
+        match target {
+            Some(ref mut target) => target
+                .borrow_mut()
+                .replace_key(min.map(|min| min.take().key)),
             None => None,
         }
     }
