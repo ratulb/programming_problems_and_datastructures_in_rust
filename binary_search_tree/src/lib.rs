@@ -42,7 +42,7 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Node<T> {
             .and_then(|tree| tree.borrow().0.as_ref().map(Rc::clone))
     }
 
-    fn upgradded_parent(&self) -> Option<Rc<RefCell<Node<T>>>> {
+    fn upgrade_parent(&self) -> Option<Rc<RefCell<Node<T>>>> {
         self.parent.as_ref().and_then(|weak| weak.upgrade())
     }
 
@@ -186,7 +186,7 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                                     });
                                 std::mem::take(&mut node.key)
                             }),
-                            (false, true, true, true) => Node::delete_right_min(target),
+                            (false, true, true, true) => Node::delete(target),
                             (_, _, _, _) => None,
                         }
                     }
@@ -195,13 +195,13 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Tree<T> {
                         (true, false, false, false)
                         | (false, true, false, false)
                         | (false, false, true, false) => {
-                            let parent = node.borrow().upgradded_parent();
+                            let parent = node.borrow().upgrade_parent();
                             let left = parent
                                 .as_ref()
                                 .map_or(false, |parent| parent.borrow().is_left_child(key));
                             parent.and_then(|parent| parent.borrow_mut().delete_child(left))
                         }
-                        (false, true, true, true) => Node::delete_right_min(target),
+                        (false, true, true, true) => Node::delete(target),
                         (_, _, _, _) => None,
                     },
                 }
@@ -462,11 +462,11 @@ impl<T: Clone + Ord + Default + std::fmt::Debug> Node<T> {
             })
     }
 
-    fn delete_right_min(mut node: Option<Rc<RefCell<Node<T>>>>) -> Option<T> {
+    fn delete(mut node: Option<Rc<RefCell<Node<T>>>>) -> Option<T> {
         let min = node
             .as_ref()
             .and_then(|node| node.borrow().right_node().as_ref().and_then(Tree::min));
-        let min_parent = min.as_ref().and_then(|min| min.borrow().upgradded_parent());
+        let min_parent = min.as_ref().and_then(|min| min.borrow().upgrade_parent());
         let mut min_right_child = min.as_ref().and_then(|min| {
             min.borrow_mut()
                 .right
@@ -749,7 +749,7 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_right_min() {
+    fn test_delete1() {
         let mut tree = Tree::new(25);
 
         tree.insert(10);
@@ -763,7 +763,7 @@ mod tests {
         });
 
         println!("Target = {:?}", node10);
-        let deleted = Node::delete_right_min(node10);
+        let deleted = Node::delete(node10);
         println!("Deleted = {:?}", deleted);
         println!("Tree = {:?}", tree);
     }
