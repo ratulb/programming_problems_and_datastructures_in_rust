@@ -1,4 +1,4 @@
-# Commonly encountered programming interview questions in rust
+# Programming problems in rust
 
 ## Programming problems
   - [Programming problems](#programming-problems)
