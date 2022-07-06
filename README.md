@@ -32,6 +32,7 @@
     - [Max heap data structure](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/max_heap/src/lib.rs)
     - [Product of array except self](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/product_of_array_except_self/src/lib.rs)
     - [K nearest point from a given point](https://github.com/ratulb/programming_interview_questions_in_rust/blob/master/k_nearest_points/src/lib.rs)
+    - [Book](https://github.com/ratulb/programming_problems_in_rust/blob/master/book/index.html)
    
     
 ## Quick Start
