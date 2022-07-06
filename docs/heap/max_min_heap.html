@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Tree height - Programming problems in rust</title>
+        <title>Max min heap - Programming problems in rust</title>
 
 
         <!-- Custom HTML head -->
@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/introduction.html"><strong aria-hidden="true">2.</strong> Binary search tree</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../binary_search_tree/tree_and_node.html"><strong aria-hidden="true">2.1.</strong> Tree and Node</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../binary_search_tree/basic_apis.html"><strong aria-hidden="true">2.1.1.</strong> Basic APIs</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_insert.html"><strong aria-hidden="true">2.1.2.</strong> Tree population</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_find.html"><strong aria-hidden="true">2.1.3.</strong> Tree find</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/node_delete.html"><strong aria-hidden="true">2.1.4.</strong> Node delete (Two children)</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/delete_child.html"><strong aria-hidden="true">2.1.5.</strong> Node delete (One or no child)</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_delete.html"><strong aria-hidden="true">2.1.6.</strong> Tree delete</a></li></ol></li><li class="chapter-item expanded "><a href="../binary_search_tree/additional.html"><strong aria-hidden="true">2.2.</strong> Additional APIs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../binary_search_tree/tree_minimum.html"><strong aria-hidden="true">2.2.1.</strong> Tree minimum</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_exists.html"><strong aria-hidden="true">2.2.2.</strong> Tree exists</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_identical.html"><strong aria-hidden="true">2.2.3.</strong> Tree identical</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_contains.html"><strong aria-hidden="true">2.2.4.</strong> Tree contains</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_iterator.html"><strong aria-hidden="true">2.2.5.</strong> Tree iterator</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_into_iterator.html"><strong aria-hidden="true">2.2.6.</strong> Tree into iterator</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_height.html" class="active"><strong aria-hidden="true">2.2.7.</strong> Tree height</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../heap/introduction.html"><strong aria-hidden="true">3.</strong> Heap</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../heap/max_heap.html"><strong aria-hidden="true">3.1.</strong> Max heap</a></li><li class="chapter-item expanded "><a href="../heap/min_heap.html"><strong aria-hidden="true">3.2.</strong> Min heap</a></li><li class="chapter-item expanded "><a href="../heap/max_min_heap.html"><strong aria-hidden="true">3.3.</strong> Max min heap</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/introduction.html"><strong aria-hidden="true">2.</strong> Binary search tree</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../binary_search_tree/tree_and_node.html"><strong aria-hidden="true">2.1.</strong> Tree and Node</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../binary_search_tree/basic_apis.html"><strong aria-hidden="true">2.1.1.</strong> Basic APIs</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_insert.html"><strong aria-hidden="true">2.1.2.</strong> Tree population</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_find.html"><strong aria-hidden="true">2.1.3.</strong> Tree find</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/node_delete.html"><strong aria-hidden="true">2.1.4.</strong> Node delete (Two children)</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/delete_child.html"><strong aria-hidden="true">2.1.5.</strong> Node delete (One or no child)</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_delete.html"><strong aria-hidden="true">2.1.6.</strong> Tree delete</a></li></ol></li><li class="chapter-item expanded "><a href="../binary_search_tree/additional.html"><strong aria-hidden="true">2.2.</strong> Additional APIs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../binary_search_tree/tree_minimum.html"><strong aria-hidden="true">2.2.1.</strong> Tree minimum</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_exists.html"><strong aria-hidden="true">2.2.2.</strong> Tree exists</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_identical.html"><strong aria-hidden="true">2.2.3.</strong> Tree identical</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_contains.html"><strong aria-hidden="true">2.2.4.</strong> Tree contains</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_iterator.html"><strong aria-hidden="true">2.2.5.</strong> Tree iterator</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_into_iterator.html"><strong aria-hidden="true">2.2.6.</strong> Tree into iterator</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_height.html"><strong aria-hidden="true">2.2.7.</strong> Tree height</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../heap/introduction.html"><strong aria-hidden="true">3.</strong> Heap</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../heap/max_heap.html"><strong aria-hidden="true">3.1.</strong> Max heap</a></li><li class="chapter-item expanded "><a href="../heap/min_heap.html"><strong aria-hidden="true">3.2.</strong> Min heap</a></li><li class="chapter-item expanded "><a href="../heap/max_min_heap.html" class="active"><strong aria-hidden="true">3.3.</strong> Max min heap</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -142,48 +142,171 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="tree-height"><a class="header" href="#tree-height">Tree height</a></h1>
-<h3 id="tree-height-function"><a class="header" href="#tree-height-function">Tree <code>height</code> function:</a></h3>
-<pre><code class="language-rust  ignore"> //Find the height of the tree
-    pub fn height(&amp;self) -&gt; usize {
-        let root = self.root();
-        match root {
-            None =&gt; 0,
-            Some(ref node)
-                if node.borrow().left_node().is_none() &amp; node.borrow().right_node().is_none() =&gt;
-            {
-                1
-            }
-            Some(ref node) =&gt; {
-                let left_tree_height = node
-                    .borrow()
-                    .left
-                    .as_ref()
-                    .map(|tree| Self::height(&amp;tree.borrow()))
-                    .unwrap_or(0);
-                let right_tree_height = node
-                    .borrow()
-                    .right
-                    .as_ref()
-                    .map(|tree| Self::height(&amp;tree.borrow()))
-                    .unwrap_or(0);
-                1 + std::cmp::max(left_tree_height, right_tree_height)
+                        <h1 id="max-min-heap"><a class="header" href="#max-min-heap">Max min heap</a></h1>
+<p>Here we present a <code>Heap</code> struct that can be used either as <code>min heap</code> or <code>max heap</code> based on how we
+instantiate it. <code>Heap::min</code> gives a min heap whereas <code>Heap::max</code> gives a max heap. Additionally, we
+can use the <code>Heap::with_capacity</code> to pass in a boolean flag to get a max or min heap.</p>
+<h3 id="below-is-the-code-for-the-heap-struct"><a class="header" href="#below-is-the-code-for-the-heap-struct">Below is the code for the heap struct:</a></h3>
+<pre><code class="language-rust  ignore">/***
+ * Implement a heap data structure that can be used as min or max heap
+ ***/
+
+pub struct Heap&lt;T: Ord&gt; {
+    elements: Vec&lt;T&gt;,
+    min: bool,
+}
+
+impl&lt;T: Ord&gt; Heap&lt;T&gt; {
+    //Creates min heap
+    pub fn min() -&gt; Self {
+        Heap {
+            elements: Vec::new(),
+            min: true,
+        }
+    }
+    //Creates a max heap
+    pub fn max() -&gt; Self {
+        Heap {
+            elements: Vec::new(),
+            min: false,
+        }
+    }
+
+    //Allocate memory upfront
+    //Creates a max or min heap based on the flag passed in
+    pub fn with_capacity(capacity: usize, min: bool) -&gt; Self {
+        Heap {
+            elements: Vec::with_capacity(capacity),
+            min,
+        }
+    }
+
+    pub fn size(&amp;self) -&gt; usize {
+        self.elements.len()
+    }
+
+    fn get_parent_index(index: usize) -&gt; Option&lt;usize&gt; {
+        match index {
+            0 =&gt; None,
+            _ =&gt; Some((index - 1) / 2),
+        }
+    }
+
+    fn left_child_index(index: usize) -&gt; usize {
+        2 * index + 1
+    }
+
+    fn right_child_index(index: usize) -&gt; usize {
+        2 * index + 2
+    }
+
+    fn has_parent(index: usize) -&gt; bool {
+        Self::get_parent_index(index).is_some()
+    }
+
+    fn has_left_child(&amp;self, index: usize) -&gt; bool {
+        Self::left_child_index(index) &lt; self.elements.len()
+    }
+
+    fn has_right_child(&amp;self, index: usize) -&gt; bool {
+        Self::right_child_index(index) &lt; self.elements.len()
+    }
+
+    fn parent(&amp;self, index: usize) -&gt; Option&lt;&amp;T&gt; {
+        match Self::has_parent(index) {
+            true =&gt; Some(&amp;self.elements[Self::get_parent_index(index).unwrap()]),
+            false =&gt; None,
+        }
+    }
+
+    fn left_child(&amp;self, index: usize) -&gt; Option&lt;&amp;T&gt; {
+        match self.has_left_child(index) {
+            true =&gt; Some(&amp;self.elements[Self::left_child_index(index)]),
+            false =&gt; None,
+        }
+    }
+
+    fn right_child(&amp;self, index: usize) -&gt; Option&lt;&amp;T&gt; {
+        match self.has_right_child(index) {
+            true =&gt; Some(&amp;self.elements[Self::right_child_index(index)]),
+            false =&gt; None,
+        }
+    }
+
+    pub fn insert(&amp;mut self, elem: T) {
+        self.elements.push(elem);
+        self.heapify_up();
+    }
+    //If max heap - take the inserted element up as long as it is bigger than its parent
+    //If min heap - take the inserted element up as long as it is smaller than its parent
+    fn heapify_up(&amp;mut self) {
+        let mut index = self.elements.len() - 1;
+        while Self::has_parent(index)
+            &amp;&amp; (!self.min &amp;&amp; self.parent(index) &lt; self.elements.get(index)
+                || (self.min &amp;&amp; self.parent(index) &gt; self.elements.get(index)))
+        {
+            let parent_index = Self::get_parent_index(index).unwrap();
+            self.elements.swap(parent_index, index);
+            index = parent_index;
+        }
+    }
+
+    pub fn remove(&amp;mut self) -&gt; Option&lt;T&gt; {
+        match self.is_empty() {
+            true =&gt; None,
+            false =&gt; {
+                let t = self.elements.swap_remove(0);
+                self.heapify_down();
+                Some(t)
             }
         }
     }
+
+    pub fn is_empty(&amp;self) -&gt; bool {
+        self.elements.len() == 0
+    }
+
+    pub fn top(&amp;self) -&gt; Option&lt;&amp;T&gt; {
+        match self.is_empty() {
+            true =&gt; None,
+            false =&gt; self.elements.get(0),
+        }
+    }
+
+    //If min heap, take the inserted element down as long as it is bigger than its children
+    //If max heap, take the inserted element down as long as it is smaller than its children
+    fn heapify_down(&amp;mut self) {
+        let mut index = 0;
+        while self.has_left_child(index) {
+            let mut child_index = Self::left_child_index(index);
+            if self.has_right_child(index)
+                &amp;&amp; (!self.min &amp;&amp; self.right_child(index) &gt; self.left_child(index)
+                    || (self.min &amp;&amp; self.right_child(index) &lt; self.left_child(index)))
+            {
+                child_index = Self::right_child_index(index);
+            }
+            if !self.min &amp;&amp; self.elements[index] &gt; self.elements[child_index] {
+                break;
+            } else if self.min &amp;&amp; self.elements[index] &lt; self.elements[child_index] {
+                break;
+            } else {
+                self.elements.swap(index, child_index);
+            }
+            index = child_index;
+        }
+    }
+}
 </code></pre>
+<p><a href="https://github.com/ratulb/programming_problems_in_rust/blob/master/heap/src/lib.rs">Source</a>.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../binary_search_tree/tree_into_iterator.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../heap/min_heap.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="../heap/introduction.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
-                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -191,13 +314,10 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../binary_search_tree/tree_into_iterator.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../heap/min_heap.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="../heap/introduction.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
-                    </a>
             </nav>
 
         </div>

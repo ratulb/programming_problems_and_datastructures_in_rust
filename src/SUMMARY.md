@@ -19,3 +19,4 @@
 * [Heap](./heap/introduction.md)
    * [Max heap](./heap/max_heap.md)
    * [Min heap](./heap/min_heap.md)
+   * [Max min heap](./heap/max_min_heap.md)
