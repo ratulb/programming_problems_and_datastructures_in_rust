@@ -438,6 +438,7 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
             },
         }
     }
+    
     //Find the height of the tree
     pub fn height(&self) -> usize {
         let root = self.root();
