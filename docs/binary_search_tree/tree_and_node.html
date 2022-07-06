@@ -148,18 +148,17 @@
 pub struct Tree&lt;T: Ord + Default + Clone + std::fmt::Debug&gt;(Option&lt;Rc&lt;RefCell&lt;Node&lt;T&gt;&gt;&gt;&gt;);
 
 </code></pre>
-<p>Our Tree is tuple struct which may or may contain a Node. The Node itself is wrapped inside a
+<p>Our Tree is tuple struct which may or may not contain a Node. The Node itself is wrapped inside a
 RefCell for interior mutability. The RefCell, in turn is wrapped inside a Rc for shared access.</p>
-<p>Our tree's keys(aka entries) are generic T. T must be of type <code>Ord</code> because that is how we decide
+<p>Our tree's keys (aka entries) are generic T. T must be of type <code>Ord</code> because that is how we decide
 which side of the tree an entry lands in.</p>
-<p>The generic type <code>T</code> is also implements <code>Default</code>. This we are utilising for flusing out key values while deleting a Node from the tree. This becomes necessary because rust is grumpy about holes in
+<p>The generic type <code>T</code> is also implements <code>Default</code>. This we are utilising for flushing out key values while deleting a Node from the tree. This becomes necessary because rust is grumpy about holes in
 memory.</p>
 <p>Clone was not strictly necessary - but we need it later - when we implement <code>Iterator</code> for the
 tree.</p>
 <p>Debug is, of course, for printing the tree. Next, we define our <code>Node</code>.</p>
 <h3 id="we-define-our-node-as-follows"><a class="header" href="#we-define-our-node-as-follows">We define our Node as follows:</a></h3>
-<pre><code class="language-rust  ignore">
-struct Node&lt;T: Ord + Default + Clone + std::fmt::Debug&gt; {
+<pre><code class="language-rust  ignore">struct Node&lt;T: Ord + Default + Clone + std::fmt::Debug&gt; {
     key: T,
     left: Option&lt;Rc&lt;RefCell&lt;Tree&lt;T&gt;&gt;&gt;&gt;,
     right: Option&lt;Rc&lt;RefCell&lt;Tree&lt;T&gt;&gt;&gt;&gt;,

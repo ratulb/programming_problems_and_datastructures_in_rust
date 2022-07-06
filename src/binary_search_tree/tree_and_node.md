@@ -7,13 +7,13 @@
 pub struct Tree<T: Ord + Default + Clone + std::fmt::Debug>(Option<Rc<RefCell<Node<T>>>>);
 
 ```
-Our Tree is tuple struct which may or may contain a Node. The Node itself is wrapped inside a
+Our Tree is tuple struct which may or may not contain a Node. The Node itself is wrapped inside a
 RefCell for interior mutability. The RefCell, in turn is wrapped inside a Rc for shared access.
 
-Our tree's keys(aka entries) are generic T. T must be of type `Ord` because that is how we decide
+Our tree's keys (aka entries) are generic T. T must be of type `Ord` because that is how we decide
 which side of the tree an entry lands in.
 
-The generic type `T` is also implements `Default`. This we are utilising for flusing out key values while deleting a Node from the tree. This becomes necessary because rust is grumpy about holes in
+The generic type `T` is also implements `Default`. This we are utilising for flushing out key values while deleting a Node from the tree. This becomes necessary because rust is grumpy about holes in
 memory.
 
 Clone was not strictly necessary - but we need it later - when we implement `Iterator` for the
@@ -23,9 +23,7 @@ Debug is, of course, for printing the tree. Next, we define our `Node`.
 
 
 ### We define our Node as follows:
-
 ```rust ,ignore
-
 struct Node<T: Ord + Default + Clone + std::fmt::Debug> {
     key: T,
     left: Option<Rc<RefCell<Tree<T>>>>,

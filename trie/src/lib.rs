@@ -22,7 +22,7 @@ impl Trie {
     pub fn new() -> Self {
         Trie { root: Node::new() }
     }
-
+    //Insert a word into the Trie
     pub fn insert(&mut self, word: &str) {
         let mut current = &mut self.root;
         let mut chars = word.chars();
@@ -31,7 +31,7 @@ impl Trie {
         }
         current.is_word = true;
     }
-
+    //Seach for word in the Trie
     pub fn search(&self, word: &str) -> bool {
         let mut current = &self.root;
         let mut chars = word.chars();
@@ -43,7 +43,7 @@ impl Trie {
         }
         current.is_word
     }
-
+    //Is there a word that starts with the given prefix
     pub fn starts_with(&self, prefix: &str) -> bool {
         let mut current = &self.root;
         let mut chars = prefix.chars();

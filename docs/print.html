@@ -150,7 +150,7 @@
 unlike linked list provide fast lookup time. Arrangement of entries are ordered. By convention -
 for a given entry, smaller entries are always on its left and biggers are always on the right.</p>
 <h2 id="binary-search-tree-implementation-in-rust"><a class="header" href="#binary-search-tree-implementation-in-rust">Binary search tree implementation in rust</a></h2>
-<p>Binary search trees(henceforth called BSTs) can be implemented in rust without parent pointers.
+<p>Binary search trees (henceforth called BSTs) can be implemented in rust without parent pointers.
 But deletion of an entry becomes somewhat clunky without parent pointers.</p>
 <p>Here we implement a BST in rust with parent pointers. Both left and right child point to their 
 parent. We make use of <a href="https://doc.rust-lang.org/std/rc/struct.Rc.html">shared references</a> -
@@ -159,11 +159,11 @@ Reference counted pointer alone - <a href="https://doc.rust-lang.org/std/rc/stru
 useful in itself - atleast in this context - since we 'Rc' provides mutable reference to its inner
 content - only if there is no other existing reference to it already. This, obviously, is not 
 the case here - because children will be pointing to it all the time. We need to be able to
-mutate(for example -change its value or delete) it - while there are outstanding child references
-to a it. We need <a href="https://doc.rust-lang.org/book/ch15-05-interior-mutability.html">shared interior mutability</a>. This is where <a href="https://doc.rust-lang.org/std/cell/struct.RefCell.html">RefCell</a> comes handy - it provides interior mutability when no existing 'borrow'(mutable and immutable) is in the
+mutate (for example -change its value or delete) it - while there are outstanding child references
+to a it. We need <a href="https://doc.rust-lang.org/book/ch15-05-interior-mutability.html">shared interior mutability</a>. This is where <a href="https://doc.rust-lang.org/std/cell/struct.RefCell.html">RefCell</a> comes handy - it provides interior mutability when no existing 'borrow' (mutable and immutable) is in the
 context and multiple shared references when there exists no mutable borrow.</p>
 <p>One last thing though. If parent contains(optionally) a child and child points back at its parent,
-while deleting a parent - its reference count will still be 1(or 2). Since parent's reference countis not 0 - it would not be dropped - it would be lingering in memory leading to a <a href="https://doc.rust-lang.org/book/ch15-06-reference-cycles.html">leaky situation</a>. This is certainly undesirable and we
+while deleting a parent - its reference count will still be 1(or 2). Since parent's reference count is not 0 - it would not be dropped - it would be lingering in memory leading to a <a href="https://doc.rust-lang.org/book/ch15-06-reference-cycles.html">leaky situation</a>. This is certainly undesirable and we
 don't want this. Which is why we want our parent pointers to be <a href="https://doc.rust-lang.org/std/rc/struct.Weak.html">weak</a> ones so that we can drop parents even when there are outstanding weak references to it.</p>
 <p>With these understanding so far - next we define our Tree and Node. </p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="tree-and-node-definition"><a class="header" href="#tree-and-node-definition">Tree and Node definition</a></h1>
@@ -172,18 +172,17 @@ don't want this. Which is why we want our parent pointers to be <a href="https:/
 pub struct Tree&lt;T: Ord + Default + Clone + std::fmt::Debug&gt;(Option&lt;Rc&lt;RefCell&lt;Node&lt;T&gt;&gt;&gt;&gt;);
 
 </code></pre>
-<p>Our Tree is tuple struct which may or may contain a Node. The Node itself is wrapped inside a
+<p>Our Tree is tuple struct which may or may not contain a Node. The Node itself is wrapped inside a
 RefCell for interior mutability. The RefCell, in turn is wrapped inside a Rc for shared access.</p>
-<p>Our tree's keys(aka entries) are generic T. T must be of type <code>Ord</code> because that is how we decide
+<p>Our tree's keys (aka entries) are generic T. T must be of type <code>Ord</code> because that is how we decide
 which side of the tree an entry lands in.</p>
-<p>The generic type <code>T</code> is also implements <code>Default</code>. This we are utilising for flusing out key values while deleting a Node from the tree. This becomes necessary because rust is grumpy about holes in
+<p>The generic type <code>T</code> is also implements <code>Default</code>. This we are utilising for flushing out key values while deleting a Node from the tree. This becomes necessary because rust is grumpy about holes in
 memory.</p>
 <p>Clone was not strictly necessary - but we need it later - when we implement <code>Iterator</code> for the
 tree.</p>
 <p>Debug is, of course, for printing the tree. Next, we define our <code>Node</code>.</p>
 <h3 id="we-define-our-node-as-follows"><a class="header" href="#we-define-our-node-as-follows">We define our Node as follows:</a></h3>
-<pre><code class="language-rust  ignore">
-struct Node&lt;T: Ord + Default + Clone + std::fmt::Debug&gt; {
+<pre><code class="language-rust  ignore">struct Node&lt;T: Ord + Default + Clone + std::fmt::Debug&gt; {
     key: T,
     left: Option&lt;Rc&lt;RefCell&lt;Tree&lt;T&gt;&gt;&gt;&gt;,
     right: Option&lt;Rc&lt;RefCell&lt;Tree&lt;T&gt;&gt;&gt;&gt;,
