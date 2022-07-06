@@ -24,3 +24,4 @@
 * [Longest common prefix/suffixes](./prefix_suffix/introduction.md)
    * [Longest common prefix](./prefix_suffix/longest_prefix.md)
    * [Longest common suffix](./prefix_suffix/longest_suffix.md)
+* [String permutation](./permutations/introduction.md)
