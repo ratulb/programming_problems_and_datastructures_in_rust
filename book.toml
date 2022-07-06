@@ -1,0 +1,13 @@
+[book]
+authors = ["Ratul Buragohain"]
+language = "en"
+multilingual = false
+src = "src"
+title = "A rust binary search with parent pointers"
+description = "A rust binary search with parent pointers"
+
+[build]
+build-dir = "book"
+
+[output.html]
+git-repository-url = "https://github.com/ratulb/programming_problems_in_rust"
