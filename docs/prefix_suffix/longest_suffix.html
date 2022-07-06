@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Heap - Programming problems in rust</title>
+        <title>Longest common suffix - Programming problems in rust</title>
 
 
         <!-- Custom HTML head -->
@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/introduction.html"><strong aria-hidden="true">2.</strong> Binary search tree</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../binary_search_tree/tree_and_node.html"><strong aria-hidden="true">2.1.</strong> Tree and Node</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../binary_search_tree/basic_apis.html"><strong aria-hidden="true">2.1.1.</strong> Basic APIs</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_insert.html"><strong aria-hidden="true">2.1.2.</strong> Tree population</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_find.html"><strong aria-hidden="true">2.1.3.</strong> Tree find</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/node_delete.html"><strong aria-hidden="true">2.1.4.</strong> Node delete (Two children)</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/delete_child.html"><strong aria-hidden="true">2.1.5.</strong> Node delete (One or no child)</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_delete.html"><strong aria-hidden="true">2.1.6.</strong> Tree delete</a></li></ol></li><li class="chapter-item expanded "><a href="../binary_search_tree/additional.html"><strong aria-hidden="true">2.2.</strong> Additional APIs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../binary_search_tree/tree_minimum.html"><strong aria-hidden="true">2.2.1.</strong> Tree minimum</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_exists.html"><strong aria-hidden="true">2.2.2.</strong> Tree exists</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_identical.html"><strong aria-hidden="true">2.2.3.</strong> Tree identical</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_contains.html"><strong aria-hidden="true">2.2.4.</strong> Tree contains</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_iterator.html"><strong aria-hidden="true">2.2.5.</strong> Tree iterator</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_into_iterator.html"><strong aria-hidden="true">2.2.6.</strong> Tree into iterator</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_height.html"><strong aria-hidden="true">2.2.7.</strong> Tree height</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../heap/introduction.html" class="active"><strong aria-hidden="true">3.</strong> Heap</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../heap/max_heap.html"><strong aria-hidden="true">3.1.</strong> Max heap</a></li><li class="chapter-item expanded "><a href="../heap/min_heap.html"><strong aria-hidden="true">3.2.</strong> Min heap</a></li><li class="chapter-item expanded "><a href="../heap/max_min_heap.html"><strong aria-hidden="true">3.3.</strong> Max min heap</a></li></ol></li><li class="chapter-item expanded "><a href="../trie/introduction.html"><strong aria-hidden="true">4.</strong> Trie</a></li><li class="chapter-item expanded "><a href="../prefix_suffix/introduction.html"><strong aria-hidden="true">5.</strong> Longest common prefix/suffixes</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../prefix_suffix/longest_prefix.html"><strong aria-hidden="true">5.1.</strong> Longest common prefix</a></li><li class="chapter-item expanded "><a href="../prefix_suffix/longest_suffix.html"><strong aria-hidden="true">5.2.</strong> Longest common suffix</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/introduction.html"><strong aria-hidden="true">2.</strong> Binary search tree</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../binary_search_tree/tree_and_node.html"><strong aria-hidden="true">2.1.</strong> Tree and Node</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../binary_search_tree/basic_apis.html"><strong aria-hidden="true">2.1.1.</strong> Basic APIs</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_insert.html"><strong aria-hidden="true">2.1.2.</strong> Tree population</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_find.html"><strong aria-hidden="true">2.1.3.</strong> Tree find</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/node_delete.html"><strong aria-hidden="true">2.1.4.</strong> Node delete (Two children)</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/delete_child.html"><strong aria-hidden="true">2.1.5.</strong> Node delete (One or no child)</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_delete.html"><strong aria-hidden="true">2.1.6.</strong> Tree delete</a></li></ol></li><li class="chapter-item expanded "><a href="../binary_search_tree/additional.html"><strong aria-hidden="true">2.2.</strong> Additional APIs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../binary_search_tree/tree_minimum.html"><strong aria-hidden="true">2.2.1.</strong> Tree minimum</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_exists.html"><strong aria-hidden="true">2.2.2.</strong> Tree exists</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_identical.html"><strong aria-hidden="true">2.2.3.</strong> Tree identical</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_contains.html"><strong aria-hidden="true">2.2.4.</strong> Tree contains</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_iterator.html"><strong aria-hidden="true">2.2.5.</strong> Tree iterator</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_into_iterator.html"><strong aria-hidden="true">2.2.6.</strong> Tree into iterator</a></li><li class="chapter-item expanded "><a href="../binary_search_tree/tree_height.html"><strong aria-hidden="true">2.2.7.</strong> Tree height</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../heap/introduction.html"><strong aria-hidden="true">3.</strong> Heap</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../heap/max_heap.html"><strong aria-hidden="true">3.1.</strong> Max heap</a></li><li class="chapter-item expanded "><a href="../heap/min_heap.html"><strong aria-hidden="true">3.2.</strong> Min heap</a></li><li class="chapter-item expanded "><a href="../heap/max_min_heap.html"><strong aria-hidden="true">3.3.</strong> Max min heap</a></li></ol></li><li class="chapter-item expanded "><a href="../trie/introduction.html"><strong aria-hidden="true">4.</strong> Trie</a></li><li class="chapter-item expanded "><a href="../prefix_suffix/introduction.html"><strong aria-hidden="true">5.</strong> Longest common prefix/suffixes</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../prefix_suffix/longest_prefix.html"><strong aria-hidden="true">5.1.</strong> Longest common prefix</a></li><li class="chapter-item expanded "><a href="../prefix_suffix/longest_suffix.html" class="active"><strong aria-hidden="true">5.2.</strong> Longest common suffix</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -142,22 +142,68 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="heap"><a class="header" href="#heap">Heap</a></h1>
-<p>Heap data structure.</p>
-<p>First we implement a max heap, then a min heap and finally combine them together to provide an
-unified heap struct.</p>
+                        <h1 id="longest-suffix"><a class="header" href="#longest-suffix">Longest suffix</a></h1>
+<h3 id="solution-for-finding-longest-common-suffix-given-an-array-of-string"><a class="header" href="#solution-for-finding-longest-common-suffix-given-an-array-of-string">Solution for finding longest common suffix given an array of string:</a></h3>
+<pre><code class="language-rust  ignore">/***
+ * Given an array of strings, find the logests common suffix for them
+ ***/
+
+pub fn longest_common_suffix(arr: &amp;[&amp;str]) -&gt; String {
+    if arr.len() == 0 {
+        return String::new();
+    }
+    //Suffix would be as long as the min length of all the strings
+    let mut result = String::with_capacity(
+        arr.iter()
+            .min_by(|p, n| p.len().cmp(&amp;n.len()))
+            .unwrap()
+            .len(),
+    );
+    let mut first = arr[0].chars();
+    let mut rests: Vec&lt;_&gt; = arr[1..].iter().map(|s| s.chars()).collect();
+    while let Some(ch) = first.next_back() {
+        for i in 0..rests.len() {
+            let current = &amp;mut rests[i];
+            match current.next_back() {
+                Some(c) if c == ch =&gt; continue,
+                _ =&gt; return result,
+            }
+        }
+        //We are comming from the back - hence insert the next before the already existing char
+        result.insert(0, ch);
+    }
+    result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn longest_common_suffix_test() {
+        let arr = [&quot;privacy&quot;];
+        let result = longest_common_suffix(&amp;arr);
+        assert_eq!(result, String::from(&quot;privacy&quot;));
+
+        let arr = [&quot;privacy&quot;, &quot;fallacy&quot;, &quot;delicacy&quot;];
+        let result = longest_common_suffix(&amp;arr);
+        assert_eq!(result, String::from(&quot;acy&quot;));
+
+        let arr = [&quot;freedom&quot;, &quot;kingdom&quot;, &quot;boredom&quot;];
+        let result = longest_common_suffix(&amp;arr);
+        assert_eq!(result, String::from(&quot;dom&quot;));
+    }
+}
+</code></pre>
+<p><a href="https://github.com/ratulb/programming_problems_in_rust/blob/master/longest_common_suffix/src/lib.rs">Source</a></p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../binary_search_tree/tree_height.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../prefix_suffix/longest_prefix.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="../heap/max_heap.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
-                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -165,13 +211,10 @@ unified heap struct.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../binary_search_tree/tree_height.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../prefix_suffix/longest_prefix.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="../heap/max_heap.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
-                    </a>
             </nav>
 
         </div>

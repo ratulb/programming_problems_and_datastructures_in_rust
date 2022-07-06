@@ -1,3 +1,7 @@
+# Longest suffix
+
+### Solution for finding longest common suffix given an array of string:
+```rust, ignore
 /***
  * Given an array of strings, find the logests common suffix for them
  ***/
@@ -47,3 +51,5 @@ mod tests {
         assert_eq!(result, String::from("dom"));
     }
 }
+```
+[Source](https://github.com/ratulb/programming_problems_in_rust/blob/master/longest_common_suffix/src/lib.rs)
