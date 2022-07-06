@@ -18,3 +18,4 @@
       * [Tree height](./binary_search_tree/tree_height.md)
 * [Heap](./heap/introduction.md)
    * [Max heap](./heap/max_heap.md)
+   * [Min heap](./heap/min_heap.md)
