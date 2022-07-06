@@ -23,8 +23,8 @@ also have `~/.cargo/bin` in your PATH environment variable.
 Clone the 'solana_counter_program' repository into your development machine:
 ```bash
 $ cd /path/to/your/work/folder/
-$ git clone https://github.com/ratulb/programming_interview_questions_in_rust.git
-$ cd programming_interview_questions_in_rust
+$ git clone https://github.com/ratulb/programming_problems_in_rust.git
+$ cd programming_problems_in_rust
 ```
 (If you plan to submit changes in a pull request, be sure to create a fork first
 and then clone your fork.)
