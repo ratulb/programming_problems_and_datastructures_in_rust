@@ -16,3 +16,5 @@
       * [Tree iterator](./binary_search_tree/tree_iterator.md)
       * [Tree into iterator](./binary_search_tree/tree_into_iterator.md)
       * [Tree height](./binary_search_tree/tree_height.md)
+* [Heap](./heap/introduction.md)
+   * [Max heap](./heap/max_heap.md)

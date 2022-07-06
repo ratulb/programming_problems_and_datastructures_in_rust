@@ -1,3 +1,15 @@
+# Max heap
+
+In max heap - parent element is always bigger than its children. When we insert an element to the
+heap we insert it at right most postion of the underlying `Vec` data structure and comapre it with
+its parent and move it up as long as it is bigger than its parent.
+
+While removing - we take out the top element - replace it with the right most element. Next we,
+look at its children to check if it is smaller than them. We swap parent with the bigger one of its
+children and repeat the process til parent is no longer smaller than its children.
+
+### Following is the entire code for max heap:
+```rust, ignore
 /***
  * Implement a max heap data structure
  ***/
@@ -19,7 +31,7 @@ impl<T: Ord> MaxHeap<T> {
             elements: Vec::with_capacity(capacity),
         }
     }
-
+    
     pub fn size(&self) -> usize {
         self.elements.len()
     }
@@ -102,7 +114,7 @@ impl<T: Ord> MaxHeap<T> {
             }
         }
     }
-
+    
     pub fn is_empty(&self) -> bool {
         self.elements.len() == 0
     }
@@ -113,6 +125,7 @@ impl<T: Ord> MaxHeap<T> {
             false => self.elements.get(0),
         }
     }
+
     //Start at the top index element. If it is bigger than either of its children
     //we are done. Otherwise, bring top element down. Continue down.
     fn heapify_down(&mut self) {
@@ -131,24 +144,6 @@ impl<T: Ord> MaxHeap<T> {
         }
     }
 }
+```
 
-#[cfg(test)]
-mod tests {
-    use super::MaxHeap;
-    #[test]
-    fn max_heap_test() {
-        let mut max_heap = MaxHeap::with_capacity(10);
-        max_heap.insert(5);
-        max_heap.insert(7);
-        max_heap.insert(20);
-        assert_eq!(max_heap.remove(), Some(20));
-        assert_eq!(max_heap.remove(), Some(7));
-        assert_eq!(max_heap.remove(), Some(5));
-        assert_eq!(max_heap.remove(), None);
-        max_heap.insert(7);
-        max_heap.insert(5);
-        assert_eq!(max_heap.remove(), Some(7));
-        assert_eq!(max_heap.remove(), Some(5));
-        assert_eq!(max_heap.remove(), None);
-    }
-}
+
