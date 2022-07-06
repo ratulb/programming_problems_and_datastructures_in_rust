@@ -3,13 +3,13 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Tree exists - A rust binary search with parent pointers</title>
+        <title>Tree exists - Programming problems in rust</title>
 
 
         <!-- Custom HTML head -->
         
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <meta name="description" content="A rust binary search with parent pointers">
+        <meta name="description" content="Programming problems in rust">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
@@ -110,14 +110,11 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">A rust binary search with parent pointers</h1>
+                    <h1 class="menu-title">Programming problems in rust</h1>
 
                     <div class="right-buttons">
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
-                        </a>
-                        <a href="https://github.com/ratulb/programming_problems_in_rust" title="Git repository" aria-label="Git repository">
-                            <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
 
                     </div>
@@ -201,6 +198,22 @@ presence of the key.</p>
 
         </div>
 
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
 
 
 
