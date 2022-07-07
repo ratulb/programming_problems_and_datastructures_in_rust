@@ -3,6 +3,7 @@
  ***/
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
+
 #[derive(Debug, Default)]
 struct Node<T: std::fmt::Debug + Default + Clone + PartialEq> {
     key: T,
@@ -27,10 +28,17 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> From<Node<T>>
         Some(Rc::new(RefCell::new(node)))
     }
 }
+
 #[derive(Debug)]
 pub struct List<T: std::fmt::Debug + Default + Clone + PartialEq> {
     head: Option<Rc<RefCell<Node<T>>>>,
     tail: Option<Rc<RefCell<Node<T>>>>,
+}
+
+impl<T: std::fmt::Debug + Default + Clone + PartialEq> Default for List<T> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
@@ -46,7 +54,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
         match self.head {
             None => {
                 self.head = node;
-                self.tail = self.head.as_ref().map(|node| Rc::clone(node));
+                self.tail = self.head.as_ref().map(Rc::clone);
             }
             Some(ref mut head) => {
                 head.borrow_mut().prev = node.as_ref().map(|node| Rc::downgrade(&Rc::clone(node)));
@@ -63,7 +71,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
         match self.tail {
             None => {
                 self.head = node;
-                self.tail = self.head.as_ref().map(|node| Rc::clone(node));
+                self.tail = self.head.as_ref().map(Rc::clone);
             }
             Some(ref mut tail) => {
                 self.tail = node.take().map(|node| {
@@ -99,11 +107,10 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
             None => None,
             Some(ref mut tail) => {
                 self.tail = tail.borrow().prev.as_ref().and_then(|prev| {
-                    let prev = prev.upgrade().map(|prev| {
+                    prev.upgrade().map(|prev| {
                         prev.borrow_mut().next = None;
                         prev
-                    });
-                    prev
+                    })
                 });
                 if self.tail.is_none() {
                     self.head.take();
@@ -134,14 +141,14 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
     fn delete_inner(&mut self, target: &Rc<RefCell<Node<T>>>) -> Option<T> {
         let prev = target.borrow_mut().prev.take();
         let next = target.borrow_mut().next.take();
-        next.as_ref().map(|next| {
-            next.borrow_mut().prev = prev.as_ref().map(|prev| prev.clone());
-        });
-        prev.as_ref().map(|prev| {
-            prev.upgrade().map(|prev| {
+        if let Some(ref next) = next {
+            next.borrow_mut().prev = prev.as_ref().cloned();
+        }
+        if let Some(ref prev) = prev {
+            if let Some(prev) = prev.upgrade() {
                 prev.borrow_mut().next = next.as_ref().map(Rc::clone);
-            });
-        });
+            }
+        }
         Some(target.take().key)
     }
 
@@ -161,8 +168,8 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
     }
 
     //Returns an iterator that is used internally.
-    fn node_iter(&self) -> NodeIter<T> {
-        NodeIter {
+    fn node_iter(&self) -> NodeIterator<T> {
+        NodeIterator {
             next: self.head.as_ref().map(Rc::clone),
         }
     }
@@ -175,13 +182,13 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
         }
     }
 
-    pub fn iter_mut(&mut self) -> IntoIter<'_, T> {
-        IntoIter { list: self }
+    pub fn iter_mut(&mut self) -> IntoIterator<'_, T> {
+        IntoIterator { list: self }
     }
 }
 
 pub struct Iter<T: std::fmt::Debug + Default + Clone + PartialEq> {
-    next: NodeIter<T>,
+    next: NodeIterator<T>,
 }
 
 //Itearor that returns Option<T>
@@ -198,12 +205,12 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for Iter<T> {
     }
 }
 
-pub struct IntoIter<'a, T: std::fmt::Debug + Default + Clone + PartialEq> {
+pub struct IntoIterator<'a, T: std::fmt::Debug + Default + Clone + PartialEq> {
     list: &'a mut List<T>,
 }
 
 //Iterator that consumes the list elements from the front
-impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for IntoIter<'a, T> {
+impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for IntoIterator<'a, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -211,17 +218,17 @@ impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for IntoIter
     }
 }
 
-impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> DoubleEndedIterator for IntoIter<'a, T> {
+impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> DoubleEndedIterator for IntoIterator<'a, T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         self.list.pop_back()
     }
 }
 
-struct NodeIter<T: std::fmt::Debug + Default + Clone + PartialEq> {
+struct NodeIterator<T: std::fmt::Debug + Default + Clone + PartialEq> {
     next: Option<Rc<RefCell<Node<T>>>>,
 }
 
-impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for NodeIter<T> {
+impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for NodeIterator<T> {
     type Item = Rc<RefCell<Node<T>>>;
 
     fn next(&mut self) -> Option<Self::Item> {
