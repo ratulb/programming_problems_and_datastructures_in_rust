@@ -75,6 +75,24 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
         }
     }
 
+    //Pop out from the front of the list
+    pub fn pop_front(&mut self) -> Option<T> {
+        match self.head.take() {
+            None => None,
+            Some(ref mut head) => {
+                self.head = head.borrow_mut().next.take().map(|next| {
+                    next.borrow_mut().prev.take();
+                    next
+                });
+                if self.head.is_none() {
+                    self.tail.take();
+                }
+                //Use of default
+                Some(head.take().key)
+            }
+        }
+    }
+
     //Pop out from the back of the list
     pub fn pop_back(&mut self) -> Option<T> {
         match self.tail.take() {
@@ -112,78 +130,6 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
             .unwrap_or(false)
     }
 
-    //Is the node next to the head
-    fn succeeds_head(&self, node: Option<&Rc<RefCell<Node<T>>>>) -> bool {
-        self.head
-            .as_ref()
-            .and_then(|head| {
-                node.and_then(|node| {
-                    head.borrow()
-                        .next
-                        .as_ref()
-                        .map(|next| Rc::ptr_eq(next, node))
-                })
-            })
-            .unwrap_or(false)
-    }
-
-    //Node is prev to tail
-    fn preceeds_tail(&self, node: Option<&Rc<RefCell<Node<T>>>>) -> bool {
-        self.tail
-            .as_ref()
-            .and_then(|tail| {
-                node.and_then(|node| {
-                    tail.borrow()
-                        .prev
-                        .as_ref()
-                        .and_then(|prev| prev.upgrade().as_ref().map(|prev| Rc::ptr_eq(prev, node)))
-                })
-            })
-            .unwrap_or(false)
-    }
-
-    //Delete the entry next to head
-    fn delete_head_next(&mut self) -> Option<T> {
-        match self.head.as_ref().map(|head| {
-            let target = head.borrow().next.as_ref().map(Rc::clone);
-            let target_next = target
-                .as_ref()
-                .and_then(|target| target.borrow().next.as_ref().map(Rc::clone));
-            (Rc::clone(head), target, target_next)
-        }) {
-            None => None,
-            Some((head, target, target_next)) => {
-                target_next.as_ref().map(|target_next| {
-                    head.borrow_mut().next = Some(Rc::clone(target_next));
-                    target_next.borrow_mut().prev = Some(Rc::downgrade(&Rc::clone(&head)));
-                });
-                return target.map(|target| target.take().key);
-            }
-        }
-    }
-    //Delete the previous node of the tail
-    fn delete_tail_prev(&mut self) -> Option<T> {
-        match self.tail.as_ref().map(|tail| {
-            let target = tail.borrow().prev.as_ref().and_then(|prev| prev.upgrade());
-            let target_prev = target.as_ref().and_then(|target| {
-                target
-                    .borrow()
-                    .prev
-                    .as_ref()
-                    .and_then(|prev| prev.upgrade())
-            });
-            (Rc::clone(tail), target, target_prev)
-        }) {
-            None => None,
-            Some((tail, target, target_prev)) => {
-                target_prev.as_ref().map(|target_prev| {
-                    target_prev.borrow_mut().next = Some(Rc::clone(&tail));
-                    tail.borrow_mut().prev = Some(Rc::downgrade(&Rc::clone(target_prev)));
-                });
-                target.map(|target| target.take().key)
-            }
-        }
-    }
     //Delete a node that has previous and next
     fn delete_inner(&mut self, mut target: Option<&Rc<RefCell<Node<T>>>>) -> Option<T> {
         target.as_ref().map(|target| {
@@ -197,10 +143,6 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
                     prev.borrow_mut().next = next.as_ref().map(Rc::clone);
                 });
             });
-            if prev.is_none() && next.is_none() {
-                self.head = None;
-                self.tail = None;
-            }
         });
         target.take().map(|target| target.take().key)
     }
@@ -219,36 +161,9 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
             self.is_first(target.as_ref()),
             self.is_last(target.as_ref()),
         ) {
-            (true, false) => self.pop_front(),
+            (true, true) | (true, false) => self.pop_front(),
             (false, true) => self.pop_back(),
-            (_, _) => {
-                match (
-                    self.succeeds_head(target.as_ref()),
-                    self.preceeds_tail(target.as_ref()),
-                ) {
-                    (true, false) => self.delete_head_next(),
-                    (false, true) => self.delete_tail_prev(),
-                    (_, _) => self.delete_inner(target.as_ref()),
-                }
-            }
-        }
-    }
-
-    //Pop out from the front of the list
-    pub fn pop_front(&mut self) -> Option<T> {
-        match self.head.take() {
-            None => None,
-            Some(ref mut head) => {
-                self.head = head.borrow_mut().next.take().map(|next| {
-                    next.borrow_mut().prev.take();
-                    next
-                });
-                if self.head.is_none() {
-                    self.tail.take();
-                }
-                //Use of default
-                Some(head.take().key)
-            }
+            (_, _) => self.delete_inner(target.as_ref()),
         }
     }
 
@@ -400,21 +315,13 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_head_next() {
-        let mut list = List::new();
-        list.push_back(1);
-        list.push_back(2);
-        list.push_back(3);
-        assert_eq!(list.delete_head_next(), Some(2));
-        //assert_eq!(list.delete_head_next(), Some(3));
-    }
-    #[test]
     fn test_delete_inner() {
         let mut list = List::new();
         list.push_back(1);
         list.push_back(2);
         list.push_back(3);
         assert_eq!(list.delete(&2), Some(2));
+        println!("The list: {:?}", list);
         assert_eq!(list.delete(&1), Some(1));
         println!("The list: {:?}", list);
         assert_eq!(list.delete(&3), Some(3));
