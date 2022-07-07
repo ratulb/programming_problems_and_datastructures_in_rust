@@ -4,13 +4,13 @@
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 #[derive(Debug, Default)]
-struct Node<T: std::fmt::Debug + Default + Clone> {
+struct Node<T: std::fmt::Debug + Default + Clone + PartialEq> {
     key: T,
     next: Option<Rc<RefCell<Node<T>>>>,
     prev: Option<Weak<RefCell<Node<T>>>>,
 }
 
-impl<T: std::fmt::Debug + Default + Clone> Node<T> {
+impl<T: std::fmt::Debug + Default + Clone + PartialEq> Node<T> {
     pub fn new(key: T) -> Self {
         Self {
             key,
@@ -20,18 +20,20 @@ impl<T: std::fmt::Debug + Default + Clone> Node<T> {
     }
 }
 
-impl<T: std::fmt::Debug + Default + Clone> From<Node<T>> for Option<Rc<RefCell<Node<T>>>> {
+impl<T: std::fmt::Debug + Default + Clone + PartialEq> From<Node<T>>
+    for Option<Rc<RefCell<Node<T>>>>
+{
     fn from(node: Node<T>) -> Self {
         Some(Rc::new(RefCell::new(node)))
     }
 }
 #[derive(Debug)]
-pub struct List<T: std::fmt::Debug + Default + Clone> {
+pub struct List<T: std::fmt::Debug + Default + Clone + PartialEq> {
     head: Option<Rc<RefCell<Node<T>>>>,
     tail: Option<Rc<RefCell<Node<T>>>>,
 }
 
-impl<T: std::fmt::Debug + Default + Clone> List<T> {
+impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
     pub fn new() -> Self {
         Self {
             head: None,
@@ -94,6 +96,144 @@ impl<T: std::fmt::Debug + Default + Clone> List<T> {
         }
     }
 
+    //Is the passed in node reference the first in the list
+    fn is_first(&self, node: Option<&Rc<RefCell<Node<T>>>>) -> bool {
+        self.head
+            .as_ref()
+            .and_then(|head| node.map(|node| Rc::ptr_eq(head, node)))
+            .unwrap_or(false)
+    }
+
+    //Is the passed in node reference the last in the list
+    fn is_last(&self, node: Option<&Rc<RefCell<Node<T>>>>) -> bool {
+        self.tail
+            .as_ref()
+            .and_then(|tail| node.map(|node| Rc::ptr_eq(tail, node)))
+            .unwrap_or(false)
+    }
+
+    //Is the node next to the head
+    fn succeeds_head(&self, node: Option<&Rc<RefCell<Node<T>>>>) -> bool {
+        self.head
+            .as_ref()
+            .and_then(|head| {
+                node.and_then(|node| {
+                    head.borrow()
+                        .next
+                        .as_ref()
+                        .map(|next| Rc::ptr_eq(next, node))
+                })
+            })
+            .unwrap_or(false)
+    }
+
+    //Node is prev to tail
+    fn preceeds_tail(&self, node: Option<&Rc<RefCell<Node<T>>>>) -> bool {
+        self.tail
+            .as_ref()
+            .and_then(|tail| {
+                node.and_then(|node| {
+                    tail.borrow()
+                        .prev
+                        .as_ref()
+                        .and_then(|prev| prev.upgrade().as_ref().map(|prev| Rc::ptr_eq(prev, node)))
+                })
+            })
+            .unwrap_or(false)
+    }
+
+    //Delete the entry next to head
+    fn delete_head_next(&mut self) -> Option<T> {
+        match self.head.as_ref().map(|head| {
+            let target = head.borrow().next.as_ref().map(Rc::clone);
+            let target_next = target
+                .as_ref()
+                .and_then(|target| target.borrow().next.as_ref().map(Rc::clone));
+            (Rc::clone(head), target, target_next)
+        }) {
+            None => None,
+            Some((head, target, target_next)) => {
+                target_next.as_ref().map(|target_next| {
+                    head.borrow_mut().next = Some(Rc::clone(target_next));
+                    target_next.borrow_mut().prev = Some(Rc::downgrade(&Rc::clone(&head)));
+                });
+                return target.map(|target| target.take().key);
+            }
+        }
+    }
+    //Delete the previous node of the tail
+    fn delete_tail_prev(&mut self) -> Option<T> {
+        match self.tail.as_ref().map(|tail| {
+            let target = tail.borrow().prev.as_ref().and_then(|prev| prev.upgrade());
+            let target_prev = target.as_ref().and_then(|target| {
+                target
+                    .borrow()
+                    .prev
+                    .as_ref()
+                    .and_then(|prev| prev.upgrade())
+            });
+            (Rc::clone(tail), target, target_prev)
+        }) {
+            None => None,
+            Some((tail, target, target_prev)) => {
+                target_prev.as_ref().map(|target_prev| {
+                    target_prev.borrow_mut().next = Some(Rc::clone(&tail));
+                    tail.borrow_mut().prev = Some(Rc::downgrade(&Rc::clone(target_prev)));
+                });
+                target.map(|target| target.take().key)
+            }
+        }
+    }
+    //Delete a node that has previous and next
+    fn delete_inner(&mut self, mut target: Option<&Rc<RefCell<Node<T>>>>) -> Option<T> {
+        target.as_ref().map(|target| {
+            let prev = target.borrow_mut().prev.take();
+            let next = target.borrow_mut().next.take();
+            next.as_ref().map(|next| {
+                next.borrow_mut().prev = prev.as_ref().map(|prev| prev.clone());
+            });
+            prev.as_ref().map(|prev| {
+                prev.upgrade().map(|prev| {
+                    prev.borrow_mut().next = next.as_ref().map(Rc::clone);
+                });
+            });
+            if prev.is_none() && next.is_none() {
+                self.head = None;
+                self.tail = None;
+            }
+        });
+        target.take().map(|target| target.take().key)
+    }
+
+    //Delete a key from the list. We try to find the by using iterator find method.
+    //If found - we check if it first or last key in the list. If the found node
+    //happens to be first or last - we call pop_front or pop_back as required.
+    //If the key is in between head and and tail - the deletion is handled accordingly.
+    pub fn delete(&mut self, key: &T) -> Option<T> {
+        let mut node_iter = self.node_iter();
+        let target = node_iter.find(|node| node.borrow().key == *key);
+        if target.is_none() {
+            return None;
+        }
+        match (
+            self.is_first(target.as_ref()),
+            self.is_last(target.as_ref()),
+        ) {
+            (true, false) => self.pop_front(),
+            (false, true) => self.pop_back(),
+            (_, _) => {
+                match (
+                    self.succeeds_head(target.as_ref()),
+                    self.preceeds_tail(target.as_ref()),
+                ) {
+                    (true, false) => self.delete_head_next(),
+                    (false, true) => self.delete_tail_prev(),
+                    (_, _) => self.delete_inner(target.as_ref()),
+                }
+            }
+        }
+    }
+
     //Pop out from the front of the list
     pub fn pop_front(&mut self) -> Option<T> {
         match self.head.take() {
@@ -112,9 +252,18 @@ impl<T: std::fmt::Debug + Default + Clone> List<T> {
         }
     }
 
+    //Returns an iterator that is used internally.
+    fn node_iter(&self) -> NodeIter<T> {
+        NodeIter {
+            next: self.head.as_ref().map(Rc::clone),
+        }
+    }
+    //Returns an iterator for public consumtion. We are breaking rust convention here. Instead of
+    //returning Option<&T>, we return Option<T> when we call `next` on this iterator.
+    //We are cloning T.
     pub fn iter(&self) -> Iter<T> {
         Iter {
-            head: self.head.as_ref().map(Rc::clone),
+            next: self.node_iter(),
         }
     }
 
@@ -123,45 +272,30 @@ impl<T: std::fmt::Debug + Default + Clone> List<T> {
     }
 }
 
-pub struct Iter<T: std::fmt::Debug + Default + Clone> {
-    head: Option<Rc<RefCell<Node<T>>>>,
+pub struct Iter<T: std::fmt::Debug + Default + Clone + PartialEq> {
+    next: NodeIter<T>,
 }
 
 //Itearor that returns Option<T>
 //Values are cloned
 //Underlying list remain intact
-impl<T: std::fmt::Debug + Default + Clone> Iterator for Iter<T> {
+impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for Iter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.head {
-            None => None,
-            Some(_) => {
-                match self.head.as_ref().map(|head| {
-                    let head_node = head.borrow();
-                    (
-                        //Use of clone
-                        head_node.key.clone(),
-                        head_node.next.as_ref().map(Rc::clone),
-                    )
-                }) {
-                    None => None,
-                    Some(key_and_next_head) => {
-                        self.head = key_and_next_head.1;
-                        Some(key_and_next_head.0)
-                    }
-                }
-            }
-        }
+        self.next
+            .next()
+            .as_ref()
+            .map(|next| next.borrow().key.clone())
     }
 }
 
-pub struct IntoIter<'a, T: std::fmt::Debug + Default + Clone> {
+pub struct IntoIter<'a, T: std::fmt::Debug + Default + Clone + PartialEq> {
     list: &'a mut List<T>,
 }
 
 //Iterator that consumes the list elements from the front
-impl<'a, T: std::fmt::Debug + Default + Clone> Iterator for IntoIter<'a, T> {
+impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for IntoIter<'a, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -169,11 +303,11 @@ impl<'a, T: std::fmt::Debug + Default + Clone> Iterator for IntoIter<'a, T> {
     }
 }
 
-struct TreeIntoIter<T: std::fmt::Debug + Default + Clone> {
+struct NodeIter<T: std::fmt::Debug + Default + Clone + PartialEq> {
     next: Option<Rc<RefCell<Node<T>>>>,
 }
 
-impl<T: std::fmt::Debug + Default + Clone> Iterator for TreeIntoIter<T> {
+impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for NodeIter<T> {
     type Item = Rc<RefCell<Node<T>>>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -251,5 +385,39 @@ mod tests {
         assert_eq!(iter.next(), Some(2));
         assert_eq!(iter.next(), Some(3));
         assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_delete() {
+        let mut list = List::new();
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        list.delete(&100);
+        list.delete(&1);
+        list.delete(&3);
+        list.delete(&2);
+    }
+
+    #[test]
+    fn test_delete_head_next() {
+        let mut list = List::new();
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        assert_eq!(list.delete_head_next(), Some(2));
+        //assert_eq!(list.delete_head_next(), Some(3));
+    }
+    #[test]
+    fn test_delete_inner() {
+        let mut list = List::new();
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        assert_eq!(list.delete(&2), Some(2));
+        assert_eq!(list.delete(&1), Some(1));
+        println!("The list: {:?}", list);
+        assert_eq!(list.delete(&3), Some(3));
+        println!("The list: {:?}", list);
     }
 }
