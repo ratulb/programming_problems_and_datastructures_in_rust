@@ -147,8 +147,8 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
         target.take().map(|target| target.take().key)
     }
 
-    //Delete a key from the list. We try to find the by using iterator find method.
-    //If found - we check if it first or last key in the list. If the found node
+    //Delete a key from the list. We try to find the by using iterator `find` method.
+    //If found - we check if it is the first or last key in the list. If the found node
     //happens to be first or last - we call pop_front or pop_back as required.
     //If the key is in between head and and tail - the deletion is handled accordingly.
     pub fn delete(&mut self, key: &T) -> Option<T> {
@@ -215,6 +215,12 @@ impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for IntoIter
 
     fn next(&mut self) -> Option<Self::Item> {
         self.list.pop_front()
+    }
+}
+
+impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> DoubleEndedIterator for IntoIter<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.list.pop_back()
     }
 }
 
@@ -300,6 +306,21 @@ mod tests {
         assert_eq!(iter.next(), Some(2));
         assert_eq!(iter.next(), Some(3));
         assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_into_iter_both_ends() {
+        let mut list = List::new();
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+
+        let mut iter = list.iter_mut();
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next_back(), Some(3));
+        assert_eq!(iter.next(), Some(2));
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next_back(), None);
     }
 
     #[test]
