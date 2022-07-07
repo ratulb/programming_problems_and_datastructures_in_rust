@@ -118,8 +118,8 @@ impl<T: std::fmt::Debug + Default + Clone> List<T> {
         }
     }
 
-    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
-        IterMut { list: self }
+    pub fn iter_mut(&mut self) -> IntoIter<'_, T> {
+        IntoIter { list: self }
     }
 }
 
@@ -156,12 +156,12 @@ impl<T: std::fmt::Debug + Default + Clone> Iterator for Iter<T> {
     }
 }
 
-pub struct IterMut<'a, T: std::fmt::Debug + Default + Clone> {
+pub struct IntoIter<'a, T: std::fmt::Debug + Default + Clone> {
     list: &'a mut List<T>,
 }
 
 //Iterator that consumes the list elements from the front
-impl<'a, T: std::fmt::Debug + Default + Clone> Iterator for IterMut<'a, T> {
+impl<'a, T: std::fmt::Debug + Default + Clone> Iterator for IntoIter<'a, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -169,11 +169,11 @@ impl<'a, T: std::fmt::Debug + Default + Clone> Iterator for IterMut<'a, T> {
     }
 }
 
-struct TreeIterMut<T: std::fmt::Debug + Default + Clone> {
+struct TreeIntoIter<T: std::fmt::Debug + Default + Clone> {
     next: Option<Rc<RefCell<Node<T>>>>,
 }
 
-impl<T: std::fmt::Debug + Default + Clone> Iterator for TreeIterMut<T> {
+impl<T: std::fmt::Debug + Default + Clone> Iterator for TreeIntoIter<T> {
     type Item = Rc<RefCell<Node<T>>>;
 
     fn next(&mut self) -> Option<Self::Item> {
