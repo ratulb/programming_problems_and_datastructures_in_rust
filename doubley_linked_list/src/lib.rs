@@ -152,18 +152,13 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
     //happens to be first or last - we call pop_front or pop_back as required.
     //If the key is in between head and and tail - the deletion is handled accordingly.
     pub fn delete(&mut self, key: &T) -> Option<T> {
-        let mut node_iter = self.node_iter();
-        let target = node_iter.find(|node| node.borrow().key == *key);
-        if target.is_none() {
-            return None;
-        }
-        match (
-            self.is_first(target.as_ref()),
-            self.is_last(target.as_ref()),
-        ) {
-            (true, true) | (true, false) => self.pop_front(),
-            (false, true) => self.pop_back(),
-            (_, _) => self.delete_inner(target.as_ref()),
+        match self.node_iter().find(|node| node.borrow().key == *key) {
+            None => None,
+            Some(ref target) => match (self.is_first(Some(target)), self.is_last(Some(target))) {
+                (true, true) | (true, false) => self.pop_front(),
+                (false, true) => self.pop_back(),
+                (_, _) => self.delete_inner(Some(target)),
+            },
         }
     }
 
