@@ -114,20 +114,20 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
         }
     }
 
-    //Is the passed in node reference the first in the list
-    fn is_first(&self, node: Option<&Rc<RefCell<Node<T>>>>) -> bool {
-        self.head
-            .as_ref()
-            .and_then(|head| node.map(|node| Rc::ptr_eq(head, node)))
-            .unwrap_or(false)
+    //Is the passed in node reference the first in the list?
+    fn is_first(&self, node: &Rc<RefCell<Node<T>>>) -> bool {
+        match self.head {
+            None => false,
+            Some(ref head) => Rc::ptr_eq(head, node),
+        }
     }
 
-    //Is the passed in node reference the last in the list
-    fn is_last(&self, node: Option<&Rc<RefCell<Node<T>>>>) -> bool {
-        self.tail
-            .as_ref()
-            .and_then(|tail| node.map(|node| Rc::ptr_eq(tail, node)))
-            .unwrap_or(false)
+    //Is the passed in node reference the last in the list?
+    fn is_last(&self, node: &Rc<RefCell<Node<T>>>) -> bool {
+        match self.tail {
+            None => false,
+            Some(ref tail) => Rc::ptr_eq(tail, node),
+        }
     }
 
     //Delete a node that has previous and next
@@ -152,7 +152,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
     pub fn delete(&mut self, key: &T) -> Option<T> {
         match self.node_iter().find(|node| node.borrow().key == *key) {
             None => None,
-            Some(ref target) => match (self.is_first(Some(target)), self.is_last(Some(target))) {
+            Some(ref target) => match (self.is_first(target), self.is_last(target)) {
                 (true, true) | (true, false) => self.pop_front(),
                 (false, true) => self.pop_back(),
                 (_, _) => self.delete_inner(target),
