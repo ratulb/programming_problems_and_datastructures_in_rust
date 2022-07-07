@@ -131,20 +131,18 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
     }
 
     //Delete a node that has previous and next
-    fn delete_inner(&mut self, mut target: Option<&Rc<RefCell<Node<T>>>>) -> Option<T> {
-        target.as_ref().map(|target| {
-            let prev = target.borrow_mut().prev.take();
-            let next = target.borrow_mut().next.take();
-            next.as_ref().map(|next| {
-                next.borrow_mut().prev = prev.as_ref().map(|prev| prev.clone());
-            });
-            prev.as_ref().map(|prev| {
-                prev.upgrade().map(|prev| {
-                    prev.borrow_mut().next = next.as_ref().map(Rc::clone);
-                });
+    fn delete_inner(&mut self, target: &Rc<RefCell<Node<T>>>) -> Option<T> {
+        let prev = target.borrow_mut().prev.take();
+        let next = target.borrow_mut().next.take();
+        next.as_ref().map(|next| {
+            next.borrow_mut().prev = prev.as_ref().map(|prev| prev.clone());
+        });
+        prev.as_ref().map(|prev| {
+            prev.upgrade().map(|prev| {
+                prev.borrow_mut().next = next.as_ref().map(Rc::clone);
             });
         });
-        target.take().map(|target| target.take().key)
+        Some(target.take().key)
     }
 
     //Delete a key from the list. We try to find the by using iterator `find` method.
@@ -157,7 +155,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
             Some(ref target) => match (self.is_first(Some(target)), self.is_last(Some(target))) {
                 (true, true) | (true, false) => self.pop_front(),
                 (false, true) => self.pop_back(),
-                (_, _) => self.delete_inner(Some(target)),
+                (_, _) => self.delete_inner(target),
             },
         }
     }
