@@ -173,7 +173,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
             next: self.head.as_ref().map(Rc::clone),
         }
     }
-    //Returns an iterator for public consumtion. We are breaking rust convention here. Instead of
+    //Returns an iterator for public consumption. We are breaking rust convention here. Instead of
     //returning Option<&T>, we return Option<T> when we call `next` on this iterator.
     //We are cloning T.
     pub fn iter(&self) -> Iter<T> {
@@ -181,8 +181,8 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
             next: self.node_iter(),
         }
     }
-
-    pub fn iter_mut(&mut self) -> IntoIterator<'_, T> {
+    
+    pub fn into_iter(&mut self) -> IntoIterator<'_, T> {
         IntoIterator { list: self }
     }
 }
@@ -301,7 +301,7 @@ mod tests {
         list.push_back(2);
         list.push_back(3);
 
-        let mut iter = list.iter_mut();
+        let mut iter = list.into_iter();
         assert_eq!(iter.next(), Some(1));
         assert_eq!(iter.next(), Some(2));
         assert_eq!(iter.next(), Some(3));
@@ -315,7 +315,7 @@ mod tests {
         list.push_back(2);
         list.push_back(3);
 
-        let mut iter = list.iter_mut();
+        let mut iter = list.into_iter();
         assert_eq!(iter.next(), Some(1));
         assert_eq!(iter.next_back(), Some(3));
         assert_eq!(iter.next(), Some(2));
