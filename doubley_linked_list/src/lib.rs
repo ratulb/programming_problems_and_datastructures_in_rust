@@ -170,7 +170,9 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
     //Returns a forward iterator that is used internally.
     fn node_iter(&self) -> NodeIterator<T> {
         NodeIterator {
+            back: self.tail.as_ref().map(Rc::clone),
             front: self.head.as_ref().map(Rc::clone),
+            ptr_crossed: false,
         }
     }
     //Returns an iterator for public consumption. We are breaking rust convention here. Instead of
@@ -178,11 +180,11 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
     //We are cloning T.
     pub fn iter(&self) -> Iter<T> {
         Iter {
-            //We are calling above helper function here 
-            front: self.node_iter(),
+            //We are calling above helper function here
+            nodes: self.node_iter(),
         }
     }
-    
+
     pub fn into_iter(&mut self) -> IntoIterator<'_, T> {
         //Taking a mutable reference to the tree
         IntoIterator { list: self }
@@ -190,7 +192,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
 }
 
 pub struct Iter<T: std::fmt::Debug + Default + Clone + PartialEq> {
-    front: NodeIterator<T>,
+    nodes: NodeIterator<T>,
 }
 
 //Itearor that returns Option<T>
@@ -200,10 +202,19 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for Iter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.front
+        self.nodes
             .next()
             .as_ref()
             .map(|next| next.borrow().key.clone())
+    }
+}
+
+impl<T: std::fmt::Debug + Default + Clone + PartialEq> DoubleEndedIterator for Iter<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.nodes
+            .next_back()
+            .as_ref()
+            .map(|prev| prev.borrow().key.clone())
     }
 }
 
@@ -220,20 +231,21 @@ impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for IntoIter
     }
 }
 
-impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> DoubleEndedIterator for IntoIterator<'a, T> {
+impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> DoubleEndedIterator
+    for IntoIterator<'a, T>
+{
     fn next_back(&mut self) -> Option<Self::Item> {
         self.list.pop_back()
     }
 }
 
 struct NodeIterator<T: std::fmt::Debug + Default + Clone + PartialEq> {
+    back: Option<Rc<RefCell<Node<T>>>>,
     front: Option<Rc<RefCell<Node<T>>>>,
-    
+    ptr_crossed: bool,
 }
-
 impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for NodeIterator<T> {
     type Item = Rc<RefCell<Node<T>>>;
-
     fn next(&mut self) -> Option<Self::Item> {
         match self.front {
             Some(_) => {
@@ -243,10 +255,20 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for NodeIterator
                     .map(|next| (Rc::clone(next), next.borrow().next.as_ref().map(Rc::clone)))
                 {
                     None => None,
-                    Some(current_and_next) => {
-                        self.front = current_and_next.1;
-                        Some(current_and_next.0)
-                    }
+                    Some(this_and_next) => match self.ptr_crossed {
+                        true => None,
+                        false => {
+                            let this = this_and_next.0;
+                            let next = this_and_next.1;
+                            self.ptr_crossed = self
+                                .back
+                                .as_ref()
+                                .map(|back| Rc::ptr_eq(&this, back))
+                                .unwrap_or(false);
+                            self.front = next;
+                            Some(this)
+                        }
+                    },
                 }
             }
             None => None,
@@ -254,6 +276,41 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for NodeIterator
     }
 }
 
+impl<T: std::fmt::Debug + Default + Clone + PartialEq> DoubleEndedIterator for NodeIterator<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        match self.back {
+            Some(_) => {
+                match self.back.as_ref().map(|back| {
+                    (
+                        Rc::clone(back),
+                        back.borrow()
+                            .prev
+                            .as_ref()
+                            .cloned()
+                            .and_then(|prev| prev.upgrade()),
+                    )
+                }) {
+                    None => None,
+                    Some(this_and_prev) => match self.ptr_crossed {
+                        true => None,
+                        false => {
+                            let this = this_and_prev.0;
+                            let prev = this_and_prev.1;
+                            self.ptr_crossed = self
+                                .front
+                                .as_ref()
+                                .map(|front| Rc::ptr_eq(&this, front))
+                                .unwrap_or(false);
+                            self.back = prev;
+                            Some(this)
+                        }
+                    },
+                }
+            }
+            None => None,
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -350,5 +407,19 @@ mod tests {
         println!("The list: {:?}", list);
         assert_eq!(list.delete(&3), Some(3));
         println!("The list: {:?}", list);
+    }
+
+    #[test]
+    fn test_double_ended_iterator() {
+        let mut list = List::new();
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        let mut iter = list.iter();
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next_back(), Some(3));
+        assert_eq!(iter.next(), Some(2));
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next_back(), None);
     }
 }
