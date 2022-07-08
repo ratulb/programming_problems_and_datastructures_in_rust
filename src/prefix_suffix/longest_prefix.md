@@ -1,6 +1,6 @@
 # Longest common prefix
 
-### Below is the solution for finding longest common prefix given an array of strings:
+### Find the longest common prefix for given array of strings:
 ```rust, ignore
 
 /***

@@ -1,6 +1,6 @@
 # Longest common suffix
 
-### Solution for finding longest common suffix given an array of string:
+### Find the longest common suffix given an array of strings:
 ```rust, ignore
 /***
  * Given an array of strings, find the logests common suffix for them
