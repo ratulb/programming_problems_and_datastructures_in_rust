@@ -167,10 +167,10 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
         }
     }
 
-    //Returns an iterator that is used internally.
+    //Returns a forward iterator that is used internally.
     fn node_iter(&self) -> NodeIterator<T> {
         NodeIterator {
-            next: self.head.as_ref().map(Rc::clone),
+            front: self.head.as_ref().map(Rc::clone),
         }
     }
     //Returns an iterator for public consumption. We are breaking rust convention here. Instead of
@@ -178,17 +178,19 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
     //We are cloning T.
     pub fn iter(&self) -> Iter<T> {
         Iter {
-            next: self.node_iter(),
+            //We are calling above helper function here 
+            front: self.node_iter(),
         }
     }
     
     pub fn into_iter(&mut self) -> IntoIterator<'_, T> {
+        //Taking a mutable reference to the tree
         IntoIterator { list: self }
     }
 }
 
 pub struct Iter<T: std::fmt::Debug + Default + Clone + PartialEq> {
-    next: NodeIterator<T>,
+    front: NodeIterator<T>,
 }
 
 //Itearor that returns Option<T>
@@ -198,7 +200,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for Iter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.next
+        self.front
             .next()
             .as_ref()
             .map(|next| next.borrow().key.clone())
@@ -225,23 +227,24 @@ impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> DoubleEndedIterator f
 }
 
 struct NodeIterator<T: std::fmt::Debug + Default + Clone + PartialEq> {
-    next: Option<Rc<RefCell<Node<T>>>>,
+    front: Option<Rc<RefCell<Node<T>>>>,
+    
 }
 
 impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for NodeIterator<T> {
     type Item = Rc<RefCell<Node<T>>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.next {
+        match self.front {
             Some(_) => {
                 match self
-                    .next
+                    .front
                     .as_ref()
                     .map(|next| (Rc::clone(next), next.borrow().next.as_ref().map(Rc::clone)))
                 {
                     None => None,
                     Some(current_and_next) => {
-                        self.next = current_and_next.1;
+                        self.front = current_and_next.1;
                         Some(current_and_next.0)
                     }
                 }
