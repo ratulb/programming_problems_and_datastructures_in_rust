@@ -167,6 +167,41 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
             },
         }
     }
+    //Does a given key exist in the list
+    pub fn exists(&self, key: &T) -> bool {
+        self.node_iter()
+            .find(|node| node.borrow().key == *key)
+            .is_some()
+    }
+
+    pub fn insert_after(&mut self, key: T, after: &T) -> bool {
+        match self.node_iter().find(|node| node.borrow().key == *after) {
+            None => false,
+            Some(ref mut after) => {
+                let mut after_next = after.borrow().next.as_ref().map(Rc::clone);
+                let mut new_node = Node::new(key);
+                new_node.next = after_next.as_ref().map(Rc::clone);
+                new_node.prev = Some(Rc::downgrade(&Rc::clone(after)));
+                let new_node = Rc::new(RefCell::new(new_node));
+                if let Some(ref mut after_next) = after_next {
+                    after_next.borrow_mut().prev = Some(Rc::downgrade(&Rc::clone(&new_node)));
+                }
+                after.borrow_mut().next = Some(new_node);
+                true
+            }
+        }
+    }
+
+    fn move_to_front(&mut self, node: Option<&Rc<RefCell<Node<T>>>>) {
+        let key = match node {
+            None => return,
+            Some(node) => node.borrow().key.clone(),
+        };
+        let deleted = self.delete(&key);
+        if let Some(deleted) = deleted {
+            self.push_front(deleted);
+        }
+    }
 
     //Returns a forward iterator that is used internally.
     fn node_iter(&self) -> NodeIterator<T> {
@@ -426,5 +461,46 @@ mod tests {
         assert_eq!(iter.next(), Some(2));
         assert_eq!(iter.next(), None);
         assert_eq!(iter.next_back(), None);
+    }
+    #[test]
+    fn test_exists() {
+        let mut list = List::new();
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        assert!(list.exists(&1));
+        assert!(list.exists(&2));
+        assert!(list.exists(&3));
+        assert!(!list.exists(&4));
+    }
+    #[test]
+    fn test_insert_after() {
+        let mut list = List::new();
+        list.push_back(1);
+        list.push_back(3);
+        list.insert_after(2, &1);
+        let mut iter = list.iter();
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), Some(2));
+        assert_eq!(iter.next(), Some(3));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_move_to_front() {
+        let mut list = List::new();
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        let mut iter = list.node_iter();
+        let third = iter.next_back();
+        println!("The third = {:?}", third);
+        list.move_to_front(third.as_ref());
+        //list.move_to_front(&3);
+        let mut iter = list.iter();
+        assert_eq!(iter.next(), Some(3));
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), Some(2));
+        assert_eq!(iter.next(), None);
     }
 }
