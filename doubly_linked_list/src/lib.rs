@@ -1,7 +1,7 @@
 /***
- * Doubly linked list implementation 
+ * Doubly linked list implementation
  ***/
-#![forbid(unsafe_code)] 
+#![forbid(unsafe_code)]
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
@@ -11,7 +11,7 @@ struct Node<T: std::fmt::Debug + Default + Clone + PartialEq> {
     next: Option<Rc<RefCell<Node<T>>>>,
     prev: Option<Weak<RefCell<Node<T>>>>,
 }
-
+//New up a new node with a value
 impl<T: std::fmt::Debug + Default + Clone + PartialEq> Node<T> {
     pub fn new(key: T) -> Self {
         Self {
@@ -21,7 +21,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> Node<T> {
         }
     }
 }
-
+//We implement `From` trait to wrap  up a node in RefCell and Rc
 impl<T: std::fmt::Debug + Default + Clone + PartialEq> From<Node<T>>
     for Option<Rc<RefCell<Node<T>>>>
 {
@@ -171,8 +171,8 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
     //Returns a forward iterator that is used internally.
     fn node_iter(&self) -> NodeIterator<T> {
         NodeIterator {
-            back: self.tail.as_ref().map(Rc::clone),
-            front: self.head.as_ref().map(Rc::clone),
+            head: self.head.as_ref().map(Rc::clone),
+            tail: self.tail.as_ref().map(Rc::clone),
             ptr_crossed: false,
         }
     }
@@ -187,7 +187,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
     }
 
     pub fn into_iter(&mut self) -> IntoIterator<'_, T> {
-        //Taking a mutable reference to the tree
+        //Taking a mutable reference to the list
         IntoIterator { list: self }
     }
 }
@@ -209,7 +209,8 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for Iter<T> {
             .map(|next| next.borrow().key.clone())
     }
 }
-
+//Iterate back
+//Calling next_back should not returned elements seen by calling next and vice versa
 impl<T: std::fmt::Debug + Default + Clone + PartialEq> DoubleEndedIterator for Iter<T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         self.nodes
@@ -240,18 +241,21 @@ impl<'a, T: std::fmt::Debug + Default + Clone + PartialEq> DoubleEndedIterator
     }
 }
 
+//This struct holds head and tail of the list
+//ptr_crossed flag indicates whether front and back iterators crossed each other
 struct NodeIterator<T: std::fmt::Debug + Default + Clone + PartialEq> {
-    back: Option<Rc<RefCell<Node<T>>>>,
-    front: Option<Rc<RefCell<Node<T>>>>,
+    head: Option<Rc<RefCell<Node<T>>>>,
+    tail: Option<Rc<RefCell<Node<T>>>>,
     ptr_crossed: bool,
 }
+
 impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for NodeIterator<T> {
     type Item = Rc<RefCell<Node<T>>>;
     fn next(&mut self) -> Option<Self::Item> {
-        match self.front {
+        match self.head {
             Some(_) => {
                 match self
-                    .front
+                    .head
                     .as_ref()
                     .map(|next| (Rc::clone(next), next.borrow().next.as_ref().map(Rc::clone)))
                 {
@@ -262,11 +266,11 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for NodeIterator
                             let this = this_and_next.0;
                             let next = this_and_next.1;
                             self.ptr_crossed = self
-                                .back
+                                .tail
                                 .as_ref()
-                                .map(|back| Rc::ptr_eq(&this, back))
+                                .map(|tail| Rc::ptr_eq(&this, tail))
                                 .unwrap_or(false);
-                            self.front = next;
+                            self.head = next;
                             Some(this)
                         }
                     },
@@ -279,12 +283,12 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> Iterator for NodeIterator
 
 impl<T: std::fmt::Debug + Default + Clone + PartialEq> DoubleEndedIterator for NodeIterator<T> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        match self.back {
+        match self.tail {
             Some(_) => {
-                match self.back.as_ref().map(|back| {
+                match self.tail.as_ref().map(|tail| {
                     (
-                        Rc::clone(back),
-                        back.borrow()
+                        Rc::clone(tail),
+                        tail.borrow()
                             .prev
                             .as_ref()
                             .cloned()
@@ -298,11 +302,11 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> DoubleEndedIterator for N
                             let this = this_and_prev.0;
                             let prev = this_and_prev.1;
                             self.ptr_crossed = self
-                                .front
+                                .head
                                 .as_ref()
-                                .map(|front| Rc::ptr_eq(&this, front))
+                                .map(|head| Rc::ptr_eq(&this, head))
                                 .unwrap_or(false);
-                            self.back = prev;
+                            self.tail = prev;
                             Some(this)
                         }
                     },
