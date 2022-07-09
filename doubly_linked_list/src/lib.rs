@@ -195,13 +195,18 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
     pub fn delete(&mut self, key: &T) -> Option<T> {
         match self.node_iter().find(|node| node.borrow().key == *key) {
             None => None,
-            Some(ref target) => match (self.is_first(target), self.is_last(target)) {
-                (true, true) | (true, false) => self.pop_front(),
-                (false, true) => self.pop_back(),
-                (_, _) => self.delete_inner(target),
-            },
+            Some(ref target) => self.delete_target(target),
         }
     }
+    //Delete given node  
+    pub fn delete_target(&mut self, target: &Rc<RefCell<Node<T>>>) -> Option<T> {
+        match (self.is_first(target), self.is_last(target)) {
+            (true, true) | (true, false) => self.pop_front(),
+            (false, true) => self.pop_back(),
+            (_, _) => self.delete_inner(target),
+        }
+    }
+
     //Does a given key exist in the list
     pub fn exists(&self, key: &T) -> bool {
         self.node_iter()
