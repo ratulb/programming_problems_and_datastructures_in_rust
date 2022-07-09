@@ -438,7 +438,7 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
             },
         }
     }
-    
+
     //Find the height of the tree
     pub fn height(&self) -> usize {
         let root = self.root();
@@ -464,6 +464,29 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
                     .unwrap_or(0);
                 1 + std::cmp::max(left_tree_height, right_tree_height)
             }
+        }
+    }
+    //Return the lowest common ancestor for two given keys
+    pub fn lowest_common_ancestor(&self, this: &T, that: &T) -> Option<T> {
+        if let Some(ref root) = self.root() {
+            let root = root.borrow();
+            if root.key() < this && root.key() < that {
+                if let Some(ref right) = root.right {
+                    return Self::lowest_common_ancestor(&right.borrow(), this, that);
+                } else {
+                    return None;
+                }
+            } else if root.key() > this && root.key() > that {
+                if let Some(ref left) = root.left {
+                    return Self::lowest_common_ancestor(&left.borrow(), this, that);
+                } else {
+                    return None;
+                }
+            } else {
+                return Some(root.key().clone());
+            }
+        } else {
+            None
         }
     }
 
@@ -868,5 +891,21 @@ mod tests {
         assert_eq!(tree.height(), 3);
         tree.insert(-3);
         assert_eq!(tree.height(), 4);
+    }
+    #[test]
+    fn test_lowest_common_ancestor() {
+        let mut tree = Tree::new(6);
+        tree.insert(2);
+        tree.insert(8);
+        tree.insert(0);
+        tree.insert(4);
+        tree.insert(7);
+        tree.insert(9);
+        tree.insert(3);
+        tree.insert(5);
+        assert_eq!(tree.lowest_common_ancestor(&3, &5), Some(4));
+        assert_eq!(tree.lowest_common_ancestor(&2, &5), Some(2));
+        assert_eq!(tree.lowest_common_ancestor(&0, &5), Some(2));
+        assert_eq!(tree.lowest_common_ancestor(&3, &7), Some(6));
     }
 }
