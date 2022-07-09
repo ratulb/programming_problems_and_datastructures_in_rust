@@ -10,7 +10,9 @@ The cache exposes the follwoing APIs:
  - `delete` - delete an entry from the cache
 
 > **Note**: The cache implementation depends on the doubly linked list implementation 
-discussed in the previous section.
+discussed in the previous section. Another noticeable thing is that - because our LRU 
+cache implementation uses doulby linked list APIs, the implementation is quite concise, 
+its about sixty odd lines when comments are ignored.
 ### Following is the complete implementation:
 ```rust, ignore
 /// LRU cache implementation
