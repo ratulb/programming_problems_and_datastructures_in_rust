@@ -34,6 +34,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> From<Node<T>>
 pub struct List<T: std::fmt::Debug + Default + Clone + PartialEq> {
     head: Option<Rc<RefCell<Node<T>>>>,
     tail: Option<Rc<RefCell<Node<T>>>>,
+    size: usize,
 }
 
 impl<T: std::fmt::Debug + Default + Clone + PartialEq> Default for List<T> {
@@ -47,8 +48,14 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
         Self {
             head: None,
             tail: None,
+            size: 0,
         }
     }
+
+    pub fn size(&self) -> usize {
+        self.size
+    }
+
     //Push to the front of the list
     pub fn push_front(&mut self, key: T) {
         let node = Node::new(key).into();
@@ -65,6 +72,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
                 });
             }
         }
+        self.size += 1;
     }
     //Push to the back of the list
     pub fn push_back(&mut self, key: T) {
@@ -82,6 +90,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
                 });
             }
         }
+        self.size += 1;
     }
 
     //Pop out from the front of the list
@@ -96,6 +105,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
                 if self.head.is_none() {
                     self.tail.take();
                 }
+                self.size -= 1;
                 //Use of default
                 Some(head.take().key)
             }
@@ -116,6 +126,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
                 if self.tail.is_none() {
                     self.head.take();
                 }
+                self.size -= 1;
                 //Use of default
                 Some(tail.take().key)
             }
@@ -150,6 +161,7 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
                 prev.borrow_mut().next = next.as_ref().map(Rc::clone);
             }
         }
+        self.size -= 1;
         Some(target.take().key)
     }
 
@@ -187,6 +199,8 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
                     after_next.borrow_mut().prev = Some(Rc::downgrade(&Rc::clone(&new_node)));
                 }
                 after.borrow_mut().next = Some(new_node);
+
+                self.size += 1;
                 true
             }
         }
@@ -502,5 +516,16 @@ mod tests {
         assert_eq!(iter.next(), Some(1));
         assert_eq!(iter.next(), Some(2));
         assert_eq!(iter.next(), None);
+    }
+    #[test]
+    fn test_size() {
+        let mut list = List::new();
+        assert_eq!(list.size(), 0);
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        assert_eq!(list.size(), 3);
+        let _ = list.pop_front();
+        assert_eq!(list.size(), 2);
     }
 }
