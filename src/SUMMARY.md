@@ -26,6 +26,7 @@
       * [Mutable iterator](./doubly_linkedlist/mutable_iterator.md)
          * [Iterating back](./doubly_linkedlist/mutable_back_iterator.md)
       * [Bidirectional iterator](./doubly_linkedlist/immutable_iterator.md)
+* [LRU cache](./lru_cache/introduction.md)
 * [Heap](./heap/introduction.md)
    * [Max heap](./heap/max_heap.md)
    * [Min heap](./heap/min_heap.md)
