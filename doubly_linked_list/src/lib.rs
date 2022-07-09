@@ -6,7 +6,7 @@ use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
 #[derive(Debug, Default)]
-struct Node<T: std::fmt::Debug + Default + Clone + PartialEq> {
+pub struct Node<T: std::fmt::Debug + Default + Clone + PartialEq> {
     key: T,
     next: Option<Rc<RefCell<Node<T>>>>,
     prev: Option<Weak<RefCell<Node<T>>>>,
@@ -18,6 +18,26 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> Node<T> {
             key,
             next: None,
             prev: None,
+        }
+    }
+    pub fn key(&self) -> &T {
+        &self.key
+    }
+
+    pub fn replace(&mut self, key: T) {
+        self.key = key;
+    }
+
+    pub fn link_prev_and_next(&mut self) {
+        let prev = self.prev.take();
+        let next = self.next.take();
+        if let Some(ref prev) = prev {
+            if let Some(prev) = prev.upgrade() {
+                prev.borrow_mut().next = next.as_ref().map(Rc::clone);
+            }
+        }
+        if let Some(next) = next {
+            next.borrow_mut().prev = prev.as_ref().cloned();
         }
     }
 }
@@ -56,6 +76,9 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
         self.size
     }
 
+    pub fn head(&self) -> Option<Rc<RefCell<Node<T>>>> {
+        self.head.as_ref().map(Rc::clone)
+    }
     //Push to the front of the list
     pub fn push_front(&mut self, key: T) {
         let node = Node::new(key).into();
@@ -205,16 +228,17 @@ impl<T: std::fmt::Debug + Default + Clone + PartialEq> List<T> {
             }
         }
     }
-
-    fn move_to_front(&mut self, node: Option<&Rc<RefCell<Node<T>>>>) {
-        let key = match node {
-            None => return,
-            Some(node) => node.borrow().key.clone(),
-        };
-        let deleted = self.delete(&key);
-        if let Some(deleted) = deleted {
-            self.push_front(deleted);
+    //Move a node to the front
+    pub fn to_front(&mut self, node: &Rc<RefCell<Node<T>>>) {
+        if self.is_first(node) {
+            return;
         }
+        node.borrow_mut().link_prev_and_next();
+        node.borrow_mut().next = self.head.as_ref().map(Rc::clone);
+        if let Some(ref mut head) = self.head {
+            head.borrow_mut().prev = Some(Rc::downgrade(node));
+        }
+        self.head = Some(Rc::clone(node));
     }
 
     //Returns a forward iterator that is used internally.
@@ -501,23 +525,6 @@ mod tests {
     }
 
     #[test]
-    fn test_move_to_front() {
-        let mut list = List::new();
-        list.push_back(1);
-        list.push_back(2);
-        list.push_back(3);
-        let mut iter = list.node_iter();
-        let third = iter.next_back();
-        println!("The third = {:?}", third);
-        list.move_to_front(third.as_ref());
-        //list.move_to_front(&3);
-        let mut iter = list.iter();
-        assert_eq!(iter.next(), Some(3));
-        assert_eq!(iter.next(), Some(1));
-        assert_eq!(iter.next(), Some(2));
-        assert_eq!(iter.next(), None);
-    }
-    #[test]
     fn test_size() {
         let mut list = List::new();
         assert_eq!(list.size(), 0);
@@ -527,5 +534,19 @@ mod tests {
         assert_eq!(list.size(), 3);
         let _ = list.pop_front();
         assert_eq!(list.size(), 2);
+    }
+    #[test]
+    fn test_to_front() {
+        let mut list = List::new();
+        list.push_back(1);
+        list.push_back(2);
+        list.push_back(3);
+        let mut iter = list.node_iter();
+        iter.next();
+        let second = iter.next().unwrap();
+        list.to_front(&second);
+        if let Some(ref head) = list.head() {
+            assert!(head.borrow().key() == &2);
+        }
     }
 }
