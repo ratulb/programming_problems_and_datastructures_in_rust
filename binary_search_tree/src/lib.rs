@@ -505,31 +505,32 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
         result: &mut Option<T>,
     ) {
         if let Some(inner) = node {
-            Self::nth_smallest_helper(
-                inner
-                    .borrow()
-                    .left
-                    .as_ref()
-                    .and_then(|left| left.borrow().root()),
-                current_pos,
-                nth,
-                result,
-            );
+            Self::nth_smallest_helper(inner.borrow().left_node(), current_pos, nth, result);
             *current_pos += 1;
             if *current_pos == nth {
                 *result = Some(inner.borrow().key().clone());
             }
-            Self::nth_smallest_helper(
-                inner
-                    .borrow()
-                    .right
-                    .as_ref()
-                    .and_then(|right| right.borrow().root()),
-                current_pos,
-                nth,
-                result,
-            );
+            Self::nth_smallest_helper(inner.borrow().right_node(), current_pos, nth, result);
         }
+    }
+    //kth smallest element - iterative
+    pub fn kth_smallest(&self, k: usize) -> Option<T> {
+        let mut curr = self.root();
+        let mut stack = Vec::new();
+        let mut n = 0;
+        while curr.is_some() || !stack.is_empty() {
+            while curr.is_some() {
+                stack.push(curr.as_ref().cloned());
+                curr = curr.and_then(|curr| curr.borrow().left_node());
+            }
+            curr = stack.pop().flatten();
+            n += 1;
+            if n == k {
+                return curr.map(|curr| curr.borrow().key().clone());
+            }
+            curr = curr.and_then(|curr| curr.borrow().right_node());
+        }
+        None
     }
 
     //Get an iterator for the tree's keys
@@ -963,12 +964,25 @@ mod tests {
         tree.insert(5);
         assert_eq!(tree.nth_smallest(1), Some(1));
         assert_eq!(tree.nth_smallest(2), Some(2));
-        assert_eq!(tree.nth_smallest(3), Some(3));
         assert_eq!(tree.nth_smallest(4), Some(4));
-        assert_eq!(tree.nth_smallest(5), Some(5));
-        assert_eq!(tree.nth_smallest(6), Some(6));
-        assert_eq!(tree.nth_smallest(7), Some(7));
         assert_eq!(tree.nth_smallest(8), Some(8));
         assert_eq!(tree.nth_smallest(9), Some(9));
+    }
+    #[test]
+    fn test_kth_smallest() {
+        let mut tree = Tree::new(6);
+        tree.insert(2);
+        tree.insert(8);
+        tree.insert(1);
+        tree.insert(4);
+        tree.insert(7);
+        tree.insert(9);
+        tree.insert(3);
+        tree.insert(5);
+        assert_eq!(tree.kth_smallest(1), Some(1));
+        assert_eq!(tree.kth_smallest(2), Some(2));
+        assert_eq!(tree.kth_smallest(4), Some(4));
+        assert_eq!(tree.kth_smallest(8), Some(8));
+        assert_eq!(tree.kth_smallest(9), Some(9));
     }
 }
