@@ -17,6 +17,8 @@
       * [Tree into iterator](./binary_search_tree/tree_into_iterator.md)
       * [Tree height](./binary_search_tree/tree_height.md)
       * [LCA](./binary_search_tree/lca.md)
+      * [Nth smallest](./binary_search_tree/nth_smallest.md)
+      * [Kth smallest](./binary_search_tree/kth_smallest.md)
 * [Dubley linkedlist](./doubly_linkedlist/introduction.md)
    * [Node and List](./doubly_linkedlist/node_and_list.md)
    * [Push front and push back](./doubly_linkedlist/push_front_and_back.md)
