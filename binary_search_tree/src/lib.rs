@@ -532,6 +532,132 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
         }
         None
     }
+    //Check if given treee is valid or not
+    pub fn is_valid(&self) -> bool {
+        let root = self.root();
+        match root {
+            None => true,
+            Some(ref root) => {
+                let bigger_than_left = root
+                    .borrow()
+                    .left_node()
+                    .map(|left| left.borrow().key() < root.borrow().key())
+                    .unwrap_or(true);
+                let less_than_right = root
+                    .borrow()
+                    .right_node()
+                    .map(|right| right.borrow().key() > root.borrow().key())
+                    .unwrap_or(true);
+                match (bigger_than_left, less_than_right) {
+                    (true, true) => Self::valid_bst(
+                        root.borrow().key(),
+                        root.borrow().left.as_ref().cloned(),
+                        root.borrow().right.as_ref().cloned(),
+                    ),
+
+                    (_, _) => false,
+                }
+            }
+        }
+    }
+    fn valid_bst(
+        root_key: &T,
+        left: Option<Rc<RefCell<Tree<T>>>>,
+        right: Option<Rc<RefCell<Tree<T>>>>,
+    ) -> bool {
+        let left_valid = match left {
+            None => true,
+            Some(ref left_tree) => {
+                let tree_node = left_tree.borrow().root();
+                let mut valid = tree_node
+                    .as_ref()
+                    .map(|node| node.borrow().key() < root_key)
+                    .unwrap_or(true);
+                let left_node = tree_node
+                    .as_ref()
+                    .and_then(|tree_node| tree_node.borrow().left_node());
+                let right_node = tree_node
+                    .as_ref()
+                    .and_then(|tree_node| tree_node.borrow().right_node());
+
+                valid = left_node
+                    .and_then(|left_node| {
+                        tree_node
+                            .as_ref()
+                            .map(|tree_node| tree_node.borrow().key() > left_node.borrow().key())
+                    })
+                    .unwrap_or(true)
+                    && valid;
+                right_node
+                    .and_then(|right_node| {
+                        tree_node
+                            .as_ref()
+                            .map(|tree_node| tree_node.borrow().key() < right_node.borrow().key())
+                    })
+                    .unwrap_or(true)
+                    && valid
+                    && Self::valid_bst(
+                        &tree_node
+                            .as_ref()
+                            .map(|tree_node| tree_node.borrow().key().clone())
+                            .unwrap(),
+                        tree_node
+                            .as_ref()
+                            .and_then(|tree_node| tree_node.borrow().left.as_ref().cloned()),
+                        tree_node
+                            .as_ref()
+                            .and_then(|tree_node| tree_node.borrow().right.as_ref().cloned()),
+                    )
+            }
+        };
+        let right_valid = match right {
+            None => true,
+            Some(ref right_tree) => {
+                let tree_node = right_tree.borrow().root();
+                let mut valid = tree_node
+                    .as_ref()
+                    .map(|node| node.borrow().key() > root_key)
+                    .unwrap_or(true);
+                let left_node = tree_node
+                    .as_ref()
+                    .and_then(|tree_node| tree_node.borrow().left_node());
+                let right_node = tree_node
+                    .as_ref()
+                    .and_then(|tree_node| tree_node.borrow().right_node());
+
+                valid = left_node
+                    .and_then(|left_node| {
+                        tree_node
+                            .as_ref()
+                            .map(|tree_node| tree_node.borrow().key() > left_node.borrow().key())
+                    })
+                    .unwrap_or(true)
+                    && valid;
+                right_node
+                    .and_then(|right_node| {
+                        tree_node
+                            .as_ref()
+                            .map(|tree_node| tree_node.borrow().key() < right_node.borrow().key())
+                    })
+                    .unwrap_or(true)
+                    && valid
+                    && Self::valid_bst(
+                        &tree_node
+                            .as_ref()
+                            .map(|tree_node| tree_node.borrow().key().clone())
+                            .unwrap(),
+                        tree_node
+                            .as_ref()
+                            .and_then(|tree_node| tree_node.borrow().left.as_ref().cloned()),
+                        tree_node
+                            .as_ref()
+                            .and_then(|tree_node| tree_node.borrow().right.as_ref().cloned()),
+                    )
+            }
+        };
+
+        left_valid && right_valid
+    }
 
     //Get an iterator for the tree's keys
     //Remember - calling iter on the tree would not consume the tree
@@ -984,5 +1110,18 @@ mod tests {
         assert_eq!(tree.kth_smallest(4), Some(4));
         assert_eq!(tree.kth_smallest(8), Some(8));
         assert_eq!(tree.kth_smallest(9), Some(9));
+    }
+    #[test]
+    fn test_tree_is_valid() {
+        let mut tree = Tree::new(6);
+        tree.insert(2);
+        tree.insert(8);
+        tree.insert(1);
+        tree.insert(4);
+        tree.insert(7);
+        tree.insert(9);
+        tree.insert(3);
+        tree.insert(5);
+        assert!(tree.is_valid());
     }
 }
