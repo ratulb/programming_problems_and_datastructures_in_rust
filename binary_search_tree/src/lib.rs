@@ -708,7 +708,9 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
         }
         true
     }
-
+    //Create a height balanced tree from a sorted array
+    //The array passed in gets mutated - its elements are replaced with default
+    //values for type `T`
     pub fn from_sorted_array(array: &mut [T]) -> Option<Self> {
         fn wrap_tree<T: Ord + Default + Clone + std::fmt::Debug>(
             tree: Option<Tree<T>>,
