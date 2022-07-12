@@ -659,6 +659,105 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
         left_valid && right_valid
     }
 
+    pub fn is_valid_bst(&self) -> bool {
+        if self.root().is_none() {
+            return true;
+        }
+        true
+    }
+    fn in_order(&self) -> bool {
+        let mut current = self.root();
+        let mut stack = Vec::<Option<Rc<RefCell<Node<T>>>>>::new();
+        let mut previous = None;
+        while current.is_some() || !stack.is_empty() {
+            let curr_val = current.as_ref().map(|c| c.borrow().key().clone());
+            println!("The curr value: {:?}", curr_val);
+            if let Some(Some(l)) = stack.last() {
+                let l = l.borrow().key().clone();
+                println!("The curr value: {:?} and stack last: {:?}", curr_val, l);
+            } else {
+                println!("The stack last is None");
+            }
+
+            while current.is_some() {
+                let curr_val = current.as_ref().map(|c| c.borrow().key().clone());
+                println!("The inner while curr value: {:?}", curr_val);
+                stack.push(current.as_ref().cloned());
+                current = current.and_then(|inner| inner.borrow().left_node());
+            }
+            current = stack.pop().and_then(|popped| popped);
+            let curr_val = current.as_ref().map(|c| c.borrow().key().clone());
+            println!("Post pop curr val: {:?}", curr_val);
+            match previous {
+                None => previous = current.as_ref().map(Rc::clone),
+                Some(ref prev) => {
+                    match current
+                        .as_ref()
+                        .map(|curr| curr.borrow().key() > prev.borrow().key())
+                    {
+                        Some(true) => previous = current.as_ref().map(Rc::clone),
+                        Some(false) => return false,
+                        None => {}
+                    }
+                }
+            }
+            current = current.and_then(|inner| inner.borrow().right_node());
+
+            let curr_val = current.as_ref().map(|c| c.borrow().key().clone());
+            println!("Got right as: {:?}", curr_val);
+        }
+        true
+    }
+
+    pub fn from_sorted_array(array: &mut [T]) -> Option<Self> {
+        fn wrap_tree<T: Ord + Default + Clone + std::fmt::Debug>(
+            tree: Option<Tree<T>>,
+        ) -> Option<Rc<RefCell<Tree<T>>>> {
+            match tree {
+                None => None,
+                tree @ Some(_) => tree.map(|tree| Rc::new(RefCell::new(tree))),
+            }
+        }
+        fn from_array<T: Ord + Default + Clone + std::fmt::Debug>(
+            array: &mut [T],
+            left: i32,
+            right: i32,
+        ) -> Option<Tree<T>> {
+            if left > right {
+                return None;
+            } else {
+                let mid = left + (right - left) / 2;
+                let tree = Tree::new(std::mem::take(&mut array[mid as usize]));
+                let right = from_array(array, mid + 1, right);
+                let left = from_array(array, left, mid - 1);
+                let mut right = wrap_tree(right);
+                let mut left = wrap_tree(left);
+                if let Some(ref mut root) = tree.root() {
+                    root.borrow_mut().left = left.as_ref().cloned();
+                    root.borrow_mut().right = right.as_ref().cloned();
+                }
+                if let Some(ref mut left) = left {
+                    if let Some(ref mut tree_node) = left.borrow_mut().root() {
+                        tree_node.borrow_mut().parent = tree
+                            .root()
+                            .as_ref()
+                            .map(|root| Rc::downgrade(&Rc::clone(root)));
+                    }
+                }
+                if let Some(ref mut right) = right {
+                    if let Some(ref mut tree_node) = right.borrow_mut().root() {
+                        tree_node.borrow_mut().parent = tree
+                            .root()
+                            .as_ref()
+                            .map(|root| Rc::downgrade(&Rc::clone(root)));
+                    }
+                }
+                return Some(tree);
+            }
+        }
+        from_array(array, 0, (array.len() - 1) as i32)
+    }
+
     //Get an iterator for the tree's keys
     //Remember - calling iter on the tree would not consume the tree
     //iterator.next would return Option<T>
@@ -1123,5 +1222,43 @@ mod tests {
         tree.insert(3);
         tree.insert(5);
         assert!(tree.is_valid());
+    }
+    #[test]
+    fn test_tree_in_order() {
+        let mut tree = Tree::new(6);
+        tree.insert(2);
+        tree.insert(8);
+        tree.insert(1);
+        tree.insert(4);
+        tree.insert(7);
+        tree.insert(9);
+        tree.insert(3);
+        tree.insert(5);
+        assert!(tree.in_order());
+    }
+    #[test]
+    fn test_from_sorted_array() {
+        let mut array = [1, 2, 3];
+        let tree = Tree::from_sorted_array(&mut array);
+        assert_eq!(array, [0, 0, 0]);
+        let mut tree = tree.unwrap();
+        assert!(tree.is_valid());
+        assert_eq!(tree.height(), 2);
+        let mut iter = tree.into_iter();
+        assert_eq!(iter.next(), Some(2));
+        assert_eq!(iter.next(), Some(3));
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), None);
+
+        let mut array = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let tree = Tree::from_sorted_array(&mut array);
+        let mut tree = tree.unwrap();
+        assert!(tree.is_valid());
+        //assert_eq!(tree.height(), 3);
+        let mut iter = tree.into_iter();
+        assert_eq!(iter.next(), Some(5));
+        assert_eq!(iter.next(), Some(6));
+        /***assert_eq!(iter.next(), Some(7));
+        assert_eq!(iter.next(), None);***/
     }
 }
