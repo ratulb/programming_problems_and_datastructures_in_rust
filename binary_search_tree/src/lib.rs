@@ -94,15 +94,6 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Node<T> {
         }
     }
 
-    //Clone this parent which is a weak reference
-    //Used during deletion of a node. When the minimum node is taken
-    //out from the right side of the node being, the minimum node's
-    //right tree(if any) - has to be hoisted up to point to the minimum
-    //node's parent
-    fn parent(&self) -> Option<Weak<RefCell<Node<T>>>> {
-        self.parent.as_ref().map(Weak::clone)
-    }
-
     //Delete a node with single child or no child but node being deleted has parent
     //left: bool -> Should we delete left or right child?
     fn delete_child(&mut self, left: bool) -> Option<T> {
@@ -157,7 +148,7 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Node<T> {
             },
         };
         let mut min = min.map(|tree| tree.take()).and_then(|tree| tree.root());
-        let mut min_right = min
+        let min_right = min
             .as_ref()
             .and_then(|min| min.borrow_mut().right.take())
             .and_then(|tree| tree.borrow().root());
@@ -545,182 +536,63 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
         }
         None
     }
-    //Check if given treee is valid or not
-    pub fn is_valid(&self) -> bool {
-        let root = self.root();
-        match root {
+
+    //Validate the if the tree is valid
+    //We use an interative process here
+    pub fn validate(&self) -> bool {
+        match self.0 {
             None => true,
             Some(ref root) => {
-                let bigger_than_left = root
-                    .borrow()
-                    .left_node()
-                    .map(|left| left.borrow().key() < root.borrow().key())
-                    .unwrap_or(true);
-                let less_than_right = root
-                    .borrow()
-                    .right_node()
-                    .map(|right| right.borrow().key() > root.borrow().key())
-                    .unwrap_or(true);
-                match (bigger_than_left, less_than_right) {
-                    (true, true) => Self::valid_bst(
-                        root.borrow().key(),
-                        root.borrow().left.as_ref().cloned(),
-                        root.borrow().right.as_ref().cloned(),
-                    ),
-
-                    (_, _) => false,
-                }
-            }
-        }
-    }
-    fn valid_bst(
-        root_key: &T,
-        left: Option<Rc<RefCell<Tree<T>>>>,
-        right: Option<Rc<RefCell<Tree<T>>>>,
-    ) -> bool {
-        let left_valid = match left {
-            None => true,
-            Some(ref left_tree) => {
-                let tree_node = left_tree.borrow().root();
-                let mut valid = tree_node
-                    .as_ref()
-                    .map(|node| node.borrow().key() < root_key)
-                    .unwrap_or(true);
-                let left_node = tree_node
-                    .as_ref()
-                    .and_then(|tree_node| tree_node.borrow().left_node());
-                let right_node = tree_node
-                    .as_ref()
-                    .and_then(|tree_node| tree_node.borrow().right_node());
-
-                valid = left_node
-                    .and_then(|left_node| {
-                        tree_node
-                            .as_ref()
-                            .map(|tree_node| tree_node.borrow().key() > left_node.borrow().key())
-                    })
-                    .unwrap_or(true)
-                    && valid;
-                right_node
-                    .and_then(|right_node| {
-                        tree_node
-                            .as_ref()
-                            .map(|tree_node| tree_node.borrow().key() < right_node.borrow().key())
-                    })
-                    .unwrap_or(true)
-                    && valid
-                    && Self::valid_bst(
-                        &tree_node
-                            .as_ref()
-                            .map(|tree_node| tree_node.borrow().key().clone())
-                            .unwrap(),
-                        tree_node
-                            .as_ref()
-                            .and_then(|tree_node| tree_node.borrow().left.as_ref().cloned()),
-                        tree_node
-                            .as_ref()
-                            .and_then(|tree_node| tree_node.borrow().right.as_ref().cloned()),
-                    )
-            }
-        };
-        let right_valid = match right {
-            None => true,
-            Some(ref right_tree) => {
-                let tree_node = right_tree.borrow().root();
-                let mut valid = tree_node
-                    .as_ref()
-                    .map(|node| node.borrow().key() > root_key)
-                    .unwrap_or(true);
-                let left_node = tree_node
-                    .as_ref()
-                    .and_then(|tree_node| tree_node.borrow().left_node());
-                let right_node = tree_node
-                    .as_ref()
-                    .and_then(|tree_node| tree_node.borrow().right_node());
-
-                valid = left_node
-                    .and_then(|left_node| {
-                        tree_node
-                            .as_ref()
-                            .map(|tree_node| tree_node.borrow().key() > left_node.borrow().key())
-                    })
-                    .unwrap_or(true)
-                    && valid;
-                right_node
-                    .and_then(|right_node| {
-                        tree_node
-                            .as_ref()
-                            .map(|tree_node| tree_node.borrow().key() < right_node.borrow().key())
-                    })
-                    .unwrap_or(true)
-                    && valid
-                    && Self::valid_bst(
-                        &tree_node
-                            .as_ref()
-                            .map(|tree_node| tree_node.borrow().key().clone())
-                            .unwrap(),
-                        tree_node
-                            .as_ref()
-                            .and_then(|tree_node| tree_node.borrow().left.as_ref().cloned()),
-                        tree_node
-                            .as_ref()
-                            .and_then(|tree_node| tree_node.borrow().right.as_ref().cloned()),
-                    )
-            }
-        };
-
-        left_valid && right_valid
-    }
-
-    pub fn is_valid_bst(&self) -> bool {
-        if self.root().is_none() {
-            return true;
-        }
-        true
-    }
-    fn in_order(&self) -> bool {
-        let mut current = self.root();
-        let mut stack = Vec::<Option<Rc<RefCell<Node<T>>>>>::new();
-        let mut previous = None;
-        while current.is_some() || !stack.is_empty() {
-            let curr_val = current.as_ref().map(|c| c.borrow().key().clone());
-            println!("The curr value: {:?}", curr_val);
-            if let Some(Some(l)) = stack.last() {
-                let l = l.borrow().key().clone();
-                println!("The curr value: {:?} and stack last: {:?}", curr_val, l);
-            } else {
-                println!("The stack last is None");
-            }
-
-            while current.is_some() {
-                let curr_val = current.as_ref().map(|c| c.borrow().key().clone());
-                println!("The inner while curr value: {:?}", curr_val);
-                stack.push(current.as_ref().cloned());
-                current = current.and_then(|inner| inner.borrow().left_node());
-            }
-            current = stack.pop().and_then(|popped| popped);
-            let curr_val = current.as_ref().map(|c| c.borrow().key().clone());
-            println!("Post pop curr val: {:?}", curr_val);
-            match previous {
-                None => previous = current.as_ref().map(Rc::clone),
-                Some(ref prev) => {
-                    match current
-                        .as_ref()
-                        .map(|curr| curr.borrow().key() > prev.borrow().key())
-                    {
-                        Some(true) => previous = current.as_ref().map(Rc::clone),
-                        Some(false) => return false,
-                        None => {}
+                let mut current = Some(Rc::clone(root));
+                let mut stack = Vec::new();
+                let mut previous = None;
+                let mut crossed_root = false;
+                let mut first = Some(false);
+                while current.is_some() || !stack.is_empty() {
+                    while current.is_some() {
+                        stack.push(current.as_ref().cloned());
+                        current = current.and_then(|inner| inner.borrow().left_node());
                     }
+                    current = stack.pop().and_then(|popped| popped);
+                    //Has moved to the right side of the tree
+                    if !crossed_root {
+                        crossed_root = current.as_ref().map(|curr| Rc::ptr_eq(curr, root)).unwrap();
+                        if let Some(first) = first.as_mut() {
+                            *first = crossed_root;
+                        }
+                    }
+                    match previous {
+                        None => previous = current.as_ref().map(Rc::clone),
+                        Some(ref prev) => match current.as_ref().map(|curr| {
+                            (
+                                crossed_root,
+                                &mut first,
+                                curr.borrow().key() > prev.borrow().key(),
+                                curr.borrow().key() < root.borrow().key(),
+                            )
+                        }) {
+                            Some((false, Some(false), true, true)) => {
+                                previous = current.as_ref().map(Rc::clone)
+                            }
+                            Some((true, Some(true), true, false)) => {
+                                if let Some(first) = first.as_mut() {
+                                    *first = false;
+                                }
+                                previous = current.as_ref().map(Rc::clone)
+                            }
+                            Some((true, Some(false), true, false)) => {
+                                previous = current.as_ref().map(Rc::clone)
+                            }
+                            _ => return false,
+                        },
+                    }
+                    current = current.and_then(|inner| inner.borrow().right_node());
                 }
+                true
             }
-            current = current.and_then(|inner| inner.borrow().right_node());
-
-            let curr_val = current.as_ref().map(|c| c.borrow().key().clone());
-            println!("Got right as: {:?}", curr_val);
         }
-        true
     }
+
     //Create a height balanced tree from a sorted array
     //The array passed in gets mutated - its elements are replaced with default
     //values for type `T`
@@ -773,6 +645,17 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
         from_array(array, 0, (array.len() - 1) as i32)
     }
 
+    pub fn update(&mut self, key: &T, new_val: T) -> bool {
+        let mut node = self.node_iter().find(|node| node.borrow().key() == key);
+        match node {
+            None => false,
+            Some(ref mut inner) => {
+                inner.borrow_mut().replace_key(Some(new_val));
+                true
+            }
+        }
+    }
+
     //Get an iterator for the tree's keys
     //Remember - calling iter on the tree would not consume the tree
     //iterator.next would return Option<T>
@@ -797,6 +680,16 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
                 Tree(None) => None,
                 Tree(_) => Some(self),
             },
+        }
+    }
+    //Returns an internal iterator that lets update values of the tree
+    fn node_iter(&mut self) -> NodeIter<T> {
+        NodeIter {
+            next: self.root().map(|node| {
+                let mut next = VecDeque::new();
+                next.push_front(node);
+                next
+            }),
         }
     }
 }
@@ -853,7 +746,34 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Iterator for IntoIter<'_, T> {
         }
     }
 }
-
+#[derive(Debug)]
+struct NodeIter<T: Ord + Default + Clone + std::fmt::Debug> {
+    next: Option<VecDeque<Rc<RefCell<Node<T>>>>>,
+}
+impl<T: Ord + Default + Clone + std::fmt::Debug> Iterator for NodeIter<T> {
+    type Item = Rc<RefCell<Node<T>>>;
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.next {
+            None => None,
+            Some(ref mut queue) => {
+                let popped = queue.pop_back();
+                match popped {
+                    None => None,
+                    Some(ref inner) => {
+                        let node = inner.borrow();
+                        if let Some(ref left) = node.left_node() {
+                            queue.push_front(Rc::clone(left));
+                        }
+                        if let Some(ref right) = node.right_node() {
+                            queue.push_front(Rc::clone(right));
+                        }
+                        Some(Rc::clone(inner))
+                    }
+                }
+            }
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1236,10 +1156,10 @@ mod tests {
         tree.insert(9);
         tree.insert(3);
         tree.insert(5);
-        assert!(tree.is_valid());
+        assert!(tree.validate());
     }
     #[test]
-    fn test_tree_in_order() {
+    fn test_tree_validate() {
         let mut tree = Tree::new(6);
         tree.insert(2);
         tree.insert(8);
@@ -1249,7 +1169,7 @@ mod tests {
         tree.insert(9);
         tree.insert(3);
         tree.insert(5);
-        assert!(tree.in_order());
+        assert!(tree.validate());
     }
     #[test]
     fn test_from_sorted_array() {
@@ -1257,7 +1177,7 @@ mod tests {
         let tree = Tree::from_sorted_array(&mut array);
         assert_eq!(array, [0, 0, 0]);
         let mut tree = tree.unwrap();
-        assert!(tree.is_valid());
+        assert!(tree.validate());
         assert_eq!(tree.height(), 2);
         let mut iter = tree.into_iter();
         assert_eq!(iter.next(), Some(2));
@@ -1268,7 +1188,7 @@ mod tests {
         let mut array = [1, 2, 3, 4, 5, 6, 7, 8, 9];
         let tree = Tree::from_sorted_array(&mut array);
         let mut tree = tree.unwrap();
-        assert!(tree.is_valid());
+        assert!(tree.validate());
         assert_eq!(tree.height(), 4);
         let mut iter = tree.into_iter();
         assert_eq!(iter.next(), Some(5));
@@ -1281,5 +1201,21 @@ mod tests {
         assert_eq!(iter.next(), Some(4));
         assert_eq!(iter.next(), Some(1));
         assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_update_tree() {
+        let mut array = [1, 2, 3];
+        let tree = Tree::from_sorted_array(&mut array);
+        let mut tree = tree.unwrap_or_default();
+        assert!(tree.validate());
+        tree.update(&1, 200);
+        assert!(!tree.validate());
+        let mut array = [1, 2, 3, 4, 50, 60, 70, 80, 90];
+        let tree = Tree::from_sorted_array(&mut array);
+        let mut tree = tree.unwrap_or_default();
+        assert!(tree.validate());
+        tree.update(&4, 100);
+        assert!(!tree.validate());
     }
 }
