@@ -20,6 +20,8 @@
       * [Nth smallest](./binary_search_tree/nth_smallest.md)
       * [Kth smallest](./binary_search_tree/kth_smallest.md)
       * [From sorted array](./binary_search_tree/from_sorted_array.md)
+      * [Tree validation](./binary_search_tree/validation.md)
+      * [Tree update](./binary_search_tree/updation.md)
 * [Dubley linkedlist](./doubly_linkedlist/introduction.md)
    * [Node and List](./doubly_linkedlist/node_and_list.md)
    * [Push front and push back](./doubly_linkedlist/push_front_and_back.md)

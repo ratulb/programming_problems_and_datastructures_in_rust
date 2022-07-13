@@ -11,49 +11,54 @@ Finally. we return the target node's content from this function.
 ### Following is the whole `Node::delete` function with inline comments:
 
 ```rust, ignore
-
-    //Delete a target node - gets invoked when the target node has both left
-    //and right node
+//Delete an node when it has two children
     fn delete(mut target: Option<Rc<RefCell<Node<T>>>>) -> Option<T> {
-        //Find the min node in the right side of the target node that is being
-        //deleted
         let min = target
             .as_ref()
             .and_then(|target| target.borrow().right_node().as_ref().and_then(Tree::min));
-        //Find strong reference(upgradded from weak) to min's parent
         let min_parent = min.as_ref().and_then(|min| min.borrow().upgrade_parent());
-        //Find the right child of min if any. Once min is taken out to fill the 
-        //deleted target node's content with evicted min node's content, min's right should
-        //be pointing at min's parent
-        let mut min_right_child = min.as_ref().and_then(|min| {
-            min.borrow_mut()
-                .right
-                .take()
-                .as_ref()
-                .and_then(|child| child.borrow().root())
+        let right_parent = Node::right_parent(target.as_ref(), min_parent.as_ref());
+        let left_or_right = right_parent.as_ref().and_then(|parent| {
+            min.as_ref()
+                .map(|min| parent.borrow().is_left_child(min.borrow().key()))
         });
-        //Make min's right point to min's parent
-        if let Some(ref mut child_node) = min_right_child {
-            child_node.borrow_mut().parent = min
+        let min = match right_parent {
+            None => None,
+            Some(parent) => match left_or_right {
+                None => None,
+                Some(true) => parent.borrow_mut().left.take(),
+                Some(false) => parent.borrow_mut().right.take(),
+            },
+        };
+        let mut min = min.map(|tree| tree.take()).and_then(|tree| tree.root());
+        let min_right = min
+            .as_ref()
+            .and_then(|min| min.borrow_mut().right.take())
+            .and_then(|tree| tree.borrow().root());
+        if let Some(ref min_right) = min_right {
+            min_right.borrow_mut().parent = right_parent
                 .as_ref()
-                .and_then(|min| min.borrow().parent().as_ref().cloned());
+                .map(|parent| Rc::downgrade(&Rc::clone(parent)));
         }
-        //min's parent could be the target node being deleted or some other node on the far
-        //right of it. Choose the appropriate parent
-        let mut right_parent = Node::right_parent(target.as_ref(), min_parent.as_ref());
-        //Set min's right as the right tree of min's parent
-        if let Some(ref mut parent) = right_parent {
-            parent.borrow_mut().right =
-                min_right_child.map(|right_child| Rc::new(RefCell::new(Tree(Some(right_child)))));
+        if let Some(parent) = right_parent {
+            match left_or_right {
+                None => {}
+                Some(true) => {
+                    parent.borrow_mut().left = Tree::with_node(min_right.as_ref().cloned())
+                }
+                Some(false) => {
+                    parent.borrow_mut().right = Tree::with_node(min_right.as_ref().cloned())
+                }
+            }
         }
-        //Return the key of the target node being deleted
         match target {
             Some(ref mut target) => target
                 .borrow_mut()
-                .replace_key(min.map(|min| min.take().key)),
+                .replace_key(min.take().map(|min| min.take().key)),
             None => None,
         }
     }
+}
 ```
 
 The above function takes care of deleting a target node when it has both children. We have separated
