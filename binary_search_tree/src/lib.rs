@@ -129,6 +129,7 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Node<T> {
         //deleted key
         result.0
     }
+    //Delete an node when it has two children
     fn delete(mut target: Option<Rc<RefCell<Node<T>>>>) -> Option<T> {
         let min = target
             .as_ref()
@@ -645,6 +646,7 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
         from_array(array, 0, (array.len() - 1) as i32)
     }
 
+    //Update a node key in the tree
     pub fn update(&mut self, key: &T, new_val: T) -> bool {
         let mut node = self.node_iter().find(|node| node.borrow().key() == key);
         match node {
