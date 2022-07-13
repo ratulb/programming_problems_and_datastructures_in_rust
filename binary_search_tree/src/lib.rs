@@ -138,51 +138,53 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Node<T> {
         //deleted key
         result.0
     }
-
-    //Delete a target node - gets invoked when the target node has both left
-    //and right node
     fn delete(mut target: Option<Rc<RefCell<Node<T>>>>) -> Option<T> {
-        //Find the min node in the right side of the target node that is being
-        //deleted
         let min = target
             .as_ref()
             .and_then(|target| target.borrow().right_node().as_ref().and_then(Tree::min));
-        //Find strong reference(upgradded from weak) to min's parent
         let min_parent = min.as_ref().and_then(|min| min.borrow().upgrade_parent());
-        //Find the right child of min if any. Once min is taken out to fill the
-        //deleted target node's content with evicted min node's content, min's right should
-        //be pointing at min's parent
-        let mut min_right_child = min.as_ref().and_then(|min| {
-            min.borrow_mut()
-                .right
-                .take()
-                .as_ref()
-                .and_then(|child| child.borrow().root())
+        let right_parent = Node::right_parent(target.as_ref(), min_parent.as_ref());
+        let left_or_right = right_parent.as_ref().and_then(|parent| {
+            min.as_ref()
+                .map(|min| parent.borrow().is_left_child(min.borrow().key()))
         });
-        //Make min's right point to min's parent
-        if let Some(ref mut child_node) = min_right_child {
-            child_node.borrow_mut().parent = min
+        let min = match right_parent {
+            None => None,
+            Some(parent) => match left_or_right {
+                None => None,
+                Some(true) => parent.borrow_mut().left.take(),
+                Some(false) => parent.borrow_mut().right.take(),
+            },
+        };
+        let mut min = min.map(|tree| tree.take()).and_then(|tree| tree.root());
+        let mut min_right = min
+            .as_ref()
+            .and_then(|min| min.borrow_mut().right.take())
+            .and_then(|tree| tree.borrow().root());
+        if let Some(ref min_right) = min_right {
+            min_right.borrow_mut().parent = right_parent
                 .as_ref()
-                .and_then(|min| min.borrow().parent().as_ref().cloned());
+                .map(|parent| Rc::downgrade(&Rc::clone(parent)));
         }
-        //min's parent could be the target node being deleted or some other node on the far
-        //right of it. Choose the appropriate parent
-        let mut right_parent = Node::right_parent(target.as_ref(), min_parent.as_ref());
-        //Set min's right as the right tree of min's parent
-        if let Some(ref mut parent) = right_parent {
-            parent.borrow_mut().right =
-                min_right_child.map(|right_child| Rc::new(RefCell::new(Tree(Some(right_child)))));
+        if let Some(parent) = right_parent {
+            match left_or_right {
+                None => {}
+                Some(true) => {
+                    parent.borrow_mut().left = Tree::with_node(min_right.as_ref().cloned())
+                }
+                Some(false) => {
+                    parent.borrow_mut().right = Tree::with_node(min_right.as_ref().cloned())
+                }
+            }
         }
-        //Return the key of the target node being deleted
         match target {
             Some(ref mut target) => target
                 .borrow_mut()
-                .replace_key(min.map(|min| min.take().key)),
+                .replace_key(min.take().map(|min| min.take().key)),
             None => None,
         }
     }
 }
-
 #[derive(Debug, Default)]
 pub struct Tree<T: Ord + Default + Clone + std::fmt::Debug>(Option<Rc<RefCell<Node<T>>>>);
 
@@ -197,6 +199,14 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
             node,
         )))))))
     }
+
+    fn with_node(node: Option<Rc<RefCell<Node<T>>>>) -> Option<Rc<RefCell<Tree<T>>>> {
+        match node {
+            None => None,
+            node @ Some(_) => Some(Rc::new(RefCell::new(Tree(node)))),
+        }
+    }
+
     //Get a shared handle to the root of the tree
     fn root(&self) -> Option<Rc<RefCell<Node<T>>>> {
         self.0.as_ref().map(Rc::clone)
@@ -307,8 +317,11 @@ impl<T: Ord + Default + Clone + std::fmt::Debug> Tree<T> {
                                 //Return root's key
                                 root.map(|root| root.take().key)
                             }
-                            //Has got both children - delete to Node::delete
-                            (false, true, true, true) => Node::delete(target),
+                            //Has got both children - delegate to Node::delete
+                            (false, true, true, true) => {
+                                let result = Node::delete(target);
+                                result
+                            }
                             (_, _, _, _) => None,
                         }
                     }
@@ -1256,11 +1269,17 @@ mod tests {
         let tree = Tree::from_sorted_array(&mut array);
         let mut tree = tree.unwrap();
         assert!(tree.is_valid());
-        //assert_eq!(tree.height(), 3);
+        assert_eq!(tree.height(), 4);
         let mut iter = tree.into_iter();
         assert_eq!(iter.next(), Some(5));
         assert_eq!(iter.next(), Some(6));
-        /***assert_eq!(iter.next(), Some(7));
-        assert_eq!(iter.next(), None);***/
+        assert_eq!(iter.next(), Some(7));
+        assert_eq!(iter.next(), Some(8));
+        assert_eq!(iter.next(), Some(9));
+        assert_eq!(iter.next(), Some(2));
+        assert_eq!(iter.next(), Some(3));
+        assert_eq!(iter.next(), Some(4));
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), None);
     }
 }
