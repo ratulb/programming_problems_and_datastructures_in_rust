@@ -46,3 +46,4 @@
    * [Longest common prefix](./prefix_suffix/longest_prefix.md)
    * [Longest common suffix](./prefix_suffix/longest_suffix.md)
 * [String permutation](./permutations/introduction.md)
+* [Merge k sorted arrays](./merge_ksorted_arrays/introduction.md)
