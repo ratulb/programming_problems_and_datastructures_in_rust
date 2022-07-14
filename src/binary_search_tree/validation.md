@@ -23,7 +23,6 @@ be greater than the root and its previous element.
                         current = current.and_then(|inner| inner.borrow().left_node());
                     }
                     current = stack.pop().and_then(|popped| popped);
-                    current = stack.pop().and_then(|popped| popped);
                     //Has moved to the right side of the tree
                     if !crossed_root {
                         crossed_root = current.as_ref().map(|curr| Rc::ptr_eq(curr, root)).unwrap();
