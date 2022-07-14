@@ -16,7 +16,6 @@ mod tests {
     fn sort_test() {
         let mut items = [10, 2, 100, 56, 9, 11, 11];
         sort(&mut items);
-        println!("{:?}", items);
         assert!(items == [2, 9, 10, 11, 11, 56, 100]);
     }
 }
