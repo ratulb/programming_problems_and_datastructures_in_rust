@@ -1,66 +1,39 @@
-//Merge k-sorted array
-
-use std::cmp::Reverse;
-use std::collections::BinaryHeap;
+///Merge k sorted arrays. Arrays are not of equal lengths
+use heap::Heap;
 
 pub fn merge(arrays: &[&[i32]]) -> Vec<i32> {
-    let mut heap = BinaryHeap::new();
+    let mut heap = Heap::min();
     let mut size = 0;
     for i in 0..arrays.len() {
         size += arrays[i].len();
         if arrays[i].len() > 0 {
-            let elem = Elem::new(0, i, arrays[i][0]);
-            heap.push(Reverse(elem));
+            let elem = Elem::new(arrays[i][0], i, 0);
+            heap.insert(elem);
         }
     }
     let mut result: Vec<i32> = Vec::with_capacity(size);
     while !heap.is_empty() {
-        let elem = heap.pop().unwrap().0;
-        let index = elem.index;
-        let array = elem.array;
-        let value = elem.value;
-        if index + 1 < arrays[array].len() {
-            heap.push(Reverse(Elem::new(
-                index + 1,
-                array,
-                arrays[array][index + 1],
-            )));
+        let elem = heap.remove().unwrap();
+        let value = elem.0;
+        let array_idx = elem.1;
+        let value_idx = elem.2;
+        if value_idx + 1 < arrays[array_idx].len() {
+            heap.insert(Elem::new(
+                arrays[array_idx][value_idx + 1],
+                array_idx,
+                value_idx + 1,
+            ));
         }
         result.push(value);
     }
     result
 }
+#[derive(Eq, Ord, PartialEq, PartialOrd)]
+struct Elem<T: Ord>(T, usize, usize);
 
-struct Elem {
-    index: usize,
-    array: usize,
-    value: i32,
-}
-
-impl Elem {
-    pub fn new(index: usize, array: usize, value: i32) -> Self {
-        Elem {
-            index,
-            array,
-            value,
-        }
-    }
-}
-impl PartialEq for Elem {
-    fn eq(&self, other: &Self) -> bool {
-        self.value == other.value
-    }
-}
-impl Eq for Elem {}
-use std::cmp::Ordering;
-impl PartialOrd for Elem {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.value.partial_cmp(&other.value)
-    }
-}
-impl Ord for Elem {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.value.cmp(&other.value)
+impl<T: Ord> Elem<T> {
+    fn new(value: T, array_idx: usize, value_idx: usize) -> Self {
+        Elem(value, array_idx, value_idx)
     }
 }
 
