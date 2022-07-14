@@ -4,7 +4,7 @@ pub struct LinkedList<T> {
 }
 impl<T: std::fmt::Display> LinkedList<T> {
     pub fn new(value: T) -> LinkedList<T> {
-        let link = Some(Box::new(LinkNode::new(value)));
+        let link = Some(Box::new(Node::new(value)));
         LinkedList { head: link }
     }
     pub fn empty() -> Self {
@@ -13,14 +13,14 @@ impl<T: std::fmt::Display> LinkedList<T> {
     pub fn push_front(&mut self, value: T) -> &mut Self {
         match self.head.take() {
             Some(h) => {
-                let new_head = LinkNode {
+                let new_head = Node {
                     value: value,
                     next: Some(h),
                 };
                 self.head = Some(Box::new(new_head));
             }
             None => {
-                self.head = Some(Box::new(LinkNode::new(value)));
+                self.head = Some(Box::new(Node::new(value)));
             }
         }
         self
@@ -44,15 +44,15 @@ impl<T: std::fmt::Display> LinkedList<T> {
     }
 }
 
-type Link<T> = Option<Box<LinkNode<T>>>;
+type Link<T> = Option<Box<Node<T>>>;
 #[derive(Debug)]
-struct LinkNode<T> {
+struct Node<T> {
     value: T,
-    next: Option<Box<LinkNode<T>>>,
+    next: Option<Box<Node<T>>>,
 }
-impl<T: std::fmt::Display> LinkNode<T> {
-    fn new(value: T) -> LinkNode<T> {
-        LinkNode {
+impl<T: std::fmt::Display> Node<T> {
+    fn new(value: T) -> Node<T> {
+        Node {
             value: value,
             next: None,
         }

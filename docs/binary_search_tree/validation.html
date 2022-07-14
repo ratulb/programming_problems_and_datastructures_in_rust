@@ -164,7 +164,6 @@ be greater than the root and its previous element.</p>
                         current = current.and_then(|inner| inner.borrow().left_node());
                     }
                     current = stack.pop().and_then(|popped| popped);
-                    current = stack.pop().and_then(|popped| popped);
                     //Has moved to the right side of the tree
                     if !crossed_root {
                         crossed_root = current.as_ref().map(|curr| Rc::ptr_eq(curr, root)).unwrap();
@@ -234,22 +233,6 @@ be greater than the root and its previous element.</p>
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script type="text/javascript">
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
 
