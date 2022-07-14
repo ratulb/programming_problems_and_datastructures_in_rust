@@ -34,6 +34,7 @@
       * [Bidirectional iterator](./doubly_linkedlist/immutable_iterator.md)
 * [Sorting algorithms](./sorting/introduction.md)
    * [Bubble sort](./sorting/bubblesort.md)
+   * [Insertion sort](./sorting/insertionsort.md)
 * [LRU cache](./lru_cache/introduction.md)
 * [Heap](./heap/introduction.md)
    * [Max heap](./heap/max_heap.md)
