@@ -19,7 +19,7 @@ pub fn mergesort<T: PartialOrd + Default>(
     let mid = left + (right - left) / 2;
     mergesort(items, left, mid, aux);
     mergesort(items, mid + 1, right, aux);
-    if items[mid] < items[mid + 1] {
+    if items[mid] <= items[mid + 1] {
         return;
     }
     merge(items, left, mid, right, aux);
@@ -59,7 +59,7 @@ mod tests {
     use rand::Rng;
     #[test]
     fn merge_sort_test() {
-        let mut items = [89, 23, 11, 0, 23, 42];
+        let mut items = [89, 23, 11, 11, 11, 23, 42];
         sort(&mut items);
         assert!(is_sorted(&items));
         let mut runs = 50;
