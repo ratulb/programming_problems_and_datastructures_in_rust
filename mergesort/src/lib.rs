@@ -1,68 +1,84 @@
-/**
- * A simple merge sort routine
- */
-
-pub fn mergesort<'a>(array: &'a mut [u16]) -> &'a [u16] {
-    sort(array, 0, array.len() - 1);
-    array
-}
-
-pub fn merge(array: &mut [u16], low: usize, mid: usize, high: usize) {
-    let aux: Vec<u16> = array.to_vec();
-
-    let mut i = low;
-    let mut j = mid + 1;
-
-    for k in low..=high {
-        if i > mid {
-            array[k] = aux[j];
-            j += 1;
-        } else if j > high {
-            array[k] = aux[i];
-            i += 1;
-        } else if aux[j] < aux[i] {
-            array[k] = aux[j];
-            j += 1;
-        } else {
-            array[k] = aux[i];
-            i += 1;
-        }
+///Merge sort implementation
+pub fn sort<'a, T: PartialOrd + Default>(items: &'a mut [T]) -> &'a [T] {
+    let mut aux = Vec::with_capacity(items.len());
+    for _ in 0..items.len() {
+        aux.push(T::default());
     }
+    mergesort(items, 0, items.len() - 1, &mut aux);
+    items
 }
-pub fn sort(array: &mut [u16], low: usize, high: usize) {
-    if high <= low {
+pub fn mergesort<T: PartialOrd + Default>(
+    items: &mut [T],
+    left: usize,
+    right: usize,
+    aux: &mut Vec<T>,
+) {
+    if right <= left {
         return;
     }
-    let mid = low + (high - low) / 2;
-    sort(array, low, mid);
-    sort(array, mid + 1, high);
-    merge(array, low, mid, high);
+    let mid = left + (right - left) / 2;
+    mergesort(items, left, mid, aux);
+    mergesort(items, mid + 1, right, aux);
+    if items[mid] < items[mid + 1] {
+        return;
+    }
+    merge(items, left, mid, right, aux);
+}
+pub fn merge<T: PartialOrd + Default>(
+    items: &mut [T],
+    left: usize,
+    mid: usize,
+    right: usize,
+    aux: &mut Vec<T>,
+) {
+    for i in left..=right {
+        aux.insert(i, std::mem::take(&mut items[i]));
+    }
+    let mut left_index = left;
+    let mut right_index = mid + 1;
+    for item_index in left..=right {
+        if left_index > mid {
+            items[item_index] = std::mem::take(&mut aux[right_index]);
+            right_index += 1;
+        } else if right_index > right {
+            items[item_index] = std::mem::take(&mut aux[left_index]);
+            left_index += 1;
+        } else if aux[left_index] < aux[right_index] {
+            items[item_index] = std::mem::take(&mut aux[left_index]);
+            left_index += 1;
+        } else {
+            items[item_index] = std::mem::take(&mut aux[right_index]);
+            right_index += 1;
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::mergesort;
+    use super::sort;
     use rand::Rng;
     #[test]
     fn merge_sort_test() {
-        let mut runs = 5;
+        let mut items = [89, 23, 11, 0, 23, 42];
+        sort(&mut items);
+        assert!(is_sorted(&items));
+        let mut runs = 50;
         loop {
-            let mut array: [u16; 20] = [0; 20];
-            rand::thread_rng().fill(&mut array);
-            mergesort(&mut array);
-            if !is_sorted(&array) {
+            let mut items: [u8; 10] = [0; 10];
+            rand::thread_rng().fill(&mut items);
+            sort(&mut items);
+            if !is_sorted(&items) {
                 panic!("Array is not sorted...");
             }
-            println!("The sorted array is : {:?} ", array);
             runs -= 1;
             if runs == 0 {
                 break;
             }
         }
     }
-    fn is_sorted(array: &[u16]) -> bool {
-        for idx in 1..array.len() {
-            if array[idx - 1] > array[idx] {
+    fn is_sorted<T: PartialOrd>(items: &[T]) -> bool {
+        for idx in 1..items.len() {
+            if items[idx - 1] > items[idx] {
                 return false;
             }
         }
