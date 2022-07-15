@@ -1,5 +1,8 @@
 ///Merge sort implementation
 pub fn sort<'a, T: PartialOrd + Default>(items: &'a mut [T]) -> &'a [T] {
+    if items.len() == 0 {
+        return items;
+    }
     let mut aux = Vec::with_capacity(items.len());
     for _ in 0..items.len() {
         aux.push(T::default());
@@ -13,7 +16,7 @@ pub fn mergesort<T: PartialOrd + Default>(
     right: usize,
     aux: &mut Vec<T>,
 ) {
-    if right <= left {
+    if right - left < 1 {
         return;
     }
     let mid = left + (right - left) / 2;
@@ -61,6 +64,15 @@ mod tests {
     fn merge_sort_test() {
         let mut items = [89, 23, 11, 11, 11, 23, 42];
         sort(&mut items);
+        assert!(is_sorted(&items));
+        let mut items = [89, 23];
+        sort(&mut items);
+        assert!(is_sorted(&items));
+        let mut items = [89];
+        sort(&mut items);
+        assert!(is_sorted(&items));
+        let items: &mut [i32] = &mut [];
+        sort(items);
         assert!(is_sorted(&items));
         let mut runs = 50;
         loop {
