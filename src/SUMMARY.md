@@ -36,6 +36,7 @@
    * [Bubble sort](./sorting/bubblesort.md)
    * [Insertion sort](./sorting/insertionsort.md)
    * [Selection sort](./sorting/selectionsort.md)
+   * [Merge sort](./sorting/mergesort.md)
 * [LRU cache](./lru_cache/introduction.md)
 * [Heap](./heap/introduction.md)
    * [Max heap](./heap/max_heap.md)
