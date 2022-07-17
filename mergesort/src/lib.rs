@@ -4,6 +4,8 @@ pub fn sort<'a, T: PartialOrd + Default>(items: &'a mut [T]) -> &'a [T] {
         return items;
     }
     let mut aux = Vec::with_capacity(items.len());
+    //Put default value - since don't expect `T` to be clone - we
+    //can not use Vec `fill`
     for _ in 0..items.len() {
         aux.push(T::default());
     }
@@ -34,15 +36,22 @@ pub fn merge<T: PartialOrd + Default>(
     right: usize,
     aux: &mut Vec<T>,
 ) {
+    //Copy elements to the auxiliary array
     for i in left..=right {
         aux.insert(i, std::mem::take(&mut items[i]));
     }
+    //Start of left half
     let mut left_index = left;
+    //Start of right half
     let mut right_index = mid + 1;
+    //From left to right all the way
     for item_index in left..=right {
+        //Left half got exhausted
+        //Copy what we have in the auxilary array to the items array
         if left_index > mid {
             items[item_index] = std::mem::take(&mut aux[right_index]);
             right_index += 1;
+        //Right half exhausted
         } else if right_index > right {
             items[item_index] = std::mem::take(&mut aux[left_index]);
             left_index += 1;
