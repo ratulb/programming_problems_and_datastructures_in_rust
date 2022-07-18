@@ -3,6 +3,7 @@
 
 use std::collections::HashSet;
 use std::collections::VecDeque;
+use std::iter::FromIterator;
 
 pub fn find_substring(s: String, search_words: Vec<String>) -> Vec<usize> {
     if s.is_empty() || search_words.is_empty() {
@@ -19,10 +20,8 @@ fn substring_indices(s: String, words: Vec<String>) -> Vec<usize> {
     }
     let mut stack: VecDeque<(&str, usize)> = VecDeque::with_capacity(words.len());
     let split_size = words[0].len();
-    let words = words
-        .into_iter()
-        .map(|w| w.to_string())
-        .collect::<HashSet<_>>();
+    //Get rid of duplicate search words
+    let words = HashSet::<String>::from_iter(words);
     let mut index = 0;
     while index <= s.len() - split_size {
         let chunck = &s[index..index + split_size];
@@ -102,7 +101,6 @@ mod tests {
         assert!(result.contains(&9));
     }
     #[test]
-    #[ignore]
     fn substr_concatenation_test3() {
         let s = String::from("wordgoodgoodgoodbestword");
         let words = vec![
