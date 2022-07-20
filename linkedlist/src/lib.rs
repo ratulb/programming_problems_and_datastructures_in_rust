@@ -181,7 +181,7 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
             }
         }
     }
-    //Sort the list using selection sort
+    //Sort the list using selection sort (slow)
     pub fn selection_sort(&mut self) {
         if self.len() < 2 {
             return;
@@ -202,11 +202,23 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
             });
     }
 
-    pub fn is_sorted(&self) -> bool {
-        let mut v1 = self.iter().collect::<Vec<_>>();
-        v1.sort();
-        let v2 = self.iter().collect::<Vec<_>>();
-        v1 == v2
+    pub fn is_sorted(&self, ascending: bool) -> bool {
+        if self.len() < 2 {
+            return true;
+        }
+        let mut first = None;
+        let mut iter = self.iter();
+        while let Some(t) = iter.next() {
+            match first {
+                None => first = Some(t),
+                Some(prev) => match ascending {
+                    true if prev > t => return false,
+                    false if prev < t => return false,
+                    _ => first = Some(t),
+                },
+            }
+        }
+        true
     }
 
     pub fn is_empty(&self) -> bool {
@@ -216,6 +228,14 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
     pub fn len(&self) -> usize {
         self.len
     }
+    pub fn first(&self) -> Option<T> {
+        self.head.as_ref().map(|node| node.borrow().value.clone())
+    }
+    //o(n) operation
+    pub fn last(&self) -> Option<T> {
+        self.iter().last()
+    }
+
     //Find the insert index for element where is existing element is bigger or equal than the
     //input element
 
@@ -534,7 +554,7 @@ mod tests {
                 ll.push_front(elem);
             }
             ll.selection_sort();
-            if !ll.is_sorted() {
+            if !ll.is_sorted(true) {
                 panic!("Array is not sorted...");
             }
             runs -= 1;
@@ -542,5 +562,47 @@ mod tests {
                 break;
             }
         }
+    }
+
+    #[test]
+    fn test_is_sorted() {
+        let mut ll = LinkedList::empty();
+        assert!(ll.is_sorted(true));
+        assert!(ll.is_sorted(false));
+        ll.push_front(1);
+        ll.push_back(2);
+        assert!(ll.is_sorted(true));
+        assert!(!ll.is_sorted(false));
+
+        let mut ll = LinkedList::empty();
+
+        ll.push_front(1);
+        ll.push_front(-1);
+        ll.push_front(0);
+        assert!(!ll.is_sorted(true));
+        assert!(!ll.is_sorted(false));
+    }
+    #[test]
+    fn test_first_last() {
+        let mut ll = LinkedList::empty();
+        assert!(ll.first().is_none());
+        assert!(ll.last().is_none());
+        ll.push_front(1);
+        assert!(ll.first().is_some());
+        assert!(ll.last().is_some());
+        assert_eq!(ll.first(), Some(1));
+        assert_eq!(ll.last(), Some(1));
+
+        ll.push_back(2);
+        ll.push_back(3);
+        assert_eq!(ll.first(), Some(1));
+        assert_eq!(ll.last(), Some(3));
+        ll.pop_front();
+        assert_eq!(ll.first(), Some(2));
+        ll.pop_back();
+        assert_eq!(ll.last(), Some(2));
+        ll.pop_front();
+        assert!(ll.first().is_none());
+        assert!(ll.last().is_none());
     }
 }
