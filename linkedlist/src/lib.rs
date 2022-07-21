@@ -162,6 +162,48 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
         }
         self.head = previous;
     }
+
+    pub fn insert_sorted(&mut self, value: T, ascending: bool) {
+        if self.is_empty() {
+            self.push_front(value);
+            return;
+        }
+        let mut prev = None;
+        let insert_at = self
+            .link_iterator()
+            .map(|link| {
+                if prev.is_none() {
+                    prev = Some(Rc::clone(&link));
+                    if ascending {
+                        (None, link.borrow().value >= value, Rc::clone(&link))
+                    } else {
+                        (None, link.borrow().value <= value, Rc::clone(&link))
+                    }
+                } else {
+                    let curr_prev = prev.as_ref().cloned();
+                    prev = Some(Rc::clone(&link));
+                    if ascending {
+                        (curr_prev, link.borrow().value >= value, Rc::clone(&link))
+                    } else {
+                        (curr_prev, link.borrow().value <= value, Rc::clone(&link))
+                    }
+                }
+            })
+            .find(|(_, greater, _)| greater == &true)
+            .map(|(prev, _, next)| (prev, next));
+        match insert_at {
+            None => self.push_back(value),
+            Some((None, _)) => self.push_front(value),
+            Some((mut prev, ref next)) => {
+                let new_entry = Some(Node::wrappred_with_link(value, next));
+                if let Some(ref mut prev) = prev {
+                    prev.borrow_mut().next = new_entry.as_ref().cloned();
+                    self.len += 1;
+                }
+            }
+        }
+    }
+
     //Sort the list with bubble sort
     pub fn bubble_sort(&mut self) {
         if self.len() < 2 {
@@ -202,6 +244,18 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
             });
     }
 
+    pub fn insertion_sort(&mut self, ascending: bool) {
+        if self.len() < 2 {
+            return;
+        }
+        let mut current = self.head.take();
+        while let Some(curr) = current {
+            let mut node = curr.take();
+            self.insert_sorted(node.value, ascending);
+            current = node.next.take();
+        }
+    }
+
     pub fn is_sorted(&self, ascending: bool) -> bool {
         if self.len() < 2 {
             return true;
@@ -234,18 +288,6 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
     //o(n) operation
     pub fn last(&self) -> Option<T> {
         self.iter().last()
-    }
-
-    //Find the insert index for element where is existing element is bigger or equal than the
-    //input element
-
-    fn insert_index(&self, link: Rc<RefCell<Node<T>>>) -> usize {
-        self.link_iterator()
-            .enumerate()
-            .find(|target| target.1.borrow().value >= link.borrow().value)
-            //.map(|(index, _)| if index > 0 { index - 1 } else { index })
-            .map(|(index, _)| index)
-            .unwrap_or(0)
     }
 
     //An iterator that consumes that list
@@ -530,24 +572,10 @@ mod tests {
     }
 
     #[test]
-    fn insert_index_test() {
-        let mut ll = LinkedList::new(-10);
-        ll.push_front(42);
-        ll.push_front(21);
-        ll.push_front(21);
-        ll.push_front(90);
-        ll.push_front(200);
-
-        ll.bubble_sort();
-        let node = Node::wrapped(43);
-        let insert_index = ll.insert_index(node);
-        println!("Insert index = {:?}", insert_index);
-    }
-    #[test]
     fn selection_sort_test2() {
         let mut runs = 5;
         loop {
-            let mut items: [u16; 1024] = [0; 1024];
+            let mut items: [u16; 128] = [0; 128];
             rand::thread_rng().fill(&mut items);
             let mut ll = LinkedList::empty();
             for elem in items {
@@ -555,7 +583,7 @@ mod tests {
             }
             ll.selection_sort();
             if !ll.is_sorted(true) {
-                panic!("Array is not sorted...");
+                panic!("List is not sorted...");
             }
             runs -= 1;
             if runs == 0 {
@@ -604,5 +632,74 @@ mod tests {
         ll.pop_front();
         assert!(ll.first().is_none());
         assert!(ll.last().is_none());
+    }
+    #[test]
+    fn test_insertion_sort() {
+        let mut runs = 5;
+        loop {
+            let mut items: [u16; 128] = [0; 128];
+            rand::thread_rng().fill(&mut items);
+            let mut ll = LinkedList::empty();
+            for elem in items {
+                ll.push_front(elem);
+            }
+            ll.insertion_sort(false);
+            if !ll.is_sorted(false) {
+                panic!("List is not sorted...");
+            }
+            runs -= 1;
+            if runs == 0 {
+                break;
+            }
+        }
+        let mut runs = 5;
+        loop {
+            let mut items: [u16; 128] = [0; 128];
+            rand::thread_rng().fill(&mut items);
+            let mut ll = LinkedList::empty();
+            for elem in items {
+                ll.push_back(elem);
+            }
+            ll.insertion_sort(true);
+            if !ll.is_sorted(true) {
+                panic!("List is not sorted...");
+            }
+            runs -= 1;
+            if runs == 0 {
+                break;
+            }
+        }
+    }
+
+    #[test]
+    fn test_insert_sorted() {
+        let mut ll = LinkedList::empty();
+        ll.push_back(4);
+        ll.push_back(5);
+        ll.insert_sorted(3, true);
+        assert!(ll.is_sorted(true));
+
+        let mut ll = LinkedList::empty();
+        ll.insert_sorted(4, true);
+        ll.insert_sorted(5, true);
+        ll.insert_sorted(3, true);
+        assert!(ll.is_sorted(true));
+
+        let mut runs = 5;
+        loop {
+            let mut items: [u16; 128] = [0; 128];
+            rand::thread_rng().fill(&mut items);
+            let mut ll = LinkedList::empty();
+            for elem in items {
+                ll.insert_sorted(elem, false);
+            }
+            if !ll.is_sorted(false) {
+                panic!("List is not sorted...");
+            }
+            runs -= 1;
+            if runs == 0 {
+                break;
+            }
+        }
     }
 }
