@@ -248,11 +248,21 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
         if self.len() < 2 {
             return;
         }
+        let len = self.len();
         let mut current = self.head.take();
+        self.len = 0;
         while let Some(curr) = current {
             let mut node = curr.take();
             self.insert_sorted(node.value, ascending);
             current = node.next.take();
+        }
+        let len_now = self.len();
+        assert_eq!(len, len_now);
+    }
+
+    pub fn mergesort(&mut self) {
+        if self.len() < 2 {
+            return;
         }
     }
 
@@ -637,13 +647,15 @@ mod tests {
     fn test_insertion_sort() {
         let mut runs = 5;
         loop {
-            let mut items: [u16; 128] = [0; 128];
+            let mut items: [u16; 10] = [0; 10];
             rand::thread_rng().fill(&mut items);
             let mut ll = LinkedList::empty();
             for elem in items {
                 ll.push_front(elem);
             }
+            let len = ll.iter().count();
             ll.insertion_sort(false);
+            assert_eq!(len, ll.len());
             if !ll.is_sorted(false) {
                 panic!("List is not sorted...");
             }
@@ -687,12 +699,13 @@ mod tests {
 
         let mut runs = 5;
         loop {
-            let mut items: [u16; 128] = [0; 128];
+            let mut items: [u8; 10] = [0; 10];
             rand::thread_rng().fill(&mut items);
             let mut ll = LinkedList::empty();
             for elem in items {
                 ll.insert_sorted(elem, false);
             }
+            assert_eq!(items.len(), ll.len());
             if !ll.is_sorted(false) {
                 panic!("List is not sorted...");
             }
