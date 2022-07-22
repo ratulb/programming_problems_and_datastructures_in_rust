@@ -244,12 +244,11 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
                     });
             });
     }
-
+    //Sort the linked list via insertion sort
     pub fn insertion_sort(&mut self, ascending: bool) {
         if self.len() < 2 {
             return;
         }
-        let len = self.len();
         let mut current = self.head.take();
         self.len = 0;
         while let Some(curr) = current {
@@ -257,8 +256,6 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
             self.insert_sorted(node.value, ascending);
             current = node.next.take();
         }
-        let len_now = self.len();
-        assert_eq!(len, len_now);
     }
 
     pub fn mergesort(&mut self) {
@@ -266,7 +263,7 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
             return;
         }
     }
-
+    //Is the list sorted in ascending or descending order?
     pub fn is_sorted(&self, ascending: bool) -> bool {
         if self.len() < 2 {
             return true;
