@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 type Link<T> = Option<Rc<RefCell<Node<T>>>>;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct LinkedList<T: std::fmt::Debug + Default + Clone + Ord> {
     head: Link<T>,
     len: usize,
@@ -262,6 +262,12 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
         if self.len() < 2 {
             return;
         }
+        let mut splits = Self::split_at_mid(std::mem::take(self));
+        if let Some((ref mut left, ref mut right)) = splits {
+            Self::mergesort(left);
+            Self::mergesort(right);
+            *self = Self::merge(std::mem::take(left), std::mem::take(right), true);
+        }
     }
     //Is the list sorted in ascending or descending order?
     pub fn is_sorted(&self, ascending: bool) -> bool {
@@ -269,8 +275,7 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
             return true;
         }
         let mut first = None;
-        let mut iter = self.iter();
-        while let Some(t) = iter.next() {
+        for t in self.iter() {
             match first {
                 None => first = Some(t),
                 Some(prev) => match ascending {
@@ -286,8 +291,8 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
     //Split the list at the given index `at` - the list would be consumed!
     pub fn split_at(mut self, at: usize) -> Option<(Self, Self)> {
         match at {
-            pos if pos >= self.len() => return None,
-            pos if pos == 0 => return Some((Self::empty(), self)),
+            pos if pos >= self.len() => None,
+            pos if pos == 0 => Some((Self::empty(), self)),
             _ => {
                 let mut index = 0;
                 let current = &mut self.head.take();
@@ -310,6 +315,53 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
                 Some((self, right))
             }
         }
+    }
+    //Merge two sorted list
+    pub fn merge(this: Self, that: Self, ascending: bool) -> Self {
+        match (this.is_empty(), that.is_empty()) {
+            (true, true) => return Self::empty(),
+            (false, true) => return this,
+            (true, false) => return that,
+            (_, _) => {}
+        }
+        assert!(this.is_sorted(ascending));
+        assert!(that.is_sorted(ascending));
+        let mut this = this.head;
+        let mut that = that.head;
+        let mut merged = Self::empty();
+        while let (Some(this_inner), Some(that_inner)) = (&mut this, &mut that) {
+            let this_smaller = this_inner.borrow().value < that_inner.borrow().value;
+            if this_smaller {
+                let mut node = this_inner.take();
+                merged.push_back(node.value);
+                this = node.next.take();
+                that = Some(Rc::clone(that_inner));
+            } else {
+                let mut node = that_inner.take();
+                merged.push_back(node.value);
+                that = node.next.take();
+                this = Some(Rc::clone(this_inner));
+            }
+        }
+        while let Some(inner) = this {
+            let mut node = inner.take();
+            merged.push_back(node.value);
+            this = node.next.take();
+        }
+        while let Some(inner) = that {
+            let mut node = inner.take();
+            merged.push_back(node.value);
+            that = node.next.take();
+        }
+
+        merged
+    }
+
+    //Split the list into two halves - first containing 0..len/2 and
+    //second len/2..len - right index not included
+    pub fn split_at_mid(self) -> Option<(Self, Self)> {
+        let mid = self.len() / 2;
+        self.split_at(mid)
     }
 
     pub fn is_empty(&self) -> bool {
@@ -755,5 +807,93 @@ mod tests {
         right.push_back(3);
         let rs = ll.split_at(1);
         assert_eq!(rs, Some((left, right)));
+    }
+
+    #[test]
+    fn test_split_at_mid() {
+        let mut ll = LinkedList::empty();
+        ll.push_back(1);
+        ll.push_back(2);
+        ll.push_back(3);
+        let mut left = LinkedList::empty();
+        left.push_back(1);
+        let mut right = LinkedList::empty();
+        right.push_back(2);
+        right.push_back(3);
+        let rs = ll.split_at(1);
+        assert_eq!(rs, Some((left, right)));
+
+        let mut ll = LinkedList::empty();
+        ll.push_back(1);
+        ll.push_back(2);
+        ll.push_back(3);
+        ll.push_back(4);
+        let mut left = LinkedList::empty();
+        left.push_back(1);
+        left.push_back(2);
+        let mut right = LinkedList::empty();
+        right.push_back(3);
+        right.push_back(4);
+        let rs = ll.split_at_mid();
+        assert_eq!(rs, Some((left, right)));
+
+        let mut ll = LinkedList::empty();
+        ll.push_back(1);
+        ll.push_back(2);
+        ll.push_back(3);
+        ll.push_back(4);
+        ll.push_back(5);
+        let mut left = LinkedList::empty();
+        left.push_back(1);
+        left.push_back(2);
+        let mut right = LinkedList::empty();
+        right.push_back(3);
+        right.push_back(4);
+        right.push_back(5);
+        let rs = ll.split_at_mid();
+        assert_eq!(rs, Some((left, right)));
+    }
+
+    #[test]
+    fn test_merge() {
+        let mut l1 = LinkedList::empty();
+        let mut l2 = LinkedList::empty();
+        l1.push_back(1);
+        l2.push_back(2);
+        l1.push_back(3);
+        l2.push_back(4);
+        l1.push_back(5);
+        l2.push_back(6);
+        l2.push_back(6);
+        l2.push_back(7);
+        let mut expected = LinkedList::empty();
+        expected.push_back(1);
+        expected.push_back(2);
+        expected.push_back(3);
+        expected.push_back(4);
+        expected.push_back(5);
+        expected.push_back(6);
+        expected.push_back(6);
+        expected.push_back(7);
+        let result = LinkedList::merge(l1, l2, true);
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_mergesort() {
+        let mut ll = LinkedList::empty();
+        ll.push_back(1);
+        ll.push_back(-9);
+        ll.push_back(0);
+        ll.push_back(1);
+        ll.push_back(-7);
+        ll.mergesort();
+        let mut expected = LinkedList::empty();
+        expected.push_back(-9);
+        expected.push_back(-7);
+        expected.push_back(0);
+        expected.push_back(1);
+        expected.push_back(1);
+        assert_eq!(ll, expected);
     }
 }
