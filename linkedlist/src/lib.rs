@@ -71,6 +71,7 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
     pub fn empty() -> Self {
         LinkedList { head: None, len: 0 }
     }
+
     //
     //Push to the front of the list - making current head the next link if it exists
     //Or else set the head if it the list is empty
@@ -283,6 +284,35 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
             }
         }
         true
+    }
+
+    //Split the list at the given index `at` - the list would be consumed!
+    pub fn split_at(mut self, at: usize) -> Option<(Self, Self)> {
+        match at {
+            pos if pos >= self.len() => return None,
+            pos if pos == 0 => return Some((Self::empty(), self)),
+            _ => {
+                let mut index = 0;
+                let current = &mut self.head.take();
+                self.len = 0;
+                while let Some(curr) = current {
+                    if index == at {
+                        break;
+                    }
+                    let mut node = curr.take();
+                    self.push_back(node.value);
+                    *current = node.next.take();
+                    index += 1;
+                }
+                let mut right = Self::empty();
+                while let Some(curr) = current {
+                    let mut node = curr.take();
+                    right.push_back(node.value);
+                    *current = node.next.take();
+                }
+                Some((self, right))
+            }
+        }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -714,5 +744,19 @@ mod tests {
                 break;
             }
         }
+    }
+    #[test]
+    fn test_split_at() {
+        let mut ll = LinkedList::empty();
+        ll.push_back(1);
+        ll.push_back(2);
+        ll.push_back(3);
+        let mut left = LinkedList::empty();
+        left.push_back(1);
+        let mut right = LinkedList::empty();
+        right.push_back(2);
+        right.push_back(3);
+        let rs = ll.split_at(1);
+        assert_eq!(rs, Some((left, right)));
     }
 }
