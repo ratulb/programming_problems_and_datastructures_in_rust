@@ -6,6 +6,7 @@ pub fn quicksort<T: PartialOrd>(array: &mut [T]) {
     sort(array, 0, array.len() - 1, &mut rng);
 }
 //Uses the right most element as pivot
+#[inline]
 fn right_as_pivot<T: PartialOrd>(array: &mut [T], left: usize, right: usize) -> usize {
     let mut i = left;
     for j in left..right {
@@ -18,7 +19,23 @@ fn right_as_pivot<T: PartialOrd>(array: &mut [T], left: usize, right: usize) -> 
     i
 }
 //Uses left most element as the as pivot
+#[inline]
 fn left_as_pivot<T: PartialOrd>(array: &mut [T], left: usize, right: usize) -> usize {
+    let mut i = right;
+    for j in (left + 1..=right).rev() {
+        if array[j] > array[left] {
+            array.swap(i, j);
+            i -= 1;
+        }
+    }
+    array.swap(i, left);
+    i
+}
+//Uses left most element as the as pivot
+#[inline]
+fn mid_as_pivot<T: PartialOrd>(array: &mut [T], left: usize, right: usize) -> usize {
+    let mid = left + (right - left) / 2;
+    array.swap(left, mid);
     let mut i = right;
     for j in (left + 1..=right).rev() {
         if array[j] > array[left] {
@@ -46,7 +63,7 @@ fn sort<T: PartialOrd>(array: &mut [T], left: usize, right: usize, random: &mut 
 
 ///Parttion the array segments using either left or right most elements as
 ///the pivots randomly.
-
+#[inline]
 fn partition<T: PartialOrd>(
     array: &mut [T],
     left: usize,
@@ -55,8 +72,10 @@ fn partition<T: PartialOrd>(
 ) -> usize {
     if random.gen::<bool>() {
         left_as_pivot(array, left, right)
-    } else {
+    } else if random.gen::<bool>() {
         right_as_pivot(array, left, right)
+    } else {
+        mid_as_pivot(array, left, right)
     }
 }
 
