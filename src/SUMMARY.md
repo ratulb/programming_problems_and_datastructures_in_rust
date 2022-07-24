@@ -37,6 +37,7 @@
    * [Insertion sort](./sorting/insertionsort.md)
    * [Selection sort](./sorting/selectionsort.md)
    * [Merge sort](./sorting/mergesort.md)
+   * [Quick sort](./sorting/quicksort.md)
 * [LRU cache](./lru_cache/introduction.md)
 * [Heap](./heap/introduction.md)
    * [Max heap](./heap/max_heap.md)
@@ -48,3 +49,4 @@
    * [Longest common suffix](./prefix_suffix/longest_suffix.md)
 * [String permutation](./permutations/introduction.md)
 * [Merge k sorted arrays](./merge_ksorted_arrays/introduction.md)
+* [Concatenated substring indices](./substring_concatenarion/introduction.md)

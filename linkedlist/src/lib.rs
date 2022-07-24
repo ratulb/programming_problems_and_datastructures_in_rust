@@ -258,6 +258,24 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
         }
     }
 
+    pub fn quicksort(&mut self, ascending: bool) {
+        let len = self.len() - 1;
+        Self::quick_sort(self, ascending, 0, len);
+    }
+
+    fn quick_sort(&mut self, ascending: bool, left: usize, right: usize) {
+        if left >= right {
+            return;
+        }
+        let partition_point = Self::partition_point(self, ascending, left, right);
+        Self::quick_sort(self, ascending, left, partition_point);
+        Self::quick_sort(self, ascending, partition_point + 1, right);
+    }
+
+    fn partition_point(list: &mut Self, ascending: bool, left: usize, right: usize) -> usize {
+        0
+    }
+
     pub fn mergesort(&mut self) {
         if self.len() < 2 {
             return;

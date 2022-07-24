@@ -9,8 +9,9 @@ pub fn sort<T: PartialOrd>(items: &mut [T]) {
             if items[j] > items[j + 1] {
                 items.swap(j, j + 1);
                 swapped = true;
-                i += 1;
+                // i += 1;
             }
+            i += 1;
         }
     }
 }
