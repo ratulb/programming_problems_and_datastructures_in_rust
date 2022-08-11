@@ -2,14 +2,13 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 type Link<T> = Option<Rc<RefCell<Node<T>>>>;
-
 #[derive(Debug, Default)]
 pub struct LinkedList<T: std::fmt::Debug + Default + Clone + Ord> {
     head: Link<T>,
     len: usize,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq)]
 struct Node<T: std::fmt::Debug + Default + Clone + Ord> {
     value: T,
     next: Link<T>,
@@ -49,7 +48,7 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> Node<T> {
         }
     }
 
-    pub fn ordered(node: Option<Rc<RefCell<Self>>>) -> bool {
+    fn ordered(node: Option<Rc<RefCell<Self>>>) -> bool {
         node.and_then(|node| {
             node.borrow()
                 .next
@@ -61,7 +60,6 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> Node<T> {
 }
 
 impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
-    //Create a List with a head
     pub fn new(value: T) -> LinkedList<T> {
         let link = Some(Node::wrapped(value));
         LinkedList { head: link, len: 1 }
@@ -72,10 +70,8 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
         LinkedList { head: None, len: 0 }
     }
 
-    //
     //Push to the front of the list - making current head the next link if it exists
     //Or else set the head if it the list is empty
-    //
     pub fn push_front(&mut self, value: T) {
         match self.head.take() {
             Some(head_link) => {
@@ -125,6 +121,76 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
             }
         }
     }
+
+    pub fn insert_before(&mut self, index: usize, value: Option<T>) {
+        match (index, value) {
+            (_, None) => (),
+            (idx, _) if idx >= self.len() => (),
+            (idx, Some(val)) if idx == 0 => self.push_front(val),
+            (idx, Some(val)) => {
+                let prev = self
+                    .link_iterator()
+                    .enumerate()
+                    .skip_while(|(idex, _)| idex != &(idx - 1))
+                    .take(1)
+                    .next()
+                    .map(|(_, link)| link);
+                let next = self
+                    .link_iterator()
+                    .enumerate()
+                    .skip_while(|(idex, _)| idex != &idx)
+                    .take(1)
+                    .next()
+                    .map(|(_, link)| link);
+                let node = Node::wrapped(val);
+                if let Some(previous) = prev {
+                    previous.borrow_mut().next = Some(Rc::clone(&node));
+                }
+                node.borrow_mut().next = next.as_ref().cloned();
+                self.len += 1;
+            }
+        }
+    }
+
+    pub fn delete(&mut self, index: usize) -> Option<T> {
+        match index {
+            idx if idx >= self.len() => None,
+            idx if idx == 0 => self.pop_front(),
+            idx if idx == self.len() - 1 => self.pop_back(),
+            _ => {
+                let prev = self
+                    .link_iterator()
+                    .enumerate()
+                    .skip_while(|(idx, _)| idx != &(index - 1))
+                    .take(1)
+                    .next()
+                    .map(|(_, link)| link);
+
+                let elem = self
+                    .link_iterator()
+                    .enumerate()
+                    .skip_while(|(idx, _)| idx != &index)
+                    .take(1)
+                    .next()
+                    .map(|(_, link)| link);
+
+                let next = self
+                    .link_iterator()
+                    .enumerate()
+                    .skip_while(|(idx, _)| idx != &(index + 1))
+                    .take(1)
+                    .next()
+                    .map(|(_, link)| link);
+
+                if let Some(previous) = prev {
+                    previous.borrow_mut().next = next.as_ref().cloned();
+                }
+                self.len -= 1;
+                elem.map(|link| link.take().value)
+            }
+        }
+    }
+
     //Pop back from the end of the list - o(n) operation
     pub fn pop_back(&mut self) -> Option<T> {
         match self.len() {
@@ -257,23 +323,73 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
             current = node.next.take();
         }
     }
-
-    pub fn quicksort(&mut self, ascending: bool) {
+    pub fn quicksort(&mut self, _ascending: bool) {
         let len = self.len() - 1;
-        Self::quick_sort(self, ascending, 0, len);
+        Self::quick_sort(self, _ascending, 0, len);
     }
 
-    fn quick_sort(&mut self, ascending: bool, left: usize, right: usize) {
+    fn quick_sort(&mut self, _ascending: bool, left: usize, right: usize) {
         if left >= right {
             return;
         }
-        let partition_point = Self::partition_point(self, ascending, left, right);
-        Self::quick_sort(self, ascending, left, partition_point);
-        Self::quick_sort(self, ascending, partition_point + 1, right);
+        let pivot = Self::partition(self, _ascending, left, right);
+        if pivot > 0 {
+            Self::quick_sort(self, _ascending, left, pivot - 1);
+        }
+        Self::quick_sort(self, _ascending, pivot + 1, right);
     }
 
-    fn partition_point(list: &mut Self, ascending: bool, left: usize, right: usize) -> usize {
-        0
+    fn partition_elements(
+        &mut self,
+        left: usize,
+        right: usize,
+        pivot: Link<T>,
+    ) -> Option<impl Iterator<Item = (usize, Rc<RefCell<Node<T>>>)>> {
+        let elements = self
+            .link_iterator()
+            .enumerate()
+            .skip_while(move |(index, _)| index != &(left + 1))
+            .take_while(move |(index, _)| index != &(right + 1));
+
+        let elements = elements.filter(move |(_, elem)| {
+            pivot
+                .as_ref()
+                .map(|pivot| elem.borrow().value <= pivot.borrow().value)
+                .unwrap_or(false)
+        });
+
+        let elements = elements.map(|(index, link)| (index, link));
+        Some(elements)
+    }
+
+    fn partition(&mut self, _ascending: bool, left: usize, right: usize) -> usize {
+        let pivot = self
+            .link_iterator()
+            .enumerate()
+            .skip_while(|(index, _)| index != &left)
+            .take(1)
+            .next()
+            .map(|(_, link)| {
+                //link.borrow_mut().next = None;
+                link
+            });
+
+        let elements = self.partition_elements(left, right, pivot);
+        let mut deleted = vec![];
+        if let Some(elems) = elements {
+            for (index, _link) in elems {
+                if let Some(value) = self.delete(index) {
+                    deleted.push(Some(value));
+                }
+            }
+        }
+        //let pivot = deleted.len() + left;
+        let mut count = left;
+        for dele in deleted {
+            self.insert_before(count, dele);
+            count += 1;
+        }
+        count
     }
 
     pub fn mergesort(&mut self) {
@@ -913,5 +1029,66 @@ mod tests {
         expected.push_back(1);
         expected.push_back(1);
         assert_eq!(ll, expected);
+    }
+    #[test]
+    fn test_quicksort() {
+        let mut ll = LinkedList::empty();
+        ll.push_back(10);
+        ll.push_back(9);
+        ll.push_back(8);
+        ll.push_back(7);
+        ll.push_back(6);
+        ll.quicksort(true);
+        println!(" At the end ll = {:?}", ll);
+    }
+    #[test]
+    fn test_delete() {
+        let mut ll = LinkedList::empty();
+        ll.push_back(10);
+        ll.push_back(9);
+        ll.push_back(8);
+        ll.push_back(7);
+        ll.push_back(6);
+        let index = 0;
+        let result = ll.delete(index);
+        assert_eq!(result, Some(10));
+        assert_eq!(ll.len(), 4);
+        println!("Result = {:?}", result);
+        println!("After delete index {},  = {:?}", index, ll);
+
+        let index = 2;
+        let result = ll.delete(index);
+        println!("Result = {:?}", result);
+        assert_eq!(result, Some(7));
+        assert_eq!(ll.len(), 3);
+        println!("After delete index {},  = {:?}", index, ll);
+
+        let index = ll.len() - 1;
+        let result = ll.delete(index);
+        println!("Result = {:?}", result);
+        assert_eq!(result, Some(6));
+        assert_eq!(ll.len(), 2);
+        println!("After delete index {},  = {:?}", index, ll);
+    }
+    #[test]
+    fn test_insert_before() {
+        let mut ll = LinkedList::empty();
+        ll.push_back(9);
+        ll.push_back(8);
+        ll.push_back(7);
+        ll.push_back(6);
+        let index = 0;
+        ll.insert_before(index, Some(10));
+        assert_eq!(ll.len(), 5);
+        println!("After insert  = {:?}", ll);
+
+        let mut ll = LinkedList::empty();
+        ll.push_back(9);
+        ll.push_back(8);
+        ll.push_back(6);
+        let index = 2;
+        ll.insert_before(index, Some(7));
+        assert_eq!(ll.len(), 4);
+        println!("After insert  = {:?}", ll);
     }
 }
