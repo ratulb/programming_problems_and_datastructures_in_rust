@@ -52,3 +52,4 @@
 * [Concatenated substring indices](./substring_concatenarion/introduction.md)
 * [Pascal's triangle](./pascal_triangle/introduction.md)
 * [Two sum](./two_sum/introduction.md)
+* [Sell stock](./sell_stock/introduction.md)
