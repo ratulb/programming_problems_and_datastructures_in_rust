@@ -50,3 +50,4 @@
 * [String permutation](./permutations/introduction.md)
 * [Merge k sorted arrays](./merge_ksorted_arrays/introduction.md)
 * [Concatenated substring indices](./substring_concatenarion/introduction.md)
+* [Pascal's triangle](./pascal_triangle/introduction.md)

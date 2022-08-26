@@ -345,21 +345,22 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
         right: usize,
         pivot: Link<T>,
     ) -> Option<impl Iterator<Item = (usize, Rc<RefCell<Node<T>>>)>> {
+        println!("The PIVOT is = {:?}, left = {}, right = {}", pivot, left, right);
         let elements = self
             .link_iterator()
             .enumerate()
-            .skip_while(move |(index, _)| index != &(left + 1))
-            .take_while(move |(index, _)| index != &(right + 1));
-
-        let elements = elements.filter(move |(_, elem)| {
-            pivot
-                .as_ref()
-                .map(|pivot| elem.borrow().value <= pivot.borrow().value)
-                .unwrap_or(false)
-        });
-
-        let elements = elements.map(|(index, link)| (index, link));
-        Some(elements)
+            .skip_while(move |(index, _)| index == &(left))
+            .take_while(move |(index, _)| index != &(right+1));
+        Some(
+            elements
+                .filter(move |(_, elem)| {
+                    pivot
+                        .as_ref()
+                        .map(|pivot| elem.borrow().value <= pivot.borrow().value)
+                        .unwrap_or(false)
+                })
+                .map(|(index, link)| (index, link)),
+        )
     }
 
     fn partition(&mut self, _ascending: bool, left: usize, right: usize) -> usize {
@@ -374,15 +375,18 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
                 link
             });
 
+        println!("Pivot is = {:?}", pivot);
         let elements = self.partition_elements(left, right, pivot);
         let mut deleted = vec![];
         if let Some(elems) = elements {
             for (index, _link) in elems {
+                println!("Index = {:?}", index);
                 if let Some(value) = self.delete(index) {
                     deleted.push(Some(value));
                 }
             }
         }
+        println!("Deleted = {:?}", deleted);
         //let pivot = deleted.len() + left;
         let mut count = left;
         for dele in deleted {
@@ -1036,8 +1040,8 @@ mod tests {
         ll.push_back(10);
         ll.push_back(9);
         ll.push_back(8);
-        ll.push_back(7);
-        ll.push_back(6);
+        /***ll.push_back(7);
+        ll.push_back(6);***/
         ll.quicksort(true);
         println!(" At the end ll = {:?}", ll);
     }
