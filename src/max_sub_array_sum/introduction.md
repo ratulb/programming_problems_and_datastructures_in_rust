@@ -64,3 +64,4 @@ pub fn max_sub_array(arr: Vec<i32>) -> i32 {
     }
 }
 ```
+[Source](https://github.com/ratulb/programming_problems_in_rust/blob/master/max_subarray_sum/src/lib.rs)
