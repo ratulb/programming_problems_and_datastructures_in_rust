@@ -54,3 +54,4 @@
 * [Two sum](./two_sum/introduction.md)
 * [Sell stock](./sell_stock/introduction.md)
 * [Product except self](./product_except_self/introduction.md)
+* [Max sub array sum](./max_sub_array_sum/introduction.md)
