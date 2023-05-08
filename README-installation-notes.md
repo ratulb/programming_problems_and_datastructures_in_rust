@@ -20,7 +20,6 @@ After installation, you should have `rustc`, `cargo`, & `rustup`. You should
 also have `~/.cargo/bin` in your PATH environment variable.
 
 ### Git Repository
-Clone the 'solana_counter_program' repository into your development machine:
 ```bash
 $ cd /path/to/your/work/folder/
 $ git clone https://github.com/ratulb/programming_problems_in_rust.git

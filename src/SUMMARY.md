@@ -55,3 +55,4 @@
 * [Sell stock](./sell_stock/introduction.md)
 * [Product except self](./product_except_self/introduction.md)
 * [Max sub array sum](./max_sub_array_sum/introduction.md)
+* [Max vowels in substring](./maximum-number-of-vowels/introduction.md)
