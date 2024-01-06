@@ -55,7 +55,8 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> Node<T> {
                 .as_ref()
                 .map(|next| next.borrow().value > node.borrow().value)
         })
-        .unwrap_or(true)
+        //.unwrap_or(true)
+        .is_some_and(|ordered| ordered == true)
     }
 }
 
@@ -277,16 +278,14 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
             return;
         }
         let len = self.len() - 1;
-        for _ in 0..=len {
-            let mut i = 0;
+        for i in 0..len {
             let mut current = self.head.as_ref().cloned();
-            for _ in 0..(len - i) {
+            for _ in 0..(len  - i) {
                 let ordered = Node::ordered(current.as_ref().cloned());
                 if !ordered {
                     Node::swap_with_next(current.as_ref().cloned());
                 }
                 current = current.and_then(|current| current.borrow().next.as_ref().cloned());
-                i += 1;
             }
         }
     }
@@ -763,6 +762,26 @@ mod tests {
         assert_eq!(iter.next(), Some(90));
         assert_eq!(iter.next(), Some(200));
         assert_eq!(iter.next(), None);
+
+        let mut ll = LinkedList::new(-10);
+        ll.bubble_sort();
+        let mut iter = ll.iter();
+        assert_eq!(iter.next(), Some(-10));
+        assert_eq!(iter.next(), None);
+
+        let mut ll = LinkedList::new(-10);
+        ll.push_front(200);
+        ll.bubble_sort();
+        let mut iter = ll.iter();
+        assert_eq!(iter.next(), Some(-10));
+        assert_eq!(iter.next(), Some(200));
+        assert_eq!(iter.next(), None);
+
+        let mut ll = LinkedList::<i32>::empty();
+        ll.bubble_sort();
+        let mut iter = ll.iter();
+        assert_eq!(iter.next(), None);
+
     }
     #[test]
     fn test_selction_sort() {
