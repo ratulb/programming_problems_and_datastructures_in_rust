@@ -1,16 +1,22 @@
+#![forbid(unsafe_code)]
 use std::cell::RefCell;
 use std::fmt::{Debug, Error, Formatter};
 use std::rc::Rc;
 
-type Link<T> = Option<Rc<RefCell<Node<T>>>>;
+type Cell<T> = Rc<RefCell<Node<T>>>;
+type Link<T> = Option<Cell<T>>;
 
+#[derive(PartialEq)]
 pub(crate) struct Node<T> {
     elem: T,
     next: Link<T>,
 }
+
 ///
 ///The link list structure for arbritary type T. 'T' should have a default value.
 ///
+
+#[derive(PartialEq)]
 pub struct LinkedList<T> {
     head: Link<T>,
     len: usize,
@@ -24,16 +30,17 @@ impl<T: Default> Node<T> {
         }
     }
 
-    fn with_link(elem: T, link: Rc<RefCell<Node<T>>>) -> Rc<RefCell<Node<T>>> {
+    fn with_link(elem: T, link: Cell<T>) -> Cell<T> {
         Rc::new(RefCell::new(Self {
             elem: elem,
             next: Some(link),
         }))
     }
+
     //Push to the back of the node chain
     fn push_back(&mut self, elem: T) {
         match self.next {
-            None => self.next = Some(Rc::new(RefCell::new(Self::new(elem)))),
+            None => self.next = Some(Self::rc_cell(elem)),
             Some(ref mut next) => next.borrow_mut().push_back(elem),
         }
     }
@@ -54,6 +61,10 @@ impl<T: Default> Node<T> {
                 }
             }
         }
+    }
+    #[inline(always)]
+    fn rc_cell(elem: T) -> Cell<T> {
+        Rc::new(RefCell::new(Self::new(elem)))
     }
 
     //Takes out the value from the node. Replaces it with the default value for type 'T'.
@@ -78,7 +89,7 @@ impl<T: Default> LinkedList<T> {
     //Creates a list with a single value
     pub fn new(elem: T) -> Self {
         Self {
-            head: Some(Rc::new(RefCell::new(Node::new(elem)))),
+            head: Some(Node::rc_cell(elem)),
             len: 1,
         }
     }
@@ -86,21 +97,15 @@ impl<T: Default> LinkedList<T> {
     //Readily create a list from clonable slice of values. Internally values are never cloned hereafter.
     pub fn from_slice<U: Clone + Default>(elems: &[U]) -> LinkedList<U> {
         assert!(elems.len() > 0);
-        let mut node = Node::<U>::new(elems[0].clone());
-        elems[1..]
-            .iter()
-            .for_each(|elem| node.push_back(elem.clone()));
-
-        LinkedList {
-            head: Some(Rc::new(RefCell::new(node))),
-            len: elems.len(),
-        }
+        let mut list = LinkedList::<U>::default();
+        elems.iter().for_each(|elem| list.push_back(elem.clone()));
+        list
     }
     //Push value to the front of the list
     pub fn push_front(&mut self, elem: T) {
         match self.head.take() {
             Some(as_link) => self.head = Some(Node::with_link(elem, as_link)),
-            None => self.head = Some(Rc::new(RefCell::new(Node::new(elem)))),
+            None => self.head = Some(Node::rc_cell(elem)),
         }
         self.len += 1;
     }
@@ -117,11 +122,7 @@ impl<T: Default> LinkedList<T> {
     pub fn push_back(&mut self, elem: T) {
         if self.is_empty() {
             self.push_front(elem);
-        }
-        //None => self.head = Some(Rc::new(RefCell::new(Node::new(elem)))),
-        //Some(ref mut head) => head.borrow_mut().push_back(elem),
-        //The above would overflow stack for large list
-        else {
+        } else {
             let mut last = self
                 .iterator()
                 .enumerate()
@@ -130,7 +131,7 @@ impl<T: Default> LinkedList<T> {
                 .next();
 
             if let Some(ref mut last) = last {
-                last.borrow_mut().next = Some(Rc::new(RefCell::new(Node::new(elem))));
+                last.borrow_mut().next = Some(Node::rc_cell(elem));
                 self.len += 1;
             }
         }
@@ -140,21 +141,24 @@ impl<T: Default> LinkedList<T> {
     pub fn pop_back(&mut self) -> Option<T> {
         if self.head.is_none() {
             return None;
+        } else if self.len() == 1 {
+            self.len -= 1;
+            self.head.take().map(|head| head.borrow_mut().take())
+        } else {
+            let penultimate = self
+                .iterator()
+                .enumerate()
+                .skip_while(|(index, _)| index != &(self.len() - 2))
+                .map(|t| t.1)
+                .next();
+
+            penultimate.and_then(|penultimate| {
+                penultimate.borrow_mut().next.take().map(|last| {
+                    self.len -= 1;
+                    last.borrow_mut().take()
+                })
+            })
         }
-        if let Some(node) = self.head.as_mut() {
-            if self.len == 1 {
-                let result = Some(node.borrow_mut().take());
-                let _ = self.head.take();
-                self.len -= 1;
-                return result;
-            } else {
-                self.len -= 1;
-                //This would blow up the stack - for large list
-                return node.borrow_mut().pop_back();
-            }
-        }
-        None
-        
     }
     //Count of values in the list
     #[inline(always)]
@@ -174,10 +178,13 @@ impl<T: Default> LinkedList<T> {
         let mut previous = None;
         let mut current = self.head.take();
         while let Some(ref mut curr_node) = current {
-            let curr_next = curr_node.borrow_mut().next.take();
-            curr_node.borrow_mut().next = previous;
-            previous = current;
-            current = curr_next;
+            let mut curr_next = curr_node.borrow_mut().next.take();
+            curr_node.borrow_mut().next = previous.take();
+            previous = current.take();
+            current = curr_next.take();
+            if current.is_none() {
+                break;
+            }
         }
         self.head = previous;
     }
@@ -200,12 +207,12 @@ pub(crate) struct LinkIterator<T> {
 }
 
 impl<T> Iterator for LinkIterator<T> {
-    type Item = Rc<RefCell<Node<T>>>;
+    type Item = Cell<T>;
     fn next(&mut self) -> Option<Self::Item> {
         self.links.take().map(|link| {
             //Following two are equivalent - top one would increase Rc count
             //self.links = link.borrow_mut().next.take().as_ref().map(Rc::clone);
-           // self.links = link.borrow_mut().next.take();
+            // self.links = link.borrow_mut().next.take();
             //The following would not dissociate returned link from next
             self.links = link.borrow().next.as_ref().map(Rc::clone);
             link
@@ -235,22 +242,22 @@ mod tests {
         let elems = (1..5).collect::<Vec<_>>();
         let list = LinkedList::<i32>::from_slice(&elems);
         let itr = list.iterator();
+        let mut elem = 1;
         for link in itr {
-            println!("Next is: {:?}", link);
+            assert_eq!(link.borrow_mut().take(), elem);
+            elem += 1;
         }
-
-        //assert_eq!(list, reversed);
     }
 
     #[test]
     fn linkedlist_size_test_1() {
-        let elems = (1..4125).collect::<Vec<_>>();
+        let elems = (1..21750).collect::<Vec<_>>();
         let mut list = LinkedList::<i32>::from_slice(&elems);
         list.reverse();
-        //let elems = [500, 400, 300, 200, 100];
-        //let reversed = LinkedList::<i32>::from_slice(&elems);
-        //println!("The reversed list = {:?}", list);
-        //assert_eq!(list, reversed);
+        let elems = (1..21750).rev().collect::<Vec<_>>();
+        let reversed = LinkedList::<i32>::from_slice(&elems);
+        // println!("The reversed list = {:?}", list);
+        assert_eq!(list, reversed);
     }
 
     #[test]
@@ -260,8 +267,7 @@ mod tests {
         list.reverse();
         let elems = [500, 400, 300, 200, 100];
         let reversed = LinkedList::<i32>::from_slice(&elems);
-        println!("The reversed list = {:?}", list);
-        //assert_eq!(list, reversed);
+        assert_eq!(list, reversed);
     }
 
     #[test]
@@ -284,27 +290,20 @@ mod tests {
         node.push_back(2);
         node.push_back(3);
         node.push_back(4);
-        println!("Node is: {:?}", node);
         assert_eq!(node.pop_back(), Some(4));
         assert_eq!(node.pop_back(), Some(3));
         assert_eq!(node.pop_back(), Some(2));
         assert_eq!(node.pop_back(), None);
-        println!("Now node is: {:?}", node);
     }
 
     #[test]
     fn linkedlist_pop_back_test_1() {
-        let mut list = LinkedList::new(1);
-        list.push_back(2);
-        list.push_back(3);
-        list.push_back(4);
-        println!("List is: {:?}", list);
-        assert_eq!(list.pop_back(), Some(4));
-        assert_eq!(list.pop_back(), Some(3));
-        assert_eq!(list.pop_back(), Some(2));
-        assert_eq!(list.pop_back(), Some(1));
+        let elems = (1..21750).collect::<Vec<_>>();
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        for num in (1..21750).rev() {
+            assert_eq!(list.pop_back(), Some(num as i32));
+        }
         assert_eq!(list.pop_back(), None);
-        println!("Now list is: {:?}", list);
     }
 }
 
