@@ -48,15 +48,14 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> Node<T> {
         }
     }
 
-    fn ordered(node: Option<Rc<RefCell<Self>>>) -> bool {
+    fn is_ordered(node: Option<Rc<RefCell<Self>>>) -> bool {
         node.and_then(|node| {
             node.borrow()
                 .next
                 .as_ref()
                 .map(|next| next.borrow().value > node.borrow().value)
         })
-        //.unwrap_or(true)
-        .is_some_and(|ordered| ordered == true)
+        .is_some_and(|is_ordered| is_ordered == true)
     }
 }
 
@@ -279,13 +278,13 @@ impl<T: std::fmt::Debug + Default + Clone + Ord> LinkedList<T> {
         }
         let len = self.len() - 1;
         for i in 0..len {
-            let mut current = self.head.as_ref().cloned();
+            let mut current = self.head.as_ref().map(Rc::clone);
             for _ in 0..(len  - i) {
-                let ordered = Node::ordered(current.as_ref().cloned());
-                if !ordered {
-                    Node::swap_with_next(current.as_ref().cloned());
+                let is_ordered = Node::is_ordered(current.as_ref().map(Rc::clone));
+                if !is_ordered {
+                    Node::swap_with_next(current.as_ref().map(Rc::clone));
                 }
-                current = current.and_then(|current| current.borrow().next.as_ref().cloned());
+                current = current.and_then(|current| current.borrow().next.as_ref().map(Rc::clone));
             }
         }
     }

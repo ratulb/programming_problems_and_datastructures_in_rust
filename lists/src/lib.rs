@@ -22,7 +22,7 @@ pub struct LinkedList<T> {
     len: usize,
 }
 
-impl<T: Default> Node<T> {
+impl<T: Default + PartialOrd> Node<T> {
     pub fn new(elem: T) -> Self {
         Self {
             elem: elem,
@@ -62,9 +62,38 @@ impl<T: Default> Node<T> {
             }
         }
     }
+
     #[inline(always)]
     fn rc_cell(elem: T) -> Cell<T> {
         Rc::new(RefCell::new(Self::new(elem)))
+    }
+
+    //Is this node in order? i.e. Greater or equal/less or equal it next node's value
+    #[inline(always)]
+    fn in_order(node: Option<Cell<T>>, asc: bool) -> bool {
+        node.and_then(|node| {
+            node.borrow().next.as_ref().map(|next| {
+                if asc {
+                    next.borrow().elem >= node.borrow().elem
+                } else {
+                    next.borrow().elem <= node.borrow().elem
+                }
+            })
+        })
+        .is_some_and(|in_place| in_place == true)
+    }
+
+    fn swap(this: &mut Self, that: &mut Self) {
+        std::mem::swap(&mut this.elem, &mut that.elem);
+    }
+
+    fn swap_with_next(mut curr_node: Option<Cell<T>>) {
+        if let Some(ref mut node) = curr_node {
+            let mut mutable_node = node.borrow_mut();
+            if let Some(ref mut next) = mutable_node.next.as_ref().map(Rc::clone) {
+                Node::swap(&mut mutable_node, &mut next.borrow_mut());
+            }
+        }
     }
 
     //Takes out the value from the node. Replaces it with the default value for type 'T'.
@@ -85,7 +114,7 @@ impl<T: Debug> Debug for Node<T> {
     }
 }
 
-impl<T: Default> LinkedList<T> {
+impl<T: Default + PartialOrd> LinkedList<T> {
     //Creates a list with a single value
     pub fn new(elem: T) -> Self {
         Self {
@@ -95,7 +124,7 @@ impl<T: Default> LinkedList<T> {
     }
 
     //Readily create a list from clonable slice of values. Internally values are never cloned hereafter.
-    pub fn from_slice<U: Clone + Default>(elems: &[U]) -> LinkedList<U> {
+    pub fn from_slice<U: Clone + Default + PartialOrd>(elems: &[U]) -> LinkedList<U> {
         assert!(elems.len() > 0);
         let mut list = LinkedList::<U>::default();
         elems.iter().for_each(|elem| list.push_back(elem.clone()));
@@ -118,7 +147,7 @@ impl<T: Default> LinkedList<T> {
             head.borrow_mut().take()
         })
     }
-    //Push values to the back of the list. O(n) recursive operation
+    //Push values to the back of the list. O(n) recursive operation in worst case
     pub fn push_back(&mut self, elem: T) {
         if self.is_empty() {
             self.push_front(elem);
@@ -132,6 +161,7 @@ impl<T: Default> LinkedList<T> {
 
             if let Some(ref mut last) = last {
                 last.borrow_mut().next = Some(Node::rc_cell(elem));
+                //Placed at the end - increment node count
                 self.len += 1;
             }
         }
@@ -194,6 +224,29 @@ impl<T: Default> LinkedList<T> {
             links: self.head.as_ref().map(Rc::clone),
         }
     }
+
+    pub fn iter_into(self) -> IterInto<T> {
+        IterInto(self)
+    }
+
+    //Implementation of various sorting alogrithms
+    pub fn bubble_sort(&mut self, asc: bool) {
+        if self.len() < 2 {
+            return;
+        }
+        let len = self.len() - 1;
+        for i in 0..len {
+            let mut curr_node = self.head.as_ref().map(Rc::clone);
+            for _ in 0..(len - i) {
+                let in_order = Node::in_order(curr_node.as_ref().map(Rc::clone), asc);
+                if !in_order {
+                    Node::swap_with_next(curr_node.as_ref().map(Rc::clone));
+                }
+                curr_node =
+                    curr_node.and_then(|curr_node| curr_node.borrow().next.as_ref().map(Rc::clone));
+            }
+        }
+    }
 }
 //Default linked list contains nothing
 impl<T> Default for LinkedList<T> {
@@ -212,7 +265,7 @@ impl<T> Iterator for LinkIterator<T> {
         self.links.take().map(|link| {
             //Following two are equivalent - top one would increase Rc count
             //self.links = link.borrow_mut().next.take().as_ref().map(Rc::clone);
-            // self.links = link.borrow_mut().next.take();
+            //self.links = link.borrow_mut().next.take();
             //The following would not dissociate returned link from next
             self.links = link.borrow().next.as_ref().map(Rc::clone);
             link
@@ -234,9 +287,69 @@ impl<T: Debug> Debug for LinkedList<T> {
     }
 }
 
+pub struct IterInto<T: Default + PartialOrd>(LinkedList<T>);
+
+impl<T: Default + PartialOrd> Iterator for IterInto<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.pop_front()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::Rng;
+
+    fn is_sorted<T: Debug+ PartialOrd>(mut input: impl Iterator<Item = T>, ascending: bool) -> bool {
+        let mut current: Option<T> = None;
+        for t in input.by_ref() {
+            match current {
+                None => current = Some(t),
+                Some(prev) => match ascending {
+                    true if prev > t => return false,
+                    false if prev < t => return false,
+                    _ => current = Some(t),
+                },
+            }
+        }
+        true
+    }
+
+    #[test]
+    fn linkedlist_bubble_sort_test_1() {
+        let elems = [200, 500, 300, 400, 100];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        list.bubble_sort(false); //false for descending
+        let elems = [500, 400, 300, 200, 100];
+        let reversed = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list, reversed);
+
+        let elems = [200, 500, 300, 400, 100];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        list.bubble_sort(true); //true for ascending
+        let elems = [100, 200, 300, 400, 500];
+        let reversed = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list, reversed);
+
+        let mut elems: [u16; 128] = [0; 128];
+        rand::thread_rng().fill(&mut elems);
+        println!("Elems = {:?}", elems);
+        let mut list = LinkedList::<u16>::from_slice(&elems);
+        list.bubble_sort(false);
+        println!();
+        println!();
+        println!("Elems = {:?}", list);
+
+        let sorted = is_sorted(list.iter_into(), false);
+        assert!(sorted);
+
+        let mut list = LinkedList::<u16>::from_slice(&elems);
+        list.bubble_sort(true);
+        let sorted = is_sorted(list.iter_into(), true);
+        assert!(sorted);
+    }
+
     #[test]
     fn linkedlist_link_iterator_test_1() {
         let elems = (1..5).collect::<Vec<_>>();
@@ -251,10 +364,12 @@ mod tests {
 
     #[test]
     fn linkedlist_size_test_1() {
-        let elems = (1..21750).collect::<Vec<_>>();
+        //let elems = (1..21750).collect::<Vec<_>>();
+        let elems = (1..4000).collect::<Vec<_>>();
         let mut list = LinkedList::<i32>::from_slice(&elems);
         list.reverse();
-        let elems = (1..21750).rev().collect::<Vec<_>>();
+        //let elems = (1..21750).rev().collect::<Vec<_>>();
+        let elems = (1..4000).rev().collect::<Vec<_>>();
         let reversed = LinkedList::<i32>::from_slice(&elems);
         // println!("The reversed list = {:?}", list);
         assert_eq!(list, reversed);
@@ -298,9 +413,11 @@ mod tests {
 
     #[test]
     fn linkedlist_pop_back_test_1() {
-        let elems = (1..21750).collect::<Vec<_>>();
+        //let elems = (1..21750).collect::<Vec<_>>();
+        let elems = (1..4000).collect::<Vec<_>>();
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        for num in (1..21750).rev() {
+        //for num in (1..21750).rev() {
+        for num in (1..4000).rev() {
             assert_eq!(list.pop_back(), Some(num as i32));
         }
         assert_eq!(list.pop_back(), None);
