@@ -199,7 +199,61 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         self.len == 0
     }
 
-    pub fn delete(&mut self, index: usize) -> Option<T> {
+    pub fn translate<U: Default + PartialOrd, F: Fn(&T) -> U>(&self, f: F) -> LinkedList<U> {
+        let mut result = LinkedList::default();
+        let iter = self.iterator();
+        for t in iter {
+            result.push_back(f(&t.borrow().elem));
+        }
+        result
+    }
+
+    pub fn transmute<U: Default + PartialOrd, F: Fn(&mut T) -> U>(&mut self, f: F) {
+        let iter = self.iterator();
+        for t in iter {
+            f(&mut t.borrow_mut().elem);
+        }
+    }
+
+    pub fn transform<U: Default + PartialOrd, F: Fn(T) -> U>(self, f: F) -> LinkedList<U> {
+        let mut result = LinkedList::default();
+        let iter = self.iter_into();
+        for t in iter {
+            result.push_back(f(t));
+        }
+        result
+    }
+
+    //Find all the indices meeting a criteria
+    pub fn indices<F: Fn(&T) -> bool>(&self, f: F) -> Vec<usize> {
+        match self.head {
+            None => vec![],
+            Some(_) => self
+                .iterator()
+                .enumerate()
+                .filter(|t| f(&t.1.borrow().elem))
+                .map(|t| t.0)
+                .collect(),
+        }
+    }
+
+    //Find the first index of a value
+    #[inline(always)]
+    pub fn index_of(&self, value: &T) -> Option<usize> {
+        match self.head {
+            None => None,
+            _ => self
+                .iterator()
+                .enumerate()
+                .find(|t| t.1.borrow().elem == *value)
+                .map(|t| t.0),
+        }
+    }
+
+    //Delete a node at a given index
+    //Retturns the deleted value
+    //O(n) operation
+    pub fn delete_at_index(&mut self, index: usize) -> Option<T> {
         match index {
             idx if idx >= self.len() => None,
             idx if idx == 0 => self.pop_front(),
@@ -224,6 +278,13 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             }
         }
     }
+    //Delete the first occurence of a value
+    pub fn delete_by_value(&mut self, value: T) -> Option<T> {
+        match self.index_of(&value) {
+            None => None,
+            Some(index) => self.delete_at_index(index),
+        }
+    }
 
     //Reverse the list
     pub fn reverse(&mut self) {
@@ -237,9 +298,6 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             curr_node.borrow_mut().next = previous.take();
             previous = current.take();
             current = curr_next.take();
-            if current.is_none() {
-                break;
-            }
         }
         self.head = previous;
     }
@@ -350,43 +408,153 @@ mod tests {
     }
 
     #[test]
-    fn linkedlist_delete_test_1() {
+    fn linkedlist_translate_test_1() {
+        let elems = [500, 400, 300, 200, 100];
+        let list = LinkedList::<i32>::from_slice(&elems);
+        let elems = [250, 200, 150, 100, 50];
+        let expect = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.translate(|i| *i / 2), expect);
+    }
+
+    #[test]
+    fn linkedlist_transform_test_1() {
+        let elems = [500, 400, 300, 200, 100];
+        let list = LinkedList::<i32>::from_slice(&elems);
+        let elems = [250, 200, 150, 100, 50];
+        let expect = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.translate(|i| i / 2), expect);
+    }
+
+    #[test]
+    fn linkedlist_transmute_test_1() {
+        let elems = [500, 400, 300, 200, 100];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        list.transmute(|i| *i /= 2);
+        let elems = [250, 200, 150, 100, 50];
+        let expect = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list, expect);
+    }
+
+    #[test]
+    fn linkedlist_iindices_test_1() {
+        let elems: [i32; 0] = [];
+        let list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.indices(|i| *i == 0), vec![]);
+
+        let elems = [500, 400, 300, 200, 100];
+        let list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.indices(|i| *i == 0), vec![]);
+        assert_eq!(list.indices(|i| *i == 500), vec![0]);
+        assert_eq!(list.indices(|i| *i % 100 == 0), vec![0, 1, 2, 3, 4]);
+        assert_eq!(list.indices(|i| *i * 2 == 400), vec![3]);
+    }
+
+    #[test]
+    fn linkedlist_index_of_test_1() {
+        let elems: [i32; 0] = [];
+        let list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.index_of(&0), None);
+
+        let elems = [500, 400, 300, 200, 100];
+        let list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.index_of(&500), Some(0));
+        assert_eq!(list.index_of(&400), Some(1));
+        assert_eq!(list.index_of(&300), Some(2));
+        assert_eq!(list.index_of(&200), Some(3));
+        assert_eq!(list.index_of(&100), Some(4));
+        assert_eq!(list.index_of(&1000), None);
+    }
+
+    #[test]
+    fn linkedlist_delete_by_value_test_1() {
         let elems: [i32; 0] = [];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete(0), None);
+        assert_eq!(list.delete_by_value(0), None);
         assert_eq!(list.len(), 0);
 
         let elems = [200];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete(0), Some(200));
+        assert_eq!(list.delete_by_value(200), Some(200));
         assert_eq!(list.len(), 0);
 
         let elems = [100, 200];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete(0), Some(100));
+        assert_eq!(list.delete_by_value(100), Some(100));
         assert_eq!(list.len(), 1);
 
-        assert_eq!(list.delete(0), Some(200));
+        assert_eq!(list.delete_by_value(200), Some(200));
         assert_eq!(list.len(), 0);
 
         let elems = [100, 200];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete(1), Some(200));
+        assert_eq!(list.delete_by_value(200), Some(200));
         assert_eq!(list.len(), 1);
 
         let elems = [500, 400, 300];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete(1), Some(400));
+        assert_eq!(list.delete_by_value(400), Some(400));
         assert_eq!(list.len(), 2);
 
         let elems = [500, 400, 300, 200, 100];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete(2), Some(300));
+        assert_eq!(list.delete_by_value(300), Some(300));
         assert_eq!(list.len(), 4);
 
         let elems = [500, 400, 300, 200, 100];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete(5), None);
+        assert_eq!(list.delete_by_value(600), None);
+        assert_eq!(list.len(), 5);
+
+        assert_eq!(list.delete_by_value(200), Some(200));
+        assert_eq!(list.delete_by_value(200), None);
+        assert_eq!(list.len(), 4);
+        assert_eq!(list.delete_by_value(500), Some(500));
+        assert_eq!(list.delete_by_value(300), Some(300));
+        assert_eq!(list.len(), 2);
+        assert_eq!(list.delete_by_value(400), Some(400));
+        assert_eq!(list.delete_by_value(100), Some(100));
+        assert_eq!(list.delete_by_value(100), None);
+        assert_eq!(list.len(), 0);
+    }
+
+    #[test]
+    fn linkedlist_delete_at_index_test_1() {
+        let elems: [i32; 0] = [];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_at_index(0), None);
+        assert_eq!(list.len(), 0);
+
+        let elems = [200];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_at_index(0), Some(200));
+        assert_eq!(list.len(), 0);
+
+        let elems = [100, 200];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_at_index(0), Some(100));
+        assert_eq!(list.len(), 1);
+
+        assert_eq!(list.delete_at_index(0), Some(200));
+        assert_eq!(list.len(), 0);
+
+        let elems = [100, 200];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_at_index(1), Some(200));
+        assert_eq!(list.len(), 1);
+
+        let elems = [500, 400, 300];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_at_index(1), Some(400));
+        assert_eq!(list.len(), 2);
+
+        let elems = [500, 400, 300, 200, 100];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_at_index(2), Some(300));
+        assert_eq!(list.len(), 4);
+
+        let elems = [500, 400, 300, 200, 100];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_at_index(5), None);
         assert_eq!(list.len(), 5);
     }
 
