@@ -6,7 +6,7 @@ use std::rc::Rc;
 type Cell<T> = Rc<RefCell<Node<T>>>;
 type Link<T> = Option<Cell<T>>;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, PartialOrd)]
 pub(crate) struct Node<T> {
     elem: T,
     next: Link<T>,
@@ -24,43 +24,14 @@ pub struct LinkedList<T> {
 
 impl<T: Default + PartialOrd> Node<T> {
     pub fn new(elem: T) -> Self {
-        Self {
-            elem: elem,
-            next: None,
-        }
+        Self { elem, next: None }
     }
 
     fn with_link(elem: T, link: Cell<T>) -> Cell<T> {
         Rc::new(RefCell::new(Self {
-            elem: elem,
+            elem,
             next: Some(link),
         }))
-    }
-
-    //Push to the back of the node chain
-    fn push_back(&mut self, elem: T) {
-        match self.next {
-            None => self.next = Some(Self::rc_cell(elem)),
-            Some(ref mut next) => next.borrow_mut().push_back(elem),
-        }
-    }
-
-    //Would pop the last node in the chain. Would stop at 'this'. No way to self sabotage in rust!
-    fn pop_back(&mut self) -> Option<T> {
-        match self.next {
-            None => None,
-            Some(ref mut next) => {
-                if next.borrow().next.is_none() {
-                    let result = Some(next.borrow_mut().take());
-                    let _ = self.next.take();
-                    return result;
-                } else {
-                    //Would blow out the stack for last list//TODO revisit
-                    //On a second thought - its ok since not exposed to wider world!
-                    return next.borrow_mut().pop_back();
-                }
-            }
-        }
     }
 
     #[inline(always)]
@@ -80,7 +51,7 @@ impl<T: Default + PartialOrd> Node<T> {
                 }
             })
         })
-        .is_some_and(|in_place| in_place == true)
+        .unwrap_or(true)
     }
 
     fn swap(this: &mut Self, that: &mut Self) {
@@ -98,7 +69,7 @@ impl<T: Default + PartialOrd> Node<T> {
 
     //Takes out the value from the node. Replaces it with the default value for type 'T'.
     fn take(&mut self) -> T {
-        std::mem::replace(&mut self.elem, T::default())
+        std::mem::take(&mut self.elem)
     }
 }
 
@@ -160,7 +131,6 @@ impl<T: Default + PartialOrd> LinkedList<T> {
 
             if let Some(ref mut last) = last {
                 last.borrow_mut().next = Some(Node::rc_cell(elem));
-                //Placed at the end - increment node count
                 self.len += 1;
             }
         }
@@ -169,7 +139,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     //Pop values from the end of the list
     pub fn pop_back(&mut self) -> Option<T> {
         if self.head.is_none() {
-            return None;
+            None
         } else if self.len() == 1 {
             self.len -= 1;
             self.head.take().map(|head| head.borrow_mut().take())
@@ -198,7 +168,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
-
+    //Convert to another list applying a function ref values
     pub fn translate<U: Default + PartialOrd, F: Fn(&T) -> U>(&self, f: F) -> LinkedList<U> {
         let mut result = LinkedList::default();
         let iter = self.iterator();
@@ -207,33 +177,45 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         }
         result
     }
-
+    //Mutate the list applying a function to the mutable values of the list
     pub fn transmute<U: Default + PartialOrd, F: Fn(&mut T) -> U>(&mut self, f: F) {
         let iter = self.iterator();
         for t in iter {
             f(&mut t.borrow_mut().elem);
         }
     }
-
+    //Convert to another list by applying a function that consumes the values
     pub fn transform<U: Default + PartialOrd, F: Fn(T) -> U>(self, f: F) -> LinkedList<U> {
         let mut result = LinkedList::default();
-        let iter = self.iter_into();
-        for t in iter {
+        for t in self {
             result.push_back(f(t));
         }
         result
     }
 
     //Find all the indices meeting a criteria
-    pub fn indices<F: Fn(&T) -> bool>(&self, f: F) -> Vec<usize> {
+    pub fn indices<F: Fn(&T) -> bool>(&self, f: F) -> LinkedList<usize> {
         match self.head {
-            None => vec![],
+            None => LinkedList::<usize>::default(),
             Some(_) => self
                 .iterator()
                 .enumerate()
                 .filter(|t| f(&t.1.borrow().elem))
                 .map(|t| t.0)
                 .collect(),
+        }
+    }
+
+    //Find the last index of a given value
+    pub fn last_index_of(&self, value: &T) -> Option<usize> {
+        match self.head {
+            None => None,
+            Some(_) => self
+                .iterator()
+                .enumerate()
+                .filter(|t| t.1.borrow().elem == *value)
+                .map(|t| t.0)
+                .last(),
         }
     }
 
@@ -256,7 +238,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     pub fn delete_at_index(&mut self, index: usize) -> Option<T> {
         match index {
             idx if idx >= self.len() => None,
-            idx if idx == 0 => self.pop_front(),
+            0 => self.pop_front(),
             idx if idx == self.len() - 1 => self.pop_back(),
             _ => {
                 let mut prev = self
@@ -278,12 +260,38 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             }
         }
     }
+
     //Delete the first occurence of a value
-    pub fn delete_by_value(&mut self, value: T) -> Option<T> {
-        match self.index_of(&value) {
+    pub fn delete_last(&mut self, value: &T) -> Option<T> {
+        match self.last_index_of(value) {
             None => None,
             Some(index) => self.delete_at_index(index),
         }
+    }
+
+    //Delete the first occurence of a value
+    pub fn delete_first(&mut self, value: &T) -> Option<T> {
+        match self.index_of(value) {
+            None => None,
+            Some(index) => self.delete_at_index(index),
+        }
+    }
+
+    //Is the list sorted in order - ascending or descending?
+    pub fn is_sorted(&self, ascending: bool) -> bool {
+        let mut current: Option<Rc<RefCell<Node<T>>>> = None;
+        for rc_cell in self.iterator() {
+            let t = rc_cell;
+            match current {
+                None => current = Some(t),
+                Some(prev) => match ascending {
+                    true if prev > t => return false,
+                    false if prev < t => return false,
+                    _ => current = Some(t),
+                },
+            }
+        }
+        true
     }
 
     //Reverse the list
@@ -308,10 +316,6 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         }
     }
 
-    pub fn iter_into(self) -> IterInto<T> {
-        IterInto(self)
-    }
-
     //Implementation of various sorting alogrithms
     pub fn bubble_sort(&mut self, asc: bool) {
         if self.len() < 2 {
@@ -330,7 +334,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
                 curr_node =
                     curr_node.and_then(|curr_node| curr_node.borrow().next.as_ref().map(Rc::clone));
             }
-            if swapped == false {
+            if !swapped {
                 break;
             }
         }
@@ -342,6 +346,26 @@ impl<T> Default for LinkedList<T> {
         Self { head: None, len: 0 }
     }
 }
+
+impl<T: Default + PartialOrd> FromIterator<T> for LinkedList<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut list = LinkedList::default();
+        for t in iter {
+            list.push_back(t);
+        }
+        list
+    }
+}
+
+impl<T: Default + PartialOrd> IntoIterator for LinkedList<T> {
+    type Item = T;
+    type IntoIter = IterInto<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IterInto(self)
+    }
+}
+
 //An iterator used internally
 pub(crate) struct LinkIterator<T> {
     links: Link<T>,
@@ -366,9 +390,9 @@ impl<T: Debug> Debug for LinkedList<T> {
         match self.head {
             None => write!(f, "Empty linked list"),
             Some(ref node) => {
-                let _ = write!(f, "{}", "{");
+                let _ = write!(f, "{{");
                 let _ = node.borrow().fmt(f);
-                let _ = write!(f, "{}", "}, size: ");
+                let _ = write!(f, "}}, size: ");
                 write!(f, "{}", self.len)
             }
         }
@@ -406,6 +430,30 @@ mod tests {
         }
         true
     }
+    #[test]
+    fn linkedlist_last_index_of_test_1() {
+        let elems: [i32; 0] = [];
+        let list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.last_index_of(&0), None);
+
+        let elems = [500, 400, 300, 200, 100];
+        let list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.last_index_of(&500), Some(0));
+        assert_eq!(list.last_index_of(&400), Some(1));
+        assert_eq!(list.last_index_of(&300), Some(2));
+        assert_eq!(list.last_index_of(&200), Some(3));
+        assert_eq!(list.last_index_of(&100), Some(4));
+        assert_eq!(list.last_index_of(&1000), None);
+
+        let elems = [500, 400, 300, 200, 100, 500, 400, 300, 200, 100];
+        let list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.last_index_of(&500), Some(5));
+        assert_eq!(list.last_index_of(&400), Some(6));
+        assert_eq!(list.last_index_of(&300), Some(7));
+        assert_eq!(list.last_index_of(&200), Some(8));
+        assert_eq!(list.last_index_of(&100), Some(9));
+        assert_eq!(list.last_index_of(&1000), None);
+    }
 
     #[test]
     fn linkedlist_translate_test_1() {
@@ -439,14 +487,23 @@ mod tests {
     fn linkedlist_iindices_test_1() {
         let elems: [i32; 0] = [];
         let list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.indices(|i| *i == 0), vec![]);
+        assert_eq!(list.indices(|i| *i == 0), LinkedList::default());
 
         let elems = [500, 400, 300, 200, 100];
         let list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.indices(|i| *i == 0), vec![]);
-        assert_eq!(list.indices(|i| *i == 500), vec![0]);
-        assert_eq!(list.indices(|i| *i % 100 == 0), vec![0, 1, 2, 3, 4]);
-        assert_eq!(list.indices(|i| *i * 2 == 400), vec![3]);
+        assert_eq!(list.indices(|i| *i == 0), LinkedList::default());
+        assert_eq!(
+            list.indices(|i| *i == 500),
+            LinkedList::<usize>::from_slice(&[0])
+        );
+        assert_eq!(
+            list.indices(|i| *i % 100 == 0),
+            LinkedList::<usize>::from_slice(&[0, 1, 2, 3, 4])
+        );
+        assert_eq!(
+            list.indices(|i| *i * 2 == 400),
+            LinkedList::<usize>::from_slice(&[3])
+        );
     }
 
     #[test]
@@ -464,56 +521,105 @@ mod tests {
         assert_eq!(list.index_of(&100), Some(4));
         assert_eq!(list.index_of(&1000), None);
     }
-
     #[test]
-    fn linkedlist_delete_by_value_test_1() {
+    fn linkedlist_delete_last_test_1() {
         let elems: [i32; 0] = [];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete_by_value(0), None);
+        assert_eq!(list.delete_first(&0), None);
         assert_eq!(list.len(), 0);
 
         let elems = [200];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete_by_value(200), Some(200));
+        assert_eq!(list.delete_last(&200), Some(200));
         assert_eq!(list.len(), 0);
 
         let elems = [100, 200];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete_by_value(100), Some(100));
+        assert_eq!(list.delete_last(&100), Some(100));
         assert_eq!(list.len(), 1);
 
-        assert_eq!(list.delete_by_value(200), Some(200));
+        assert_eq!(list.delete_last(&200), Some(200));
         assert_eq!(list.len(), 0);
 
         let elems = [100, 200];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete_by_value(200), Some(200));
+        assert_eq!(list.delete_last(&200), Some(200));
         assert_eq!(list.len(), 1);
 
         let elems = [500, 400, 300];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete_by_value(400), Some(400));
+        assert_eq!(list.delete_last(&400), Some(400));
         assert_eq!(list.len(), 2);
 
         let elems = [500, 400, 300, 200, 100];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete_by_value(300), Some(300));
+        assert_eq!(list.delete_last(&300), Some(300));
+        assert_eq!(list.len(), 4);
+
+        let elems = [500, 400, 300, 200, 200, 200, 100];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_last(&600), None);
+        assert_eq!(list.last_index_of(&200), Some(5));
+
+        assert_eq!(list.delete_last(&200), Some(200));
+        assert_eq!(list.last_index_of(&200), Some(4));
+
+        assert_eq!(list.delete_last(&200), Some(200));
+        assert_eq!(list.last_index_of(&200), Some(3));
+
+        assert_eq!(list.delete_last(&200), Some(200));
+        assert_eq!(list.last_index_of(&200), None);
+    }
+
+    #[test]
+    fn linkedlist_delete_first_test_1() {
+        let elems: [i32; 0] = [];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_first(&0), None);
+        assert_eq!(list.len(), 0);
+
+        let elems = [200];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_first(&200), Some(200));
+        assert_eq!(list.len(), 0);
+
+        let elems = [100, 200];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_first(&100), Some(100));
+        assert_eq!(list.len(), 1);
+
+        assert_eq!(list.delete_first(&200), Some(200));
+        assert_eq!(list.len(), 0);
+
+        let elems = [100, 200];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_first(&200), Some(200));
+        assert_eq!(list.len(), 1);
+
+        let elems = [500, 400, 300];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_first(&400), Some(400));
+        assert_eq!(list.len(), 2);
+
+        let elems = [500, 400, 300, 200, 100];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete_first(&300), Some(300));
         assert_eq!(list.len(), 4);
 
         let elems = [500, 400, 300, 200, 100];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        assert_eq!(list.delete_by_value(600), None);
+        assert_eq!(list.delete_first(&600), None);
         assert_eq!(list.len(), 5);
 
-        assert_eq!(list.delete_by_value(200), Some(200));
-        assert_eq!(list.delete_by_value(200), None);
+        assert_eq!(list.delete_first(&200), Some(200));
+        assert_eq!(list.delete_first(&200), None);
         assert_eq!(list.len(), 4);
-        assert_eq!(list.delete_by_value(500), Some(500));
-        assert_eq!(list.delete_by_value(300), Some(300));
+        assert_eq!(list.delete_first(&500), Some(500));
+        assert_eq!(list.delete_first(&300), Some(300));
         assert_eq!(list.len(), 2);
-        assert_eq!(list.delete_by_value(400), Some(400));
-        assert_eq!(list.delete_by_value(100), Some(100));
-        assert_eq!(list.delete_by_value(100), None);
+        assert_eq!(list.delete_first(&400), Some(400));
+        assert_eq!(list.delete_first(&100), Some(100));
+        assert_eq!(list.delete_first(&100), None);
         assert_eq!(list.len(), 0);
     }
 
@@ -584,8 +690,9 @@ mod tests {
             let mut list = LinkedList::<u16>::from_slice(&elems);
 
             list.bubble_sort(false);
+            assert!(list.is_sorted(false));
 
-            let sorted = is_sorted(list.iter_into(), false);
+            let sorted = is_sorted(list.into_iter(), false);
             assert!(sorted);
 
             let mut elems: [i32; 128] = [0; 128];
@@ -593,8 +700,9 @@ mod tests {
             let mut list = LinkedList::<i32>::from_slice(&elems);
 
             list.bubble_sort(true);
+            assert!(list.is_sorted(true));
 
-            let sorted = is_sorted(list.iter_into(), true);
+            let sorted = is_sorted(list.into_iter(), true);
             assert!(sorted);
 
             runs -= 1;
@@ -625,7 +733,6 @@ mod tests {
         //let elems = (1..21750).rev().collect::<Vec<_>>();
         let elems = (1..4000).rev().collect::<Vec<_>>();
         let reversed = LinkedList::<i32>::from_slice(&elems);
-        // println!("The reversed list = {:?}", list);
         assert_eq!(list, reversed);
     }
 
@@ -651,18 +758,6 @@ mod tests {
         assert_eq!(list.pop_front(), None);
         assert_eq!(list.pop_back(), None);
         assert_eq!(list.len(), 0);
-    }
-
-    #[test]
-    fn node_pop_back_test_1() {
-        let mut node = Node::new(1);
-        node.push_back(2);
-        node.push_back(3);
-        node.push_back(4);
-        assert_eq!(node.pop_back(), Some(4));
-        assert_eq!(node.pop_back(), Some(3));
-        assert_eq!(node.pop_back(), Some(2));
-        assert_eq!(node.pop_back(), None);
     }
 
     #[test]
@@ -698,15 +793,12 @@ pub mod iterable {
 
     impl<T: Default> Node<T> {
         pub fn new(elem: T) -> Self {
-            Self {
-                elem: elem,
-                next: None,
-            }
+            Self { elem, next: None }
         }
 
         fn with_link(elem: T, link: Rc<Node<T>>) -> Rc<Node<T>> {
             Rc::new(Self {
-                elem: elem,
+                elem,
                 next: Some(link),
             })
         }
@@ -741,15 +833,8 @@ pub mod iterable {
             }
         }
 
-        /***pub fn push_front(&mut self, elem: T) {
-            *self = Self {
-                elem: elem,
-                next: Some(Rc::new(std::mem::take(self))),
-            };
-        }***/
-
         fn take(&mut self) -> T {
-            std::mem::replace(&mut self.elem, T::default())
+            std::mem::take(&mut self.elem)
         }
     }
 
@@ -798,7 +883,7 @@ pub mod iterable {
 
         //Create a list from from clonable types
         pub fn from_slice<U: Clone + Default>(elems: &[U]) -> LinkedList<U> {
-            assert!(elems.len() > 0);
+            assert!(!elems.is_empty());
             let mut node = Node::<U>::new(elems[0].clone());
             elems[1..]
                 .iter()
@@ -841,9 +926,7 @@ pub mod iterable {
         }
 
         pub fn pop_back(&mut self) -> Option<T> {
-            if self.head.is_none() {
-                return None;
-            }
+            self.head.as_ref()?;
             if let Some(head) = self.head.as_mut() {
                 if let Some(node) = Rc::get_mut(head) {
                     if self.len == 1 {
@@ -865,6 +948,10 @@ pub mod iterable {
 
         pub fn len(&self) -> usize {
             self.len
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.len == 0
         }
 
         //Update a value at the given index
@@ -909,13 +996,6 @@ pub mod iterable {
                 link: self.head.as_mut().and_then(Rc::get_mut),
             }
         }
-
-        pub fn into_iter(self) -> IntoIter<T> {
-            let mut head = self.head;
-            IntoIter {
-                link: head.take().and_then(Rc::into_inner),
-            }
-        }
     }
 
     impl<T> Default for LinkedList<T> {
@@ -929,9 +1009,9 @@ pub mod iterable {
             match self.head {
                 None => write!(f, "Empty linked list"),
                 Some(ref node) => {
-                    let _ = write!(f, "{}", "{");
+                    let _ = write!(f, "{{");
                     let _ = node.fmt(f);
-                    let _ = write!(f, "{}", "}, size: ");
+                    let _ = write!(f, "}}, size: ");
                     write!(f, "{}", self.len)
                 }
             }
@@ -956,6 +1036,18 @@ pub mod iterable {
                 self.link = node.next.and_then(Rc::into_inner);
                 node.elem
             })
+        }
+    }
+
+    impl<T> IntoIterator for LinkedList<T> {
+        type Item = T;
+        type IntoIter = IntoIter<Self::Item>;
+
+        fn into_iter(self) -> Self::IntoIter {
+            let mut head = self.head;
+            IntoIter {
+                link: head.take().and_then(Rc::into_inner),
+            }
         }
     }
 
@@ -1025,6 +1117,15 @@ pub mod iterable {
                 assert_eq!(iter.next(), Some(num));
             }
             assert_eq!(iter.next(), None);
+
+            let elems = [1, 2, 3, 4, 5];
+            let list = LinkedList::<i32>::from_slice(&elems);
+
+            let mut num = 1;
+            for i in list {
+                assert_eq!(i, num);
+                num += 1;
+            }
         }
         #[test]
         fn linklist_push_back_test() {
@@ -1054,12 +1155,10 @@ pub mod iterable {
             node.push_back(2);
             node.push_back(3);
             node.push_back(4);
-            println!("Node is: {:?}", node);
             assert_eq!(node.pop_back(), Some(4));
             assert_eq!(node.pop_back(), Some(3));
             assert_eq!(node.pop_back(), Some(2));
             assert_eq!(node.pop_back(), None);
-            println!("Now node is: {:?}", node);
         }
 
         #[test]
@@ -1068,13 +1167,11 @@ pub mod iterable {
             list.push_back(2);
             list.push_back(3);
             list.push_back(4);
-            println!("List is: {:?}", list);
             assert_eq!(list.pop_back(), Some(4));
             assert_eq!(list.pop_back(), Some(3));
             assert_eq!(list.pop_back(), Some(2));
             assert_eq!(list.pop_back(), Some(1));
             assert_eq!(list.pop_back(), None);
-            println!("Now list is: {:?}", list);
         }
 
         #[test]
@@ -1093,11 +1190,9 @@ pub mod iterable {
             let mut list = LinkedList::<i32>::from_slice(&elems);
             let result = list.update(4, 1000);
             assert_eq!(result, Some(500));
-            println!("The updated list is: {:?}", list);
 
             let result = list.update(0, 999);
             assert_eq!(result, Some(100));
-            println!("The updated list is: {:?}", list);
         }
     }
 }
