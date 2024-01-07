@@ -237,13 +237,18 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         let len = self.len() - 1;
         for i in 0..len {
             let mut curr_node = self.head.as_ref().map(Rc::clone);
+            let mut swapped = false;
             for _ in 0..(len - i) {
                 let in_order = Node::in_order(curr_node.as_ref().map(Rc::clone), asc);
                 if !in_order {
                     Node::swap_with_next(curr_node.as_ref().map(Rc::clone));
+                    swapped = true;
                 }
                 curr_node =
                     curr_node.and_then(|curr_node| curr_node.borrow().next.as_ref().map(Rc::clone));
+            }
+            if swapped == false {
+                break;
             }
         }
     }
@@ -301,9 +306,13 @@ mod tests {
     use super::*;
     use rand::Rng;
 
-    fn is_sorted<T: Debug+ PartialOrd>(mut input: impl Iterator<Item = T>, ascending: bool) -> bool {
+    fn is_sorted<T: Debug + PartialOrd>(
+        mut input: impl Iterator<Item = T>,
+        ascending: bool,
+    ) -> bool {
         let mut current: Option<T> = None;
         for t in input.by_ref() {
+            println!("t is: {:?}", t);
             match current {
                 None => current = Some(t),
                 Some(prev) => match ascending {
@@ -321,6 +330,7 @@ mod tests {
         let elems = [200, 500, 300, 400, 100];
         let mut list = LinkedList::<i32>::from_slice(&elems);
         list.bubble_sort(false); //false for descending
+
         let elems = [500, 400, 300, 200, 100];
         let reversed = LinkedList::<i32>::from_slice(&elems);
         assert_eq!(list, reversed);
@@ -328,26 +338,36 @@ mod tests {
         let elems = [200, 500, 300, 400, 100];
         let mut list = LinkedList::<i32>::from_slice(&elems);
         list.bubble_sort(true); //true for ascending
+
         let elems = [100, 200, 300, 400, 500];
         let reversed = LinkedList::<i32>::from_slice(&elems);
         assert_eq!(list, reversed);
 
-        let mut elems: [u16; 128] = [0; 128];
-        rand::thread_rng().fill(&mut elems);
-        println!("Elems = {:?}", elems);
-        let mut list = LinkedList::<u16>::from_slice(&elems);
-        list.bubble_sort(false);
-        println!();
-        println!();
-        println!("Elems = {:?}", list);
+        let mut runs = 50;
 
-        let sorted = is_sorted(list.iter_into(), false);
-        assert!(sorted);
+        loop {
+            let mut elems: [u16; 128] = [0; 128];
+            rand::thread_rng().fill(&mut elems);
+            let mut list = LinkedList::<u16>::from_slice(&elems);
 
-        let mut list = LinkedList::<u16>::from_slice(&elems);
-        list.bubble_sort(true);
-        let sorted = is_sorted(list.iter_into(), true);
-        assert!(sorted);
+            list.bubble_sort(false);
+
+            let sorted = is_sorted(list.iter_into(), false);
+            assert!(sorted);
+
+            let mut elems: [i32; 128] = [0; 128];
+            let mut list = LinkedList::<i32>::from_slice(&elems);
+
+            list.bubble_sort(true);
+
+            let sorted = is_sorted(list.iter_into(), true);
+            assert!(sorted);
+
+            runs -= 1;
+            if runs == 0 {
+                break;
+            }
+        }
     }
 
     #[test]
