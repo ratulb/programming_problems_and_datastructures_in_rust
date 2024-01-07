@@ -125,7 +125,6 @@ impl<T: Default + PartialOrd> LinkedList<T> {
 
     //Readily create a list from clonable slice of values. Internally values are never cloned hereafter.
     pub fn from_slice<U: Clone + Default + PartialOrd>(elems: &[U]) -> LinkedList<U> {
-        assert!(elems.len() > 0);
         let mut list = LinkedList::<U>::default();
         elems.iter().for_each(|elem| list.push_back(elem.clone()));
         list
@@ -198,6 +197,32 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.len == 0
+    }
+
+    pub fn delete(&mut self, index: usize) -> Option<T> {
+        match index {
+            idx if idx >= self.len() => None,
+            idx if idx == 0 => self.pop_front(),
+            idx if idx == self.len() - 1 => self.pop_back(),
+            _ => {
+                let mut prev = self
+                    .iterator()
+                    .enumerate()
+                    .skip_while(|(idx, _)| idx != &(index - 1))
+                    .take(1)
+                    .next()
+                    .map(|(_, link)| link);
+
+                let mut elem = prev.as_mut().and_then(|prev| prev.borrow_mut().next.take());
+                let next = elem.as_mut().and_then(|elem| elem.borrow_mut().next.take());
+
+                if let Some(prev) = prev {
+                    prev.borrow_mut().next = next;
+                }
+                self.len -= 1;
+                elem.map(|elem| elem.borrow_mut().take())
+            }
+        }
     }
 
     //Reverse the list
@@ -312,7 +337,6 @@ mod tests {
     ) -> bool {
         let mut current: Option<T> = None;
         for t in input.by_ref() {
-            println!("t is: {:?}", t);
             match current {
                 None => current = Some(t),
                 Some(prev) => match ascending {
@@ -323,6 +347,47 @@ mod tests {
             }
         }
         true
+    }
+
+    #[test]
+    fn linkedlist_delete_test_1() {
+        let elems: [i32; 0] = [];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete(0), None);
+        assert_eq!(list.len(), 0);
+
+        let elems = [200];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete(0), Some(200));
+        assert_eq!(list.len(), 0);
+
+        let elems = [100, 200];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete(0), Some(100));
+        assert_eq!(list.len(), 1);
+
+        assert_eq!(list.delete(0), Some(200));
+        assert_eq!(list.len(), 0);
+
+        let elems = [100, 200];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete(1), Some(200));
+        assert_eq!(list.len(), 1);
+
+        let elems = [500, 400, 300];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete(1), Some(400));
+        assert_eq!(list.len(), 2);
+
+        let elems = [500, 400, 300, 200, 100];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete(2), Some(300));
+        assert_eq!(list.len(), 4);
+
+        let elems = [500, 400, 300, 200, 100];
+        let mut list = LinkedList::<i32>::from_slice(&elems);
+        assert_eq!(list.delete(5), None);
+        assert_eq!(list.len(), 5);
     }
 
     #[test]
@@ -356,6 +421,7 @@ mod tests {
             assert!(sorted);
 
             let mut elems: [i32; 128] = [0; 128];
+            rand::thread_rng().fill(&mut elems);
             let mut list = LinkedList::<i32>::from_slice(&elems);
 
             list.bubble_sort(true);
