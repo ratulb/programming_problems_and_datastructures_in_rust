@@ -126,7 +126,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
                 .iterator()
                 .enumerate()
                 .skip_while(|(index, _)| index != &(self.len() - 1))
-                .map(|t| t.1)
+                .map(|(_, cell)| cell)
                 .next();
 
             if let Some(ref mut last) = last {
@@ -148,7 +148,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
                 .iterator()
                 .enumerate()
                 .skip_while(|(index, _)| index != &(self.len() - 2))
-                .map(|t| t.1)
+                .map(|(_, cell)| cell)
                 .next();
 
             penultimate.and_then(|penultimate| {
@@ -200,8 +200,8 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             Some(_) => self
                 .iterator()
                 .enumerate()
-                .filter(|t| f(&t.1.borrow().elem))
-                .map(|t| t.0)
+                .filter(|(_, cell)| f(&cell.borrow().elem))
+                .map(|(index, _)| index)
                 .collect(),
         }
     }
@@ -213,8 +213,8 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             Some(_) => self
                 .iterator()
                 .enumerate()
-                .filter(|t| t.1.borrow().elem == *value)
-                .map(|t| t.0)
+                .filter(|(_, cell)| cell.borrow().elem == *value)
+                .map(|(index, _)| index)
                 .last(),
         }
     }
@@ -227,8 +227,8 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             _ => self
                 .iterator()
                 .enumerate()
-                .find(|t| t.1.borrow().elem == *value)
-                .map(|t| t.0),
+                .find(|(_, cell)| cell.borrow().elem == *value)
+                .map(|(index, _)| index),
         }
     }
 
@@ -964,7 +964,7 @@ pub mod iterable {
                 .skip_while(|(idx, _)| idx != &index)
                 .take(1)
                 .next()
-                .map(|t| t.1)
+                .map(|(_, t)| t)
                 .map(|t| std::mem::replace(t, elem))
         }
 
