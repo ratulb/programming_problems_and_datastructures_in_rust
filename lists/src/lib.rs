@@ -86,7 +86,7 @@ impl<T: Debug> Debug for Node<T> {
 }
 
 impl<T: Default + PartialOrd> LinkedList<T> {
-    //Creates a list with a single value
+    //New up a list with a single value
     pub fn new(elem: T) -> Self {
         Self {
             head: Some(Node::rc_cell(elem)),
@@ -136,7 +136,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         }
     }
 
-    //Pop values from the end of the list
+    //Pop values from the end of the list - obvious O(n) operation
     pub fn pop_back(&mut self) -> Option<T> {
         if self.head.is_none() {
             None
@@ -416,10 +416,10 @@ impl<T: Default + PartialOrd> FromIterator<T> for LinkedList<T> {
 
 impl<T: Default + PartialOrd> IntoIterator for LinkedList<T> {
     type Item = T;
-    type IntoIter = IterInto<Self::Item>;
+    type IntoIter = IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
-        IterInto(self)
+        IntoIter(self)
     }
 }
 
@@ -456,9 +456,9 @@ impl<T: Debug> Debug for LinkedList<T> {
     }
 }
 
-pub struct IterInto<T: Default + PartialOrd>(LinkedList<T>);
+pub struct IntoIter<T: Default + PartialOrd>(LinkedList<T>);
 
-impl<T: Default + PartialOrd> Iterator for IterInto<T> {
+impl<T: Default + PartialOrd> Iterator for IntoIter<T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
         self.0.pop_front()
