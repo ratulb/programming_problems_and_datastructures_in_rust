@@ -123,7 +123,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             self.push_front(elem);
         } else {
             let mut last = self
-                .iterator()
+                .link_iterator()
                 .enumerate()
                 .skip_while(|(index, _)| index != &(self.len() - 1))
                 .map(|(_, cell)| cell)
@@ -145,7 +145,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             self.head.take().map(|head| head.borrow_mut().take())
         } else {
             let penultimate = self
-                .iterator()
+                .link_iterator()
                 .enumerate()
                 .skip_while(|(index, _)| index != &(self.len() - 2))
                 .map(|(_, cell)| cell)
@@ -172,7 +172,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     //Convert to another list applying a function ref values
     pub fn translate<U: Default + PartialOrd, F: Fn(&T) -> U>(&self, f: F) -> LinkedList<U> {
         let mut result = LinkedList::default();
-        let iter = self.iterator();
+        let iter = self.link_iterator();
         for t in iter {
             result.push_back(f(&t.borrow().elem));
         }
@@ -180,7 +180,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     }
     //Mutate the list applying a function to the mutable values of the list
     pub fn transmute<U: Default + PartialOrd, F: Fn(&mut T) -> U>(&mut self, f: F) {
-        let iter = self.iterator();
+        let iter = self.link_iterator();
         for t in iter {
             f(&mut t.borrow_mut().elem);
         }
@@ -199,7 +199,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         match self.head {
             None => LinkedList::<usize>::default(),
             Some(_) => self
-                .iterator()
+                .link_iterator()
                 .enumerate()
                 .filter(|(_, cell)| f(&cell.borrow().elem))
                 .map(|(index, _)| index)
@@ -212,7 +212,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         match self.head {
             None => None,
             Some(_) => self
-                .iterator()
+                .link_iterator()
                 .enumerate()
                 .filter(|(_, cell)| cell.borrow().elem == *value)
                 .map(|(index, _)| index)
@@ -226,7 +226,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         match self.head {
             None => None,
             _ => self
-                .iterator()
+                .link_iterator()
                 .enumerate()
                 .find(|(_, cell)| cell.borrow().elem == *value)
                 .map(|(index, _)| index),
@@ -243,7 +243,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             idx if idx == self.len() - 1 => self.pop_back(),
             _ => {
                 let mut prev = self
-                    .iterator()
+                    .link_iterator()
                     .enumerate()
                     .skip_while(|(idx, _)| idx != &(index - 1))
                     .take(1)
@@ -271,7 +271,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         }
         let mut prev = None;
         let insert_at = self
-            .iterator()
+            .link_iterator()
             .map(|link| {
                 if prev.is_none() {
                     //First item of the iterator. prev is None - set this item as prev for later
@@ -337,7 +337,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     //Is the list sorted in order - ascending or descending?
     pub fn is_sorted(&self, ascending: bool) -> bool {
         let mut current: Option<Rc<RefCell<Node<T>>>> = None;
-        for rc_cell in self.iterator() {
+        for rc_cell in self.link_iterator() {
             let t = rc_cell;
             match current {
                 None => current = Some(t),
@@ -367,7 +367,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         self.head = previous;
     }
 
-    pub(crate) fn iterator(&self) -> LinkIterator<T> {
+    pub(crate) fn link_iterator(&self) -> LinkIterator<T> {
         LinkIterator {
             links: self.head.as_ref().map(Rc::clone),
         }
@@ -813,7 +813,7 @@ mod tests {
     fn linkedlist_link_iterator_test_1() {
         let elems = (1..5).collect::<Vec<_>>();
         let list = LinkedList::<i32>::from_slice(&elems);
-        let itr = list.iterator();
+        let itr = list.link_iterator();
         let mut elem = 1;
         for link in itr {
             assert_eq!(link.borrow_mut().take(), elem);
