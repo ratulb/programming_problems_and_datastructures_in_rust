@@ -301,11 +301,11 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         }
         let mut previous = None;
         let mut current = self.head.take();
-        while let Some(ref mut curr_node) = current {
-            let mut curr_next = curr_node.borrow_mut().next.take();
-            curr_node.borrow_mut().next = previous.take();
-            previous = current.take();
-            current = curr_next.take();
+        while let Some(ref mut node) = current {
+            let next = node.borrow_mut().next.take();
+            node.borrow_mut().next = previous;
+            previous = current;
+            current = next;
         }
         self.head = previous;
     }
