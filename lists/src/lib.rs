@@ -408,7 +408,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         }
     }
     //Implementation of various sorting alogrithms
-    pub fn bubble_sort(&mut self, asc: bool) {
+    pub fn bubble_sort(&mut self, ascending: bool) {
         if self.len() < 2 {
             return;
         }
@@ -417,7 +417,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             let mut curr_node = self.head.as_ref().map(Rc::clone);
             let mut swapped = false;
             for _ in 0..(len - i) {
-                let in_order = Node::in_order(curr_node.as_ref().map(Rc::clone), asc);
+                let in_order = Node::in_order(curr_node.as_ref().map(Rc::clone), ascending);
                 if !in_order {
                     Node::swap_with_next(curr_node.as_ref().map(Rc::clone));
                     swapped = true;
@@ -430,6 +430,38 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             }
         }
     }
+    //Sort the list values via selection sort
+    pub fn selection_sort(&mut self, ascending: bool) {
+        if self.len < 2 {
+            return;
+        }
+        self.link_iterator()
+            .enumerate()
+            .take(self.len() - 1)
+            .for_each(|(i, curr_node)| {
+                let mut min_or_max_node = Rc::clone(&curr_node);
+                self.link_iterator()
+                    .enumerate()
+                    .skip_while(|(j, _)| j <= &i)
+                    .map(|(_, node)| node)
+                    .for_each(|node| {
+                        if ascending {
+                            if min_or_max_node.borrow().elem > node.borrow().elem {
+                                min_or_max_node = Rc::clone(&node);
+                            }
+                        } else if min_or_max_node.borrow().elem < node.borrow().elem {
+                            min_or_max_node = Rc::clone(&node);
+                        }
+                    });
+                if !Rc::ptr_eq(&curr_node, &min_or_max_node) {
+                    Node::swap(
+                        &mut curr_node.borrow_mut(),
+                        &mut min_or_max_node.borrow_mut(),
+                    );
+                }
+            });
+    }
+
     //Does the list contain the elem?
     pub fn contains(&self, elem: &T) -> bool
     where
@@ -536,6 +568,21 @@ mod tests {
         }
         true
     }
+
+    #[test]
+    fn linkedlist_selection_sort_test_1() {
+        let mut list = LinkedList::<i32>::from_slice(&[30, 10, 5, 20, 15, 45, 35, 25, 50, 40]);
+        list.selection_sort(true); //true for ascending
+        assert_eq!(
+            list,
+            LinkedList::<i32>::from_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
+        );
+        list.selection_sort(false);
+        let mut expected = LinkedList::<i32>::from_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50]);
+        expected.reverse();
+        assert_eq!(list, expected);
+    }
+
     #[test]
     fn linkedlist_front_mut_test_1() {
         let mut list = LinkedList::new(30);
