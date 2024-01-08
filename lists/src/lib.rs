@@ -336,15 +336,14 @@ impl<T: Default + PartialOrd> LinkedList<T> {
 
     //Is the list sorted in order - ascending or descending?
     pub fn is_sorted(&self, ascending: bool) -> bool {
-        let mut current: Option<Rc<RefCell<Node<T>>>> = None;
-        for rc_cell in self.link_iterator() {
-            let t = rc_cell;
+        let mut current: Link<T> = None;
+        for cell in self.link_iterator() {
             match current {
-                None => current = Some(t),
+                None => current = Some(cell),
                 Some(prev) => match ascending {
-                    true if prev > t => return false,
-                    false if prev < t => return false,
-                    _ => current = Some(t),
+                    true if prev > cell => return false,
+                    false if prev < cell => return false,
+                    _ => current = Some(cell),
                 },
             }
         }
@@ -372,7 +371,6 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             links: self.head.as_ref().map(Rc::clone),
         }
     }
-
     //Implementation of various sorting alogrithms
     pub fn bubble_sort(&mut self, asc: bool) {
         if self.len() < 2 {
@@ -396,7 +394,15 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             }
         }
     }
+    //Does the list contain the elem?
+    pub fn contains(&self, elem: &T) -> bool
+    where
+        T: PartialEq<T>,
+    {
+        self.link_iterator().any(|e| &e.borrow().elem == elem)
+    }
 }
+
 //Default linked list contains nothing
 impl<T> Default for LinkedList<T> {
     fn default() -> Self {
@@ -486,6 +492,17 @@ mod tests {
             }
         }
         true
+    }
+
+    #[test]
+    fn linkedlist_contains_test_1() {
+        let mut list = LinkedList::<i32>::default();
+        list.insert_sorted(30, true);
+        assert!(list.contains(&30));
+        assert!(!list.contains(&40));
+        assert_eq!(list.delete_last(&30), Some(30));
+        assert_eq!(list.len(), 0);
+        assert!(!list.contains(&30));
     }
 
     #[test]
@@ -990,6 +1007,10 @@ pub mod iterable {
                 head: Some(Rc::new(node)),
                 len: elems.len(),
             }
+        }
+
+        pub fn front(&self) -> Option<&T> {
+            self.head.as_ref().map(|node| &node.elem)
         }
 
         pub fn push_front(&mut self, elem: T) {
