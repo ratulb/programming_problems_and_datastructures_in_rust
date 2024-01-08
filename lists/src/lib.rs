@@ -159,6 +159,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             })
         }
     }
+
     //Count of values in the list
     #[inline(always)]
     pub fn len(&self) -> usize {
@@ -257,6 +258,62 @@ impl<T: Default + PartialOrd> LinkedList<T> {
                 }
                 self.len -= 1;
                 elem.map(|elem| elem.borrow_mut().take())
+            }
+        }
+    }
+
+    //Insert values in ascending or descending order. O(n) worst case operation to find the (prev,
+    //next) tuple within which to place the value
+    pub fn insert_sorted(&mut self, elem: T, ascending: bool) {
+        if self.is_empty() {
+            self.push_front(elem);
+            return;
+        }
+        let mut prev = None;
+        let insert_at = self
+            .iterator()
+            .map(|link| {
+                if prev.is_none() {
+                    //First item of the iterator. prev is None - set this item as prev for later
+                    //If the first item satifies our query - its of no use
+                    prev = Some(Rc::clone(&link));
+                    //First value itself satisfy the condition - find returns this with
+                    //No previous i.e. value need to be inserted at the beginning
+                    if ascending {
+                        (None, link.borrow().elem >= elem, Rc::clone(&link))
+                    } else {
+                        (None, link.borrow().elem <= elem, Rc::clone(&link))
+                    }
+                } else {
+                    //Condition was not satisfied with first item of the iterator or so far.
+                    //prev was set before - hence if current item of iterator satisfy our query
+                    //that prev is our required prev and current item is our required next to be
+                    //returned by "find" method on the iterator
+                    //let curr_prev = prev.as_ref().cloned();
+                    let existent = prev.as_ref().map(Rc::clone);
+                    prev = Some(Rc::clone(&link));
+                    if ascending {
+                        (existent, link.borrow().elem >= elem, Rc::clone(&link))
+                    } else {
+                        (existent, link.borrow().elem <= elem, Rc::clone(&link))
+                    }
+                }
+            })
+            .find(|(_, gle, _)| gle == &true) //gle => greater/lesser/equal
+            .map(|(prev, _, next)| (prev, next));
+        match insert_at {
+            None => self.push_back(elem),
+            //All items are smaller(bigger) than the value to be inserted if ascending(descending).
+            //Hence found none. Hence value goes to the end
+            Some((None, _)) => self.push_front(elem), //First item itself was bigger or
+            //equal(smaller or equal) if ascending(descending). Hence value goes to the front
+            Some((mut prev, next)) => {
+                //Found prev and next. Stick in between them
+                let entry = Some(Node::with_link(elem, next));
+                if let Some(ref mut prev) = prev {
+                    prev.borrow_mut().next = entry;
+                    self.len += 1;
+                }
             }
         }
     }
@@ -430,6 +487,46 @@ mod tests {
         }
         true
     }
+
+    #[test]
+    fn linkedlist_insert_sorted_test_1() {
+        let mut list = LinkedList::<i32>::default();
+        list.insert_sorted(10, true);
+        list.insert_sorted(30, true);
+        list.insert_sorted(45, true);
+        list.insert_sorted(5, true);
+        list.insert_sorted(50, true);
+        list.insert_sorted(20, true);
+        list.insert_sorted(25, true);
+        list.insert_sorted(40, true);
+        list.insert_sorted(15, true);
+        list.insert_sorted(35, true);
+        println!("Insert sorted list:{:?}", list);
+
+        assert_eq!(
+            list,
+            LinkedList::<i32>::from_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
+        );
+
+        let mut list = LinkedList::<i32>::default();
+        list.insert_sorted(10, false);
+        list.insert_sorted(30, false);
+        list.insert_sorted(45, false);
+        list.insert_sorted(5, false);
+        list.insert_sorted(50, false);
+        list.insert_sorted(20, false);
+        list.insert_sorted(25, false);
+        list.insert_sorted(40, false);
+        list.insert_sorted(15, false);
+        list.insert_sorted(35, false);
+        println!("Insert sorted list:{:?}", list);
+
+        assert_eq!(
+            list,
+            LinkedList::<i32>::from_slice(&[50, 45, 40, 35, 30, 25, 20, 15, 10, 5])
+        );
+    }
+
     #[test]
     fn linkedlist_last_index_of_test_1() {
         let elems: [i32; 0] = [];
