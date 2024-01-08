@@ -581,6 +581,37 @@ mod tests {
         let mut expected = LinkedList::<i32>::from_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50]);
         expected.reverse();
         assert_eq!(list, expected);
+
+        let mut runs = 50;
+
+        loop {
+            let mut elems: [u16; 128] = [0; 128];
+            rand::thread_rng().fill(&mut elems);
+            let mut list = LinkedList::<u16>::from_slice(&elems);
+
+            list.selection_sort(false);
+            assert!(list.is_sorted(false));
+
+            let sorted = is_sorted(list.into_iter(), false);
+            assert!(sorted);
+
+            let mut elems: [i32; 128] = [0; 128];
+            rand::thread_rng().fill(&mut elems);
+            let mut list = LinkedList::<i32>::from_slice(&elems);
+
+            list.selection_sort(true);
+            assert!(list.is_sorted(true));
+
+            println!("{:?}", list);
+
+            let sorted = is_sorted(list.into_iter(), true);
+            assert!(sorted);
+
+            runs -= 1;
+            if runs == 0 {
+                break;
+            }
+        }
     }
 
     #[test]
