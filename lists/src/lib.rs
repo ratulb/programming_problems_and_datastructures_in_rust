@@ -23,6 +23,41 @@ pub struct LinkedList<T> {
     len: usize,
 }
 
+pub struct NonMutT<'a, T>(Ref<'a, Node<T>>);
+pub struct MutT<'a, T>(RefMut<'a, Node<T>>);
+
+impl<'a, T> NonMutT<'a, T> {
+    pub fn t(&self) -> &T {
+        &self.0.elem
+    }
+}
+
+impl<'a, T> MutT<'a, T> {
+    pub fn t(&mut self) -> &mut T {
+        &mut self.0.elem
+    }
+}
+
+impl<'a, T> Deref for NonMutT<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0.elem
+    }
+}
+
+impl<'a, T> Deref for MutT<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0.elem
+    }
+}
+
+impl<'a, T> DerefMut for MutT<'a, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0.elem
+    }
+}
+
 impl<T: Default + PartialOrd> Node<T> {
     pub fn new(elem: T) -> Self {
         Self { elem, next: None }
@@ -418,42 +453,6 @@ impl<T> Default for LinkedList<T> {
         Self { head: None, len: 0 }
     }
 }
-
-pub struct NonMutT<'a, T>(Ref<'a, Node<T>>);
-pub struct MutT<'a, T>(RefMut<'a, Node<T>>);
-
-impl<'a, T> NonMutT<'a, T> {
-    pub fn t(&self) -> &T {
-        &self.0.elem
-    }
-}
-
-impl<'a, T> MutT<'a, T> {
-    pub fn t(&mut self) -> &mut T {
-        &mut self.0.elem
-    }
-}
-
-impl<'a, T> Deref for NonMutT<'a, T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        &self.0.elem
-    }
-}
-
-impl<'a, T> Deref for MutT<'a, T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        &self.0.elem
-    }
-}
-
-impl<'a, T> DerefMut for MutT<'a, T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0.elem
-    }
-}
-
 impl<T: Default + PartialOrd> FromIterator<T> for LinkedList<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut list = LinkedList::default();
