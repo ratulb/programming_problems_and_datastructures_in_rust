@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell, RefMut};
 use std::fmt::{Debug, Error, Formatter};
+use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 
 type Cell<T> = Rc<RefCell<Node<T>>>;
@@ -401,12 +402,55 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     {
         self.link_iterator().any(|e| &e.borrow().elem == elem)
     }
+
+    pub fn front(&self) -> Option<NonMutT<'_, T>> {
+        self.head.as_ref().map(|node| NonMutT(node.borrow()))
+    }
+
+    pub fn front_mut(&mut self) -> Option<MutT<'_, T>> {
+        self.head.as_mut().map(|node| MutT(node.borrow_mut()))
+    }
 }
 
 //Default linked list contains nothing
 impl<T> Default for LinkedList<T> {
     fn default() -> Self {
         Self { head: None, len: 0 }
+    }
+}
+
+pub struct NonMutT<'a, T>(Ref<'a, Node<T>>);
+pub struct MutT<'a, T>(RefMut<'a, Node<T>>);
+
+impl<'a, T> NonMutT<'a, T> {
+    pub fn t(&self) -> &T {
+        &self.0.elem
+    }
+}
+
+impl<'a, T> MutT<'a, T> {
+    pub fn t(&mut self) -> &mut T {
+        &mut self.0.elem
+    }
+}
+
+impl<'a, T> Deref for NonMutT<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0.elem
+    }
+}
+
+impl<'a, T> Deref for MutT<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0.elem
+    }
+}
+
+impl<'a, T> DerefMut for MutT<'a, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0.elem
     }
 }
 
@@ -492,6 +536,38 @@ mod tests {
             }
         }
         true
+    }
+    #[test]
+    fn linkedlist_front_mut_test_1() {
+        let mut list = LinkedList::new(30);
+        if let Some(mut t) = list.front_mut() {
+            *t.t() *= 3;
+        }
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[90]));
+
+        let mut list = LinkedList::new(30);
+        let opt: Option<MutT<'_, i32>> = list.front_mut();
+        *opt.unwrap() *= 3;
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[90]));
+    }
+
+    #[test]
+    fn linkedlist_front_test_1() {
+        let mut list = LinkedList::<i32>::default();
+        list.insert_sorted(30, true);
+        let t: Option<NonMutT<'_, i32>> = list.front();
+        assert!(t.is_some_and(|t| t.t() == &30));
+
+        let mut list = LinkedList::<i32>::default();
+        list.push_back(30);
+        let front = list.front().unwrap();
+        assert_eq!(front.t(), &30);
+
+        let mut list = LinkedList::<i32>::default();
+        list.push_back(30);
+        let non_mut_t: NonMutT<'_, i32> = list.front().unwrap();
+        assert_eq!(*non_mut_t, 30);
+        assert_eq!(non_mut_t.deref(), &30);
     }
 
     #[test]
