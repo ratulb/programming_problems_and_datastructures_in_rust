@@ -298,6 +298,60 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         }
     }
 
+    //Delete the first occurence of a value
+    pub fn delete_last(&mut self, value: &T) -> Option<T> {
+        match self.last_index_of(value) {
+            None => None,
+            Some(index) => self.delete_at_index(index),
+        }
+    }
+
+    //Delete the first occurence of a value
+    pub fn delete_first(&mut self, value: &T) -> Option<T> {
+        match self.index_of(value) {
+            None => None,
+            Some(index) => self.delete_at_index(index),
+        }
+    }
+
+    //Reverse the list
+    pub fn reverse(&mut self) {
+        if self.len < 2 {
+            return;
+        }
+        let mut previous = None;
+        let mut current = self.head.take();
+        while let Some(ref mut node) = current {
+            let next = node.borrow_mut().next.take();
+            node.borrow_mut().next = previous;
+            previous = current;
+            current = next;
+        }
+        self.head = previous;
+    }
+
+    pub(crate) fn link_iterator(&self) -> LinkIterator<T> {
+        LinkIterator {
+            links: self.head.as_ref().map(Rc::clone),
+        }
+    }
+
+    //Is the list sorted in order - ascending or descending?
+    pub fn is_sorted(&self, ascending: bool) -> bool {
+        let mut current: Link<T> = None;
+        for cell in self.link_iterator() {
+            match current {
+                None => current = Some(cell),
+                Some(prev) => match ascending {
+                    true if prev > cell => return false,
+                    false if prev < cell => return false,
+                    _ => current = Some(cell),
+                },
+            }
+        }
+        true
+    }
+
     //Insert values in ascending or descending order. O(n) worst case operation to find the (prev,
     //next) tuple within which to place the value
     pub fn insert_sorted(&mut self, elem: T, ascending: bool) {
@@ -354,59 +408,6 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         }
     }
 
-    //Delete the first occurence of a value
-    pub fn delete_last(&mut self, value: &T) -> Option<T> {
-        match self.last_index_of(value) {
-            None => None,
-            Some(index) => self.delete_at_index(index),
-        }
-    }
-
-    //Delete the first occurence of a value
-    pub fn delete_first(&mut self, value: &T) -> Option<T> {
-        match self.index_of(value) {
-            None => None,
-            Some(index) => self.delete_at_index(index),
-        }
-    }
-
-    //Is the list sorted in order - ascending or descending?
-    pub fn is_sorted(&self, ascending: bool) -> bool {
-        let mut current: Link<T> = None;
-        for cell in self.link_iterator() {
-            match current {
-                None => current = Some(cell),
-                Some(prev) => match ascending {
-                    true if prev > cell => return false,
-                    false if prev < cell => return false,
-                    _ => current = Some(cell),
-                },
-            }
-        }
-        true
-    }
-
-    //Reverse the list
-    pub fn reverse(&mut self) {
-        if self.len < 2 {
-            return;
-        }
-        let mut previous = None;
-        let mut current = self.head.take();
-        while let Some(ref mut node) = current {
-            let next = node.borrow_mut().next.take();
-            node.borrow_mut().next = previous;
-            previous = current;
-            current = next;
-        }
-        self.head = previous;
-    }
-
-    pub(crate) fn link_iterator(&self) -> LinkIterator<T> {
-        LinkIterator {
-            links: self.head.as_ref().map(Rc::clone),
-        }
-    }
     //Implementation of various sorting alogrithms
     pub fn bubble_sort(&mut self, ascending: bool) {
         if self.len() < 2 {
@@ -461,6 +462,19 @@ impl<T: Default + PartialOrd> LinkedList<T> {
                 }
             });
     }
+    //Sort the values using insertion sort
+    pub fn insertion_sort(&mut self, ascending: bool) {
+        if self.len < 2 {
+            return;
+        }
+        let mut current = self.head.take();
+        self.len = 0;
+        while let Some(cell) = current {
+            let mut node = cell.take();
+            self.insert_sorted(node.take(), ascending);
+            current = node.next.take();
+        }
+    }
 
     //Does the list contain the elem?
     pub fn contains(&self, elem: &T) -> bool
@@ -476,6 +490,14 @@ impl<T: Default + PartialOrd> LinkedList<T> {
 
     pub fn front_mut(&mut self) -> Option<MutT<'_, T>> {
         self.head.as_mut().map(|node| MutT(node.borrow_mut()))
+    }
+}
+impl<T: Default> Default for Node<T> {
+    fn default() -> Self {
+        Self {
+            elem: T::default(),
+            next: None,
+        }
     }
 }
 
@@ -567,6 +589,50 @@ mod tests {
             }
         }
         true
+    }
+    #[test]
+    fn linkedlist_insertion_sort_test_1() {
+        let mut list = LinkedList::<i32>::from_slice(&[30, 10, 5, 20, 15, 45, 35, 25, 50, 40]);
+        list.insertion_sort(true); //true for ascending
+        assert_eq!(
+            list,
+            LinkedList::<i32>::from_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
+        );
+        list.insertion_sort(false);
+        let mut expected = LinkedList::<i32>::from_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50]);
+        expected.reverse();
+        assert_eq!(list, expected);
+
+        let mut runs = 50;
+
+        loop {
+            let mut elems: [u16; 256] = [0; 256];
+            rand::thread_rng().fill(&mut elems);
+            let mut list = LinkedList::<u16>::from_slice(&elems);
+
+            list.insertion_sort(false);
+            assert!(list.is_sorted(false));
+
+            let sorted = is_sorted(list.into_iter(), false);
+            assert!(sorted);
+
+            let mut elems: [i32; 256] = [0; 256];
+            rand::thread_rng().fill(&mut elems);
+            let mut list = LinkedList::<i32>::from_slice(&elems);
+
+            list.insertion_sort(true);
+            assert!(list.is_sorted(true));
+
+            println!("{:?}", list);
+
+            let sorted = is_sorted(list.into_iter(), true);
+            assert!(sorted);
+
+            runs -= 1;
+            if runs == 0 {
+                break;
+            }
+        }
     }
 
     #[test]
