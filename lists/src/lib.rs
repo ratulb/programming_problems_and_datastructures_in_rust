@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 use std::cell::{Ref, RefCell, RefMut};
+use std::cmp::Ordering;
 use std::fmt::{Debug, Error, Formatter};
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
@@ -7,7 +8,6 @@ use std::rc::Rc;
 type Cell<T> = Rc<RefCell<Node<T>>>;
 type Link<T> = Option<Cell<T>>;
 
-#[derive(PartialEq, PartialOrd)]
 pub(crate) struct Node<T> {
     elem: T,
     next: Link<T>,
@@ -17,7 +17,6 @@ pub(crate) struct Node<T> {
 ///The link list structure for arbritary type T. 'T' should have a default value.
 ///
 
-#[derive(PartialEq)]
 pub struct LinkedList<T> {
     head: Link<T>,
     len: usize,
@@ -58,7 +57,7 @@ impl<'a, T> DerefMut for MutT<'a, T> {
     }
 }
 
-impl<T: Default + PartialOrd> Node<T> {
+impl<T: Default> Node<T> {
     pub fn new(elem: T) -> Self {
         Self { elem, next: None }
     }
@@ -77,7 +76,10 @@ impl<T: Default + PartialOrd> Node<T> {
 
     //Is this node in order? i.e. Greater or equal/less or equal it next node's value
     #[inline(always)]
-    fn in_order(node: Option<Cell<T>>, asc: bool) -> bool {
+    fn in_order(node: Option<Cell<T>>, asc: bool) -> bool
+    where
+        T: PartialOrd,
+    {
         node.and_then(|node| {
             node.borrow().next.as_ref().map(|next| {
                 if asc {
@@ -121,7 +123,39 @@ impl<T: Debug> Debug for Node<T> {
     }
 }
 
-impl<T: Default + PartialOrd> LinkedList<T> {
+impl<T: PartialOrd> PartialOrd for Node<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.elem.partial_cmp(&other.elem)
+    }
+}
+
+impl<T: PartialEq> Eq for Node<T> {}
+
+impl<T: PartialEq> PartialEq for Node<T> {
+    fn eq(&self, other: &Node<T>) -> bool {
+        match (&self.elem, &self.next, &other.elem, &other.next) {
+            (elem, _, other_elem, _) if *elem != *other_elem => false,
+            (elem, None, other_elem, None) if *elem == *other_elem => true,
+            (elem, None, other_elem, Some(_)) if *elem == *other_elem => false,
+            (elem, Some(_), other_elem, None) if *elem == *other_elem => false,
+            (elem, Some(ref this), other_elem, Some(ref that)) if *elem == *other_elem => {
+                *this.borrow() == *that.borrow()
+            }
+            (_, _, _, _) => false,
+        }
+    }
+}
+
+impl<T: PartialEq> Eq for LinkedList<T> {}
+
+impl<T: PartialEq> PartialEq for LinkedList<T> {
+    #[inline]
+    fn eq(&self, other: &LinkedList<T>) -> bool {
+        self.head == other.head && self.len == other.len
+    }
+}
+
+impl<T: Default> LinkedList<T> {
     //New up a list with a single value
     pub fn new(elem: T) -> Self {
         Self {
@@ -131,7 +165,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     }
 
     //Readily create a list from clonable slice of values. Internally values are never cloned hereafter.
-    pub fn from_slice<U: Clone + Default + PartialOrd>(elems: &[U]) -> LinkedList<U> {
+    pub fn from_slice<U: Clone + Default>(elems: &[U]) -> LinkedList<U> {
         let mut list = LinkedList::<U>::default();
         elems.iter().for_each(|elem| list.push_back(elem.clone()));
         list
@@ -206,7 +240,7 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         self.len == 0
     }
     //Convert to another list applying a function ref values
-    pub fn translate<U: Default + PartialOrd, F: Fn(&T) -> U>(&self, f: F) -> LinkedList<U> {
+    pub fn translate<U: Default, F: Fn(&T) -> U>(&self, f: F) -> LinkedList<U> {
         let mut result = LinkedList::default();
         let iter = self.link_iterator();
         for t in iter {
@@ -215,14 +249,14 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         result
     }
     //Mutate the list applying a function to the mutable values of the list
-    pub fn transmute<U: Default + PartialOrd, F: Fn(&mut T) -> U>(&mut self, f: F) {
+    pub fn transmute<U: Default, F: Fn(&mut T) -> U>(&mut self, f: F) {
         let iter = self.link_iterator();
         for t in iter {
             f(&mut t.borrow_mut().elem);
         }
     }
     //Convert to another list by applying a function that consumes the values
-    pub fn transform<U: Default + PartialOrd, F: Fn(T) -> U>(self, f: F) -> LinkedList<U> {
+    pub fn transform<U: Default, F: Fn(T) -> U>(self, f: F) -> LinkedList<U> {
         let mut result = LinkedList::default();
         for t in self {
             result.push_back(f(t));
@@ -244,7 +278,10 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     }
 
     //Find the last index of a given value
-    pub fn last_index_of(&self, value: &T) -> Option<usize> {
+    pub fn last_index_of(&self, value: &T) -> Option<usize>
+    where
+        T: PartialOrd,
+    {
         match self.head {
             None => None,
             Some(_) => self
@@ -258,7 +295,10 @@ impl<T: Default + PartialOrd> LinkedList<T> {
 
     //Find the first index of a value
     #[inline(always)]
-    pub fn index_of(&self, value: &T) -> Option<usize> {
+    pub fn index_of(&self, value: &T) -> Option<usize>
+    where
+        T: PartialOrd,
+    {
         match self.head {
             None => None,
             _ => self
@@ -299,7 +339,10 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     }
 
     //Delete the first occurence of a value
-    pub fn delete_last(&mut self, value: &T) -> Option<T> {
+    pub fn delete_last(&mut self, value: &T) -> Option<T>
+    where
+        T: PartialOrd,
+    {
         match self.last_index_of(value) {
             None => None,
             Some(index) => self.delete_at_index(index),
@@ -307,7 +350,10 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     }
 
     //Delete the first occurence of a value
-    pub fn delete_first(&mut self, value: &T) -> Option<T> {
+    pub fn delete_first(&mut self, value: &T) -> Option<T>
+    where
+        T: PartialOrd,
+    {
         match self.index_of(value) {
             None => None,
             Some(index) => self.delete_at_index(index),
@@ -330,6 +376,42 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         self.head = previous;
     }
 
+    ///
+    ///Append another list to this
+    ///
+    pub fn append(&mut self, other: Self) {
+        self.extend(other);
+    }
+    /// Splits the list into two at the given index.
+    ///
+    /// Returns a newlist  containing the elements in the range
+    /// `[at, len)`. After the call, the original list will be left containing
+    /// the elements `[0, at)`.
+    /// If this list is empty or index is more than length of this list,
+    /// would return an empty list.
+    /// If index is 0 this list would become empty
+    ///
+    pub fn split_at(&mut self, index: usize) -> Self {
+        if self.len == 0 || index >= self.len {
+            return Self::default();
+        } else if index == 0 {
+            return std::mem::take(self);
+        } else {
+            let split = self
+                .link_iterator()
+                .enumerate()
+                .skip_while(|(idx, _)| *idx < index - 1)
+                .next()
+                .and_then(|(_, cell)| cell.borrow_mut().next.take());
+            let split_len = self.len - index;
+            self.len = index;
+            LinkedList {
+                head: split,
+                len: split_len,
+            }
+        }
+    }
+
     pub(crate) fn link_iterator(&self) -> LinkIterator<T> {
         LinkIterator {
             links: self.head.as_ref().map(Rc::clone),
@@ -337,7 +419,10 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     }
 
     //Is the list sorted in order - ascending or descending?
-    pub fn is_sorted(&self, ascending: bool) -> bool {
+    pub fn is_sorted(&self, ascending: bool) -> bool
+    where
+        T: PartialOrd,
+    {
         let mut current: Link<T> = None;
         for cell in self.link_iterator() {
             match current {
@@ -354,7 +439,10 @@ impl<T: Default + PartialOrd> LinkedList<T> {
 
     //Insert values in ascending or descending order. O(n) worst case operation to find the (prev,
     //next) tuple within which to place the value
-    pub fn insert_sorted(&mut self, elem: T, ascending: bool) {
+    pub fn insert_sorted(&mut self, elem: T, ascending: bool)
+    where
+        T: PartialOrd,
+    {
         if self.is_empty() {
             self.push_front(elem);
             return;
@@ -409,7 +497,10 @@ impl<T: Default + PartialOrd> LinkedList<T> {
     }
 
     //Implementation of various sorting alogrithms
-    pub fn bubble_sort(&mut self, ascending: bool) {
+    pub fn bubble_sort(&mut self, ascending: bool)
+    where
+        T: PartialOrd,
+    {
         if self.len() < 2 {
             return;
         }
@@ -432,7 +523,10 @@ impl<T: Default + PartialOrd> LinkedList<T> {
         }
     }
     //Sort the list values via selection sort
-    pub fn selection_sort(&mut self, ascending: bool) {
+    pub fn selection_sort(&mut self, ascending: bool)
+    where
+        T: PartialOrd,
+    {
         if self.len < 2 {
             return;
         }
@@ -462,8 +556,12 @@ impl<T: Default + PartialOrd> LinkedList<T> {
                 }
             });
     }
+
     //Sort the values using insertion sort
-    pub fn insertion_sort(&mut self, ascending: bool) {
+    pub fn insertion_sort(&mut self, ascending: bool)
+    where
+        T: PartialOrd,
+    {
         if self.len < 2 {
             return;
         }
@@ -474,6 +572,13 @@ impl<T: Default + PartialOrd> LinkedList<T> {
             self.insert_sorted(node.take(), ascending);
             current = node.next.take();
         }
+    }
+
+    pub fn quicksort<Strategy>(&mut self, ascending: bool, pivot_strategy: Option<Strategy>)
+    where
+        Strategy: Fn(&Self) -> usize,
+        T: Ord,
+    {
     }
 
     //Does the list contain the elem?
@@ -507,7 +612,7 @@ impl<T> Default for LinkedList<T> {
         Self { head: None, len: 0 }
     }
 }
-impl<T: Default + PartialOrd> FromIterator<T> for LinkedList<T> {
+impl<T: Default> FromIterator<T> for LinkedList<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut list = LinkedList::default();
         for t in iter {
@@ -517,12 +622,19 @@ impl<T: Default + PartialOrd> FromIterator<T> for LinkedList<T> {
     }
 }
 
-impl<T: Default + PartialOrd> IntoIterator for LinkedList<T> {
+impl<T: Default> IntoIterator for LinkedList<T> {
     type Item = T;
     type IntoIter = IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIter(self)
+    }
+}
+impl<T: Default> Extend<T> for LinkedList<T> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        for elem in iter {
+            self.push_back(elem);
+        }
     }
 }
 
@@ -559,9 +671,9 @@ impl<T: Debug> Debug for LinkedList<T> {
     }
 }
 
-pub struct IntoIter<T: Default + PartialOrd>(LinkedList<T>);
+pub struct IntoIter<T: Default>(LinkedList<T>);
 
-impl<T: Default + PartialOrd> Iterator for IntoIter<T> {
+impl<T: Default> Iterator for IntoIter<T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
         self.0.pop_front()
@@ -573,10 +685,10 @@ mod tests {
     use super::*;
     use rand::Rng;
 
-    fn is_sorted<T: Debug + PartialOrd>(
-        mut input: impl Iterator<Item = T>,
-        ascending: bool,
-    ) -> bool {
+    fn is_sorted<T: Debug>(mut input: impl Iterator<Item = T>, ascending: bool) -> bool
+    where
+        T: PartialOrd,
+    {
         let mut current: Option<T> = None;
         for t in input.by_ref() {
             match current {
@@ -590,6 +702,32 @@ mod tests {
         }
         true
     }
+    #[test]
+    fn linkedlist_split_at_test_1() {
+        let mut list = LinkedList::<i32>::from_slice(&[1, 2, 3]);
+        let mut split = list.split_at(1);
+        assert_eq!(split, LinkedList::<i32>::from_slice(&[2, 3]));
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[1]));
+        assert_eq!(list.len(), 1);
+        split.push_back(4);
+        assert_eq!(split, LinkedList::<i32>::from_slice(&[2, 3, 4]));
+        assert_eq!(split.len(), 3);
+    }
+    #[test]
+    fn linkedlist_append_test_1() {
+        let source = LinkedList::<i32>::from_slice(&[1, 2, 3]);
+        let mut target = LinkedList::default();
+        target.append(source);
+        assert_eq!(target, LinkedList::<i32>::from_slice(&[1, 2, 3]));
+    }
+    #[test]
+    fn linkedlist_extend_test_1() {
+        let source = vec![1, 2, 3];
+        let mut target = LinkedList::default();
+        target.extend(source);
+        assert_eq!(target, LinkedList::<i32>::from_slice(&[1, 2, 3]));
+    }
+
     #[test]
     fn linkedlist_insertion_sort_test_1() {
         let mut list = LinkedList::<i32>::from_slice(&[30, 10, 5, 20, 15, 45, 35, 25, 50, 40]);
