@@ -2,7 +2,7 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::cmp::Ordering;
 use std::fmt::{Debug, Error, Formatter};
-use std::ops::{Deref, DerefMut};
+use std::ops::{Add, Deref, DerefMut};
 use std::rc::Rc;
 
 type Cell<T> = Rc<RefCell<Node<T>>>;
@@ -239,7 +239,7 @@ impl<T: Default> LinkedList<T> {
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
-    //Convert to another list applying a function ref values
+    //Convert to another list applying a function that takes reference to values
     pub fn translate<U: Default, F: Fn(&T) -> U>(&self, f: F) -> LinkedList<U> {
         let mut result = LinkedList::default();
         let iter = self.link_iterator();
@@ -248,11 +248,13 @@ impl<T: Default> LinkedList<T> {
         }
         result
     }
-    //Mutate the list applying a function to the mutable values of the list
-    pub fn transmute<U: Default, F: Fn(&mut T) -> U>(&mut self, f: F) {
+    //Mutate the list applying a function to the mutable values of the list. The value would be
+    //changed to the return value of the function
+    pub fn transmute<F: Fn(&mut T) -> T>(&mut self, f: F) {
         let iter = self.link_iterator();
-        for t in iter {
-            f(&mut t.borrow_mut().elem);
+        for cell in iter {
+            let t: T = f(&mut cell.borrow_mut().elem);
+            cell.borrow_mut().elem = t;
         }
     }
     //Convert to another list by applying a function that consumes the values
@@ -576,7 +578,7 @@ impl<T: Default> LinkedList<T> {
 
     pub fn quicksort<Strategy>(&mut self, ascending: bool, pivot_strategy: Option<Strategy>)
     where
-        Strategy: Fn(&Self) -> usize,
+        Strategy: Fn(&mut Self) -> usize,
         T: Ord,
     {
     }
@@ -597,6 +599,78 @@ impl<T: Default> LinkedList<T> {
         self.head.as_mut().map(|node| MutT(node.borrow_mut()))
     }
 }
+
+pub trait PartitionStrategy<T: Ord> {
+    fn partition(list: &mut LinkedList<T>) -> usize;
+}
+
+struct PartitionAtHead;
+impl<T: Default + Ord> PartitionStrategy<T> for PartitionAtHead {
+    fn partition(list: &mut LinkedList<T>) -> usize {
+        let pivot = list.link_iterator().nth(0);
+        let mut pivot_next_pos = 1; //If we find a value smaller than pivot we want it to place it at his pos
+        for k in 1..list.len() {
+            let kth = list.link_iterator().nth(k);
+            let lesser = kth < pivot;
+            if lesser {
+                if pivot_next_pos != k {
+                    if let Some(at_next_pos) = list.link_iterator().nth(pivot_next_pos) {
+                        if let Some(at_kth_pos) = kth {
+                            Node::swap(&mut at_next_pos.borrow_mut(), &mut at_kth_pos.borrow_mut());
+                        }
+                    }
+                }
+                pivot_next_pos += 1;
+            }
+        }
+
+        pivot_next_pos -= 1;
+        if pivot_next_pos != 0 {
+            if let Some(pivot) = pivot {
+                if let Some(at_next_pos) = list.link_iterator().nth(pivot_next_pos) {
+                    Node::swap(&mut pivot.borrow_mut(), &mut at_next_pos.borrow_mut());
+                }
+            }
+        }
+        pivot_next_pos
+    }
+}
+
+fn partition_first_pivot<T>(arr: &mut [T]) -> usize
+where
+    T: Ord + Clone,
+{
+    let pivot_index = 0;
+    let pivot_value = arr[pivot_index].clone();
+    let mut i = pivot_index + 1;
+
+    for j in i..arr.len() {
+        if arr[j] < pivot_value {
+            arr.swap(i, j);
+            i += 1;
+        }
+    }
+
+    arr.swap(pivot_index, i - 1);
+    i - 1
+}
+
+/***10 8 6 15
+pi=0, pv=10, i=1, j=1, s(1,1), i=2; j=2, s(2,2), i=3; i=3, j=3, ns; i=3,j=4. lo. as(0, i-1)=> as(0, 2)
+ar = 6,8,10,15; return (i-1); rt(3-1)=> 2. Index=2
+
+10, 8, 15, 2
+pi=0, pv, 10, i=1,j=1, sw(1,1), i=2; i=2,j=2, ns; i=2, j=3, sw(2,3);a=10,8,2,15; i=3;j=4;lo; as(0, 3-1), as(0,2), a=2, 8, 10,15,r=2;
+
+10, 2,3
+
+pi=0, pv=10, i=1, j=1, sw(1,1), i=2; i=2, j=2, sw(2,2); i=3; lo; as(0, 3-1)=> as(0, 2), a=3, 2, 10; r= 2;
+
+a=3,2
+pi=0, pv=3, i=1, j=1, sw(1,1),i=2; lo; as(0, 2-1)=> as(0,1);a = 2,3; r = 1;
+
+10, 20, 30, i=1, as(0,0);r =0;***/
+
 impl<T: Default> Default for Node<T> {
     fn default() -> Self {
         Self {
@@ -670,6 +744,19 @@ impl<T: Debug> Debug for LinkedList<T> {
         }
     }
 }
+impl<T: Default> Add for LinkedList<T> {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        let mut itself = self;
+        let mut other = other;
+        itself.len += other.len;
+        if let Some(last) = itself.link_iterator().last().as_mut() {
+            last.borrow_mut().next = other.head.take();
+        }
+        itself
+    }
+}
 
 pub struct IntoIter<T: Default>(LinkedList<T>);
 
@@ -702,6 +789,38 @@ mod tests {
         }
         true
     }
+    #[test]
+    fn linkedlist_add_test_1() {
+        let list1 = LinkedList::<i32>::from_slice(&[1, 2, 3]);
+        let list2 = LinkedList::<i32>::from_slice(&[4, 5, 6]);
+        let mut list = list1 + list2;
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 6]));
+        assert_eq!(list.len(), 6);
+        assert_eq!(list.pop_front(), Some(1));
+        assert_eq!(list.pop_back(), Some(6));
+        assert_eq!(list.len(), 4);
+        assert_eq!(list.pop_front(), Some(2));
+        assert_eq!(list.pop_front(), Some(3));
+        assert_eq!(list.pop_front(), Some(4));
+        assert_eq!(list.pop_front(), Some(5));
+        assert_eq!(list.len(), 0);
+    }
+
+    #[test]
+    fn linkedlist_partioner_test_1() {
+        let mut list = LinkedList::<i32>::from_slice(&[10, 8, 6, 4, 2]);
+        let pivot_index = PartitionAtHead::partition(&mut list);
+        assert_eq!(pivot_index, 4);
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[2, 8, 6, 4, 10]));
+        let mut split = list.split_at(4);
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[2, 8, 6, 4]));
+        assert_eq!(split, LinkedList::<i32>::from_slice(&[10]));
+        assert_eq!(0, PartitionAtHead::partition(&mut split));
+        assert_eq!(0, PartitionAtHead::partition(&mut list));
+        let mut split = list.split_at(0);
+        println!("{:?}", split);
+    }
+
     #[test]
     fn linkedlist_split_at_test_1() {
         let mut list = LinkedList::<i32>::from_slice(&[1, 2, 3]);
@@ -948,7 +1067,7 @@ mod tests {
     fn linkedlist_transmute_test_1() {
         let elems = [500, 400, 300, 200, 100];
         let mut list = LinkedList::<i32>::from_slice(&elems);
-        list.transmute(|i| *i /= 2);
+        list.transmute(|i| *i / 2);
         let elems = [250, 200, 150, 100, 50];
         let expect = LinkedList::<i32>::from_slice(&elems);
         assert_eq!(list, expect);
