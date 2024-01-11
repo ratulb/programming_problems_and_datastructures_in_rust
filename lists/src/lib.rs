@@ -654,41 +654,6 @@ impl<T: Default> LinkedList<T> {
     }
 }
 
-/***fn partition_first_pivot<T>(arr: &mut [T]) -> usize
-where
-    T: Ord + Clone,
-{
-    let pivot_index = 0;
-    let pivot_value = arr[pivot_index].clone();
-    let mut i = pivot_index + 1;
-
-    for j in i..arr.len() {
-        if arr[j] < pivot_value {
-            arr.swap(i, j);
-            i += 1;
-        }
-    }
-
-    arr.swap(pivot_index, i - 1);
-    i - 1
-}***/
-
-/***10 8 6 15
-pi=0, pv=10, i=1, j=1, s(1,1), i=2; j=2, s(2,2), i=3; i=3, j=3, ns; i=3,j=4. lo. as(0, i-1)=> as(0, 2)
-ar = 6,8,10,15; return (i-1); rt(3-1)=> 2. Index=2
-
-10, 8, 15, 2
-pi=0, pv, 10, i=1,j=1, sw(1,1), i=2; i=2,j=2, ns; i=2, j=3, sw(2,3);a=10,8,2,15; i=3;j=4;lo; as(0, 3-1), as(0,2), a=2, 8, 10,15,r=2;
-
-10, 2,3
-
-pi=0, pv=10, i=1, j=1, sw(1,1), i=2; i=2, j=2, sw(2,2); i=3; lo; as(0, 3-1)=> as(0, 2), a=3, 2, 10; r= 2;
-
-a=3,2
-pi=0, pv=3, i=1, j=1, sw(1,1),i=2; lo; as(0, 2-1)=> as(0,1);a = 2,3; r = 1;
-
-10, 20, 30, i=1, as(0,0);r =0;***/
-
 impl<T: Default> Default for Node<T> {
     fn default() -> Self {
         Self {
