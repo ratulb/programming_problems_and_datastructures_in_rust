@@ -51,6 +51,13 @@ impl<'a, T> Deref for MutT<'a, T> {
     }
 }
 
+impl<T: Default> Deref for Node<T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.elem
+    }
+}
+
 impl<'a, T> DerefMut for MutT<'a, T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0.elem
@@ -393,17 +400,16 @@ impl<T: Default> LinkedList<T> {
     /// would return an empty list.
     /// If index is 0 this list would become empty
     ///
-    pub fn split_at(&mut self, index: usize) -> Self {
+    pub fn split_off(&mut self, index: usize) -> Self {
         if self.len == 0 || index >= self.len {
-            return Self::default();
+            Self::default()
         } else if index == 0 {
             return std::mem::take(self);
         } else {
             let split = self
                 .link_iterator()
                 .enumerate()
-                .skip_while(|(idx, _)| *idx < index - 1)
-                .next()
+                .find(|(idx, _)| *idx == index - 1)
                 .and_then(|(_, cell)| cell.borrow_mut().next.take());
             let split_len = self.len - index;
             self.len = index;
@@ -534,27 +540,24 @@ impl<T: Default> LinkedList<T> {
         }
         self.link_iterator()
             .enumerate()
-            .take(self.len() - 1)
+            .take(self.len() - 1) //elems at [0..n-1]
             .for_each(|(i, curr_node)| {
-                let mut min_or_max_node = Rc::clone(&curr_node);
+                let mut min_or_max = Rc::clone(&curr_node);
                 self.link_iterator()
                     .enumerate()
-                    .skip_while(|(j, _)| j <= &i)
+                    .skip_while(|(j, _)| j < &i)
                     .map(|(_, node)| node)
                     .for_each(|node| {
                         if ascending {
-                            if min_or_max_node.borrow().elem > node.borrow().elem {
-                                min_or_max_node = Rc::clone(&node);
+                            if min_or_max.borrow().elem > node.borrow().elem {
+                                min_or_max = Rc::clone(&node);
                             }
-                        } else if min_or_max_node.borrow().elem < node.borrow().elem {
-                            min_or_max_node = Rc::clone(&node);
+                        } else if min_or_max.borrow().elem < node.borrow().elem {
+                            min_or_max = Rc::clone(&node);
                         }
                     });
-                if !Rc::ptr_eq(&curr_node, &min_or_max_node) {
-                    Node::swap(
-                        &mut curr_node.borrow_mut(),
-                        &mut min_or_max_node.borrow_mut(),
-                    );
+                if !Rc::ptr_eq(&curr_node, &min_or_max) {
+                    Node::swap(&mut curr_node.borrow_mut(), &mut min_or_max.borrow_mut());
                 }
             });
     }
@@ -575,14 +578,6 @@ impl<T: Default> LinkedList<T> {
             current = node.next.take();
         }
     }
-
-    pub fn quicksort<Strategy>(&mut self, ascending: bool, pivot_strategy: Option<Strategy>)
-    where
-        Strategy: Fn(&mut Self) -> usize,
-        T: Ord,
-    {
-    }
-
     //Does the list contain the elem?
     pub fn contains(&self, elem: &T) -> bool
     where
@@ -598,45 +593,68 @@ impl<T: Default> LinkedList<T> {
     pub fn front_mut(&mut self) -> Option<MutT<'_, T>> {
         self.head.as_mut().map(|node| MutT(node.borrow_mut()))
     }
-}
+    ///Quick sort - slow. Usage is not advisable
+    pub fn quicksort(&self, ascending: bool)
+    where
+        T: PartialOrd + Debug,
+    {
+        self.quicklysort(ascending, 0, self.len - 1);
+    }
 
-pub trait PartitionStrategy<T: Ord> {
-    fn partition(list: &mut LinkedList<T>) -> usize;
-}
+    fn quicklysort(&self, ascending: bool, start: usize, end: usize)
+    where
+        T: PartialOrd + Debug,
+    {
+        if start < end {
+            let pivot_index = self.partition(ascending, start, end);
+            if pivot_index > 0 {
+                self.quicklysort(ascending, 0, pivot_index - 1);
+            }
+            self.quicklysort(ascending, pivot_index + 1, end);
+        }
+    }
 
-struct PartitionAtHead;
-impl<T: Default + Ord> PartitionStrategy<T> for PartitionAtHead {
-    fn partition(list: &mut LinkedList<T>) -> usize {
-        let pivot = list.link_iterator().nth(0);
-        let mut pivot_next_pos = 1; //If we find a value smaller than pivot we want it to place it at his pos
-        for k in 1..list.len() {
-            let kth = list.link_iterator().nth(k);
-            let lesser = kth < pivot;
+    fn partition(&self, ascending: bool, start: usize, end: usize) -> usize
+    where
+        T: PartialOrd + Debug,
+    {
+        let pivot = self.link_iterator().nth(start);
+        let mut next_pivot_pos = start + 1; //possibly
+        for k in start + 1..=end {
+            let kth = self.link_iterator().nth(k);
+            let lesser = if ascending { kth < pivot } else { kth > pivot };
             if lesser {
-                if pivot_next_pos != k {
-                    if let Some(at_next_pos) = list.link_iterator().nth(pivot_next_pos) {
+                if next_pivot_pos != k {
+                    if let Some(at_next_pivot_pos) = self.link_iterator().nth(next_pivot_pos) {
                         if let Some(at_kth_pos) = kth {
-                            Node::swap(&mut at_next_pos.borrow_mut(), &mut at_kth_pos.borrow_mut());
+                            Node::swap(
+                                &mut at_next_pivot_pos.borrow_mut(),
+                                &mut at_kth_pos.borrow_mut(),
+                            );
                         }
                     }
                 }
-                pivot_next_pos += 1;
+                next_pivot_pos += 1;
             }
         }
 
-        pivot_next_pos -= 1;
-        if pivot_next_pos != 0 {
+        next_pivot_pos -= 1;
+        if next_pivot_pos != start {
+            let at_pivot_next_pos = self.link_iterator().nth(next_pivot_pos);
             if let Some(pivot) = pivot {
-                if let Some(at_next_pos) = list.link_iterator().nth(pivot_next_pos) {
-                    Node::swap(&mut pivot.borrow_mut(), &mut at_next_pos.borrow_mut());
+                if let Some(at_next_pos) = at_pivot_next_pos {
+                    let value_at_next_pos = at_next_pos.borrow_mut().take();
+                    let pivot_value =
+                        std::mem::replace(&mut pivot.borrow_mut().elem, value_at_next_pos);
+                    let _ = std::mem::replace(&mut at_next_pos.borrow_mut().elem, pivot_value);
                 }
             }
         }
-        pivot_next_pos
+        next_pivot_pos
     }
 }
 
-fn partition_first_pivot<T>(arr: &mut [T]) -> usize
+/***fn partition_first_pivot<T>(arr: &mut [T]) -> usize
 where
     T: Ord + Clone,
 {
@@ -653,7 +671,7 @@ where
 
     arr.swap(pivot_index, i - 1);
     i - 1
-}
+}***/
 
 /***10 8 6 15
 pi=0, pv=10, i=1, j=1, s(1,1), i=2; j=2, s(2,2), i=3; i=3, j=3, ns; i=3,j=4. lo. as(0, i-1)=> as(0, 2)
@@ -790,6 +808,41 @@ mod tests {
         true
     }
     #[test]
+    fn linkedlist_quicksort_test_1() {
+        let list = LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 6]);
+        list.quicksort(false);
+        println!("The quick sorted list: {:?}", list);
+
+        let mut runs = 50;
+        loop {
+            let mut elems: [u16; 16] = [0; 16];
+            rand::thread_rng().fill(&mut elems);
+            let list = LinkedList::<u16>::from_slice(&elems);
+
+            list.quicksort(false);
+            assert!(list.is_sorted(false)); //false for descending
+
+            let sorted = is_sorted(list.into_iter(), false);
+            assert!(sorted);
+
+            let mut elems: [u8; 16] = [0; 16];
+            rand::thread_rng().fill(&mut elems);
+            let list = LinkedList::<i32>::from_slice(&elems);
+
+            list.quicksort(true);
+            assert!(list.is_sorted(true));
+
+            let sorted = is_sorted(list.into_iter(), true);
+            assert!(sorted);
+
+            runs -= 1;
+            if runs == 0 {
+                break;
+            }
+        }
+    }
+
+    #[test]
     fn linkedlist_add_test_1() {
         let list1 = LinkedList::<i32>::from_slice(&[1, 2, 3]);
         let list2 = LinkedList::<i32>::from_slice(&[4, 5, 6]);
@@ -807,24 +860,9 @@ mod tests {
     }
 
     #[test]
-    fn linkedlist_partioner_test_1() {
-        let mut list = LinkedList::<i32>::from_slice(&[10, 8, 6, 4, 2]);
-        let pivot_index = PartitionAtHead::partition(&mut list);
-        assert_eq!(pivot_index, 4);
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[2, 8, 6, 4, 10]));
-        let mut split = list.split_at(4);
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[2, 8, 6, 4]));
-        assert_eq!(split, LinkedList::<i32>::from_slice(&[10]));
-        assert_eq!(0, PartitionAtHead::partition(&mut split));
-        assert_eq!(0, PartitionAtHead::partition(&mut list));
-        let mut split = list.split_at(0);
-        println!("{:?}", split);
-    }
-
-    #[test]
-    fn linkedlist_split_at_test_1() {
+    fn linkedlist_split_off_test_1() {
         let mut list = LinkedList::<i32>::from_slice(&[1, 2, 3]);
-        let mut split = list.split_at(1);
+        let mut split = list.split_off(1);
         assert_eq!(split, LinkedList::<i32>::from_slice(&[2, 3]));
         assert_eq!(list, LinkedList::<i32>::from_slice(&[1]));
         assert_eq!(list.len(), 1);
