@@ -505,7 +505,7 @@ impl<T: Default> LinkedList<T> {
     }
 
     //Implementation of various sorting alogrithms
-    pub fn bubble_sort(&mut self, ascending: bool)
+    pub fn bubble_sort(&self, ascending: bool)
     where
         T: PartialOrd,
     {
@@ -531,7 +531,7 @@ impl<T: Default> LinkedList<T> {
         }
     }
     //Sort the list values via selection sort
-    pub fn selection_sort(&mut self, ascending: bool)
+    pub fn selection_sort(&self, ascending: bool)
     where
         T: PartialOrd,
     {
@@ -596,14 +596,14 @@ impl<T: Default> LinkedList<T> {
     ///Quick sort - slow. Usage is not advisable
     pub fn quicksort(&self, ascending: bool)
     where
-        T: PartialOrd + Debug,
+        T: PartialOrd,
     {
         self.quicklysort(ascending, 0, self.len - 1);
     }
 
     fn quicklysort(&self, ascending: bool, start: usize, end: usize)
     where
-        T: PartialOrd + Debug,
+        T: PartialOrd,
     {
         if start < end {
             let pivot_index = self.partition(ascending, start, end);
@@ -616,7 +616,7 @@ impl<T: Default> LinkedList<T> {
 
     fn partition(&self, ascending: bool, start: usize, end: usize) -> usize
     where
-        T: PartialOrd + Debug,
+        T: PartialOrd,
     {
         let pivot = self.link_iterator().nth(start);
         let mut next_pivot_pos = start + 1; //possibly
@@ -704,10 +704,6 @@ impl<T> Iterator for LinkIterator<T> {
     type Item = Cell<T>;
     fn next(&mut self) -> Option<Self::Item> {
         self.links.take().map(|link| {
-            //Following two are equivalent - top one would increase Rc count
-            //self.links = link.borrow_mut().next.take().as_ref().map(Rc::clone);
-            //self.links = link.borrow_mut().next.take();
-            //The following would not dissociate returned link from next
             self.links = link.borrow().next.as_ref().map(Rc::clone);
             link
         })
@@ -897,7 +893,7 @@ mod tests {
 
     #[test]
     fn linkedlist_selection_sort_test_1() {
-        let mut list = LinkedList::<i32>::from_slice(&[30, 10, 5, 20, 15, 45, 35, 25, 50, 40]);
+        let list = LinkedList::<i32>::from_slice(&[30, 10, 5, 20, 15, 45, 35, 25, 50, 40]);
         list.selection_sort(true); //true for ascending
         assert_eq!(
             list,
@@ -913,7 +909,7 @@ mod tests {
         loop {
             let mut elems: [u16; 128] = [0; 128];
             rand::thread_rng().fill(&mut elems);
-            let mut list = LinkedList::<u16>::from_slice(&elems);
+            let list = LinkedList::<u16>::from_slice(&elems);
 
             list.selection_sort(false);
             assert!(list.is_sorted(false));
@@ -923,7 +919,7 @@ mod tests {
 
             let mut elems: [i32; 128] = [0; 128];
             rand::thread_rng().fill(&mut elems);
-            let mut list = LinkedList::<i32>::from_slice(&elems);
+            let list = LinkedList::<i32>::from_slice(&elems);
 
             list.selection_sort(true);
             assert!(list.is_sorted(true));
@@ -1260,7 +1256,7 @@ mod tests {
     #[test]
     fn linkedlist_bubble_sort_test_1() {
         let elems = [200, 500, 300, 400, 100];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::from_slice(&elems);
         list.bubble_sort(false); //false for descending
 
         let elems = [500, 400, 300, 200, 100];
@@ -1268,7 +1264,7 @@ mod tests {
         assert_eq!(list, reversed);
 
         let elems = [200, 500, 300, 400, 100];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::from_slice(&elems);
         list.bubble_sort(true); //true for ascending
 
         let elems = [100, 200, 300, 400, 500];
@@ -1280,7 +1276,7 @@ mod tests {
         loop {
             let mut elems: [u16; 128] = [0; 128];
             rand::thread_rng().fill(&mut elems);
-            let mut list = LinkedList::<u16>::from_slice(&elems);
+            let list = LinkedList::<u16>::from_slice(&elems);
 
             list.bubble_sort(false);
             assert!(list.is_sorted(false));
@@ -1290,7 +1286,7 @@ mod tests {
 
             let mut elems: [i32; 128] = [0; 128];
             rand::thread_rng().fill(&mut elems);
-            let mut list = LinkedList::<i32>::from_slice(&elems);
+            let list = LinkedList::<i32>::from_slice(&elems);
 
             list.bubble_sort(true);
             assert!(list.is_sorted(true));
