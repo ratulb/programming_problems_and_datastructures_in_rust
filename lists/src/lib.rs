@@ -452,6 +452,13 @@ impl<T: Default> LinkedList<T> {
                 list.push_back(list2.pop_front());
             }
         }
+        while list1.front().is_some() {
+            list.push_back(list1.pop_front());
+        }
+        while list2.front().is_some() {
+            list.push_back(list2.pop_front());
+        }
+
         Self::flatten(list)
     }
 
@@ -815,6 +822,13 @@ mod tests {
     }
     #[test]
     fn linkedlist_merge_test_1() {
+        let list1 = LinkedList::<i32>::from_slice(&[1, 3, 5, 6]);
+        let list2 = LinkedList::<i32>::from_slice(&[2, 4, 5, 6]);
+        let list = LinkedList::merge(list1, list2, true);
+        assert_eq!(
+            list,
+            LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 5, 6, 6])
+        );
         let mut runs = 50;
         loop {
             let mut elems: [u16; 16] = [0; 16];
