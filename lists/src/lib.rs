@@ -611,7 +611,7 @@ impl<T: Default> LinkedList<T> {
                 let mut min_or_max = Rc::clone(&curr_node);
                 self.link_iterator()
                     .enumerate()
-                    .skip_while(|(j, _)| j < &i)
+                    .skip_while(|(j, _)| j <= &i)
                     .map(|(_, node)| node)
                     .for_each(|node| {
                         if ascending {
