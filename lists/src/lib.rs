@@ -88,13 +88,10 @@ impl<T: Default> Node<T> {
         T: PartialOrd,
     {
         node.and_then(|node| {
-            node.borrow().next.as_ref().map(|next| {
-                if asc {
-                    next.borrow().elem >= node.borrow().elem
-                } else {
-                    next.borrow().elem <= node.borrow().elem
-                }
-            })
+            node.borrow()
+                .next
+                .as_ref()
+                .map(|next| if asc { next >= node } else { next <= node })
         })
         .unwrap_or(true)
     }
@@ -956,6 +953,7 @@ mod tests {
         list.insert_sorted(30, true);
         let t: Option<NonMutT<'_, i32>> = list.front();
         assert!(t.is_some_and(|t| t.t() == &30));
+        //assert!(t > 10);
 
         let mut list = LinkedList::<i32>::default();
         list.push_back(30);
