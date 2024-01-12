@@ -718,6 +718,29 @@ impl<T: Default> LinkedList<T> {
         }
         next_pivot_pos
     }
+
+    fn split_and_merge_sorted(mut list: Self, ascending: bool) -> Self
+    where
+        T: PartialOrd,
+    {
+        if list.len > 1 {
+            let mid = list.len / 2;
+            let split = list.split_off(mid);
+            Self::merge(
+                Self::split_and_merge_sorted(list, ascending),
+                Self::split_and_merge_sorted(split, ascending),
+                ascending,
+            )
+        } else {
+            list
+        }
+    }
+    pub fn mergesort(&mut self, ascending: bool)
+    where
+        T: PartialOrd,
+    {
+        *self = Self::split_and_merge_sorted(self.split_off(0), ascending);
+    }
 }
 
 impl<T: Default> Default for Node<T> {
@@ -834,6 +857,43 @@ mod tests {
         }
         true
     }
+
+    #[test]
+    fn linkedlist_mergesort_test_1() {
+        let mut list = LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 6]);
+        list.mergesort(false);
+        println!("The quick sorted list: {:?}", list);
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[6, 5, 4, 3, 2, 1]));
+
+        let mut runs = 50;
+        loop {
+            let mut elems: [u16; 64] = [0; 64];
+            rand::thread_rng().fill(&mut elems);
+            let mut list = LinkedList::<u16>::from_slice(&elems);
+
+            list.mergesort(false);
+            assert!(list.is_sorted(false)); //false for descending
+
+            let sorted = is_sorted(list.into_iter(), false);
+            assert!(sorted);
+
+            let mut elems: [u8; 128] = [0; 128];
+            rand::thread_rng().fill(&mut elems);
+            let mut list = LinkedList::<i32>::from_slice(&elems);
+
+            list.mergesort(true);
+            assert!(list.is_sorted(true));
+
+            let sorted = is_sorted(list.into_iter(), true);
+            assert!(sorted);
+
+            runs -= 1;
+            if runs == 0 {
+                break;
+            }
+        }
+    }
+
     #[test]
     fn linkedlist_merge_with_test_1() {
         let list = LinkedList::<i32>::default();
@@ -961,6 +1021,7 @@ mod tests {
         let list = LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 6]);
         list.quicksort(false);
         println!("The quick sorted list: {:?}", list);
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[6, 5, 4, 3, 2, 1]));
 
         let mut runs = 50;
         loop {
