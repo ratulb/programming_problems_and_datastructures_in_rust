@@ -688,8 +688,8 @@ impl<T: Default> LinkedList<T> {
         let mut next_pivot_pos = start + 1; //possibly
         for k in start + 1..=end {
             let kth = self.link_iterator().nth(k);
-            let lesser = if ascending { kth < pivot } else { kth > pivot };
-            if lesser {
+            let lesser_or_greater = if ascending { kth < pivot } else { kth > pivot };
+            if lesser_or_greater {
                 if next_pivot_pos != k {
                     if let Some(at_next_pivot_pos) = self.link_iterator().nth(next_pivot_pos) {
                         if let Some(at_kth_pos) = kth {
