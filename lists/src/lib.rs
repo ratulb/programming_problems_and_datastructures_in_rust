@@ -83,7 +83,7 @@ impl<T: Default> Node<T> {
 
     //Is this node in order? i.e. Greater or equal/less or equal it next node's value
     #[inline(always)]
-    fn in_order(node: Option<Cell<T>>, asc: bool) -> bool
+    fn in_order(node: Option<&Cell<T>>, asc: bool) -> bool
     where
         T: PartialOrd,
     {
@@ -517,7 +517,7 @@ impl<T: Default> LinkedList<T> {
             let mut curr_node = self.head.as_ref().map(Rc::clone);
             let mut swapped = false;
             for _ in 0..(len - i) {
-                let in_order = Node::in_order(curr_node.as_ref().map(Rc::clone), ascending);
+                let in_order = Node::in_order(curr_node.as_ref(), ascending);
                 if !in_order {
                     Node::swap_with_next(curr_node.as_ref().map(Rc::clone));
                     swapped = true;
