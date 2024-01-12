@@ -659,7 +659,7 @@ impl<T: Default> LinkedList<T> {
     pub fn front_mut(&mut self) -> Option<MutT<'_, T>> {
         self.head.as_mut().map(|node| MutT(node.borrow_mut()))
     }
-    ///Quick sort - slow. Usage is not advisable
+    ///Quick sort - slow. Usage is advisable when list size is small
     pub fn quicksort(&self, ascending: bool)
     where
         T: PartialOrd,
@@ -836,6 +836,21 @@ mod tests {
     }
     #[test]
     fn linkedlist_merge_with_test_1() {
+        let list = LinkedList::<i32>::default();
+        let mut list1 = LinkedList::<i32>::default();
+        list1.merge_with(list, true);
+        assert_eq!(list1, LinkedList::<i32>::default());
+
+        let list = LinkedList::<i32>::from_slice(&[1, 3, 5, 6]);
+        let mut list1 = LinkedList::<i32>::default();
+        list1.merge_with(list, true);
+        assert_eq!(list1, LinkedList::<i32>::from_slice(&[1, 3, 5, 6]));
+
+        let mut list = LinkedList::<i32>::from_slice(&[1, 3, 5, 6]);
+        let list1 = LinkedList::<i32>::default();
+        list.merge_with(list1, true);
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[1, 3, 5, 6]));
+
         let mut list = LinkedList::<i32>::from_slice(&[1, 3, 5, 6]);
         let list1 = LinkedList::<i32>::from_slice(&[2, 4, 5, 6]);
         list.merge_with(list1, true);
@@ -887,6 +902,11 @@ mod tests {
 
     #[test]
     fn linkedlist_merge_test_1() {
+        let list1 = LinkedList::<i32>::default();
+        let list2 = LinkedList::<i32>::default();
+        let list = LinkedList::merge(list1, list2, true);
+        assert_eq!(list, LinkedList::<i32>::default());
+
         let list1 = LinkedList::<i32>::from_slice(&[1, 3, 5, 6]);
         let list2 = LinkedList::<i32>::from_slice(&[2, 4, 5, 6]);
         let list = LinkedList::merge(list1, list2, true);
