@@ -111,7 +111,7 @@ impl<T: Default> Node<T> {
         })
         .unwrap_or(true)
     }
-
+    #[inline(always)]
     fn swap(this: &mut Self, that: &mut Self) {
         std::mem::swap(&mut this.elem, &mut that.elem);
     }
@@ -126,6 +126,7 @@ impl<T: Default> Node<T> {
     }
 
     //Takes out the value from the node. Replaces it with the default value for type 'T'.
+    #[inline(always)]
     fn take(&mut self) -> T {
         std::mem::take(&mut self.elem)
     }
