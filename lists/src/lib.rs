@@ -44,6 +44,22 @@ impl<'a, T> Deref for NonMutT<'a, T> {
     }
 }
 
+impl<'a, T: PartialOrd> PartialOrd for NonMutT<'a, T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.0.elem.partial_cmp(&other.0.elem)
+    }
+}
+
+/***
+impl<'a , T: PartialEq> Eq for NonMutT<'a, T> {}
+***/
+impl<'a, T: PartialEq> PartialEq for NonMutT<'a, T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.0.elem == other.0.elem
+    }
+}
+
 impl<'a, T> Deref for MutT<'a, T> {
     type Target = T;
     fn deref(&self) -> &Self::Target {
@@ -952,8 +968,7 @@ mod tests {
         let mut list = LinkedList::<i32>::default();
         list.insert_sorted(30, true);
         let t: Option<NonMutT<'_, i32>> = list.front();
-        assert!(t.is_some_and(|t| t.t() == &30));
-        //assert!(t > 10);
+        assert!(t.as_ref().is_some_and(|t| t.t() == &30));
 
         let mut list = LinkedList::<i32>::default();
         list.push_back(30);
@@ -965,6 +980,18 @@ mod tests {
         let non_mut_t: NonMutT<'_, i32> = list.front().unwrap();
         assert_eq!(*non_mut_t, 30);
         assert_eq!(non_mut_t.deref(), &30);
+
+        let mut list1 = LinkedList::<i32>::default();
+        list1.push_back(100);
+        let front1 = list1.front();
+
+        let mut list2 = LinkedList::<i32>::default();
+        list2.push_back(100);
+        assert!(front1 == list2.front());
+
+        list2.push_front(1000);
+        let front2 = list2.front();
+        assert!(!(front1 == front2));
     }
 
     #[test]
