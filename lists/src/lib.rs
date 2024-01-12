@@ -103,7 +103,7 @@ impl<T: Default> Node<T> {
         std::mem::swap(&mut this.elem, &mut that.elem);
     }
 
-    fn swap_with_next(mut curr_node: Option<Cell<T>>) {
+    fn swap_with_next(mut curr_node: Option<&Cell<T>>) {
         if let Some(ref mut node) = curr_node {
             let mut mutable_node = node.borrow_mut();
             if let Some(ref mut next) = mutable_node.next.as_ref().map(Rc::clone) {
@@ -519,7 +519,7 @@ impl<T: Default> LinkedList<T> {
             for _ in 0..(len - i) {
                 let in_order = Node::in_order(curr_node.as_ref(), ascending);
                 if !in_order {
-                    Node::swap_with_next(curr_node.as_ref().map(Rc::clone));
+                    Node::swap_with_next(curr_node.as_ref());
                     swapped = true;
                 }
                 curr_node =
