@@ -549,10 +549,10 @@ impl<T: Default> LinkedList<T> {
                     .map(|(_, node)| node)
                     .for_each(|node| {
                         if ascending {
-                            if min_or_max.borrow().elem > node.borrow().elem {
+                            if min_or_max > node {
                                 min_or_max = Rc::clone(&node);
                             }
-                        } else if min_or_max.borrow().elem < node.borrow().elem {
+                        } else if min_or_max < node {
                             min_or_max = Rc::clone(&node);
                         }
                     });
