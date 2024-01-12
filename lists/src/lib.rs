@@ -433,7 +433,21 @@ impl<T: Default> LinkedList<T> {
         }
     }
     ///
+    ///Merge this sorted list with another sorted list in ascending or descending order
+    ///
+    pub fn merge_with(&mut self, other: Self, ascending: bool)
+    where
+        T: PartialOrd,
+    {
+        let len = self.len + other.len;
+        let this = self.split_off(0);
+        *self = Self::merge(this, other, ascending);
+        self.len = len;
+    }
+
+    ///
     ///Merge two sorted list to one single list in ascending or discending order
+    ///
     pub fn merge(mut list1: Self, mut list2: Self, ascending: bool) -> LinkedList<T>
     where
         T: PartialOrd,
@@ -820,6 +834,57 @@ mod tests {
         }
         true
     }
+    #[test]
+    fn linkedlist_merge_with_test_1() {
+        let mut list = LinkedList::<i32>::from_slice(&[1, 3, 5, 6]);
+        let list1 = LinkedList::<i32>::from_slice(&[2, 4, 5, 6]);
+        list.merge_with(list1, true);
+        assert_eq!(
+            list,
+            LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 5, 6, 6])
+        );
+        let mut runs = 50;
+        loop {
+            let mut elems: [u16; 16] = [0; 16];
+            rand::thread_rng().fill(&mut elems);
+            let mut list1 = LinkedList::<u16>::from_slice(&elems);
+
+            list1.quicksort(false);
+            assert!(list1.is_sorted(false)); //false for descending
+
+            let mut elems: [u16; 16] = [0; 16];
+            rand::thread_rng().fill(&mut elems);
+            let list2 = LinkedList::<u16>::from_slice(&elems);
+
+            list2.quicksort(false);
+            assert!(list2.is_sorted(false));
+            list1.merge_with(list2, false);
+            assert!(list1.is_sorted(false));
+
+            /////////////////////////
+            let mut elems: [u16; 16] = [0; 16];
+            rand::thread_rng().fill(&mut elems);
+            let list1 = LinkedList::<u16>::from_slice(&elems);
+
+            list1.quicksort(true);
+            assert!(list1.is_sorted(true)); //false for descending
+
+            let mut elems: [u16; 16] = [0; 16];
+            rand::thread_rng().fill(&mut elems);
+            let mut list2 = LinkedList::<u16>::from_slice(&elems);
+
+            list2.quicksort(true);
+            assert!(list2.is_sorted(true));
+            list2.merge_with(list1, true);
+            assert!(list2.is_sorted(true));
+
+            runs -= 1;
+            if runs == 0 {
+                break;
+            }
+        }
+    }
+
     #[test]
     fn linkedlist_merge_test_1() {
         let list1 = LinkedList::<i32>::from_slice(&[1, 3, 5, 6]);
