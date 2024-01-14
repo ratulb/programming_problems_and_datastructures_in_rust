@@ -42,7 +42,6 @@ impl<'a, T> MutT<'a, T> {
     pub fn next(&mut self) -> Option<MutT<'_, T>> {
         self.0.next.as_mut().map(|next| MutT(next.borrow_mut()))
     }
-
 }
 
 impl<'a, T> Deref for NonMutT<'a, T> {
