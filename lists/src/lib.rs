@@ -1983,7 +1983,7 @@ pub mod iterable {
             }
         }
         #[test]
-        fn linklist_push_back_test() {
+        fn linkedlist_push_back_test() {
             let mut list = LinkedList::<i32>::default();
             list.push_back(1);
             list.push_back(2);
