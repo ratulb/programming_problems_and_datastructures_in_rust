@@ -29,6 +29,10 @@ impl<'a, T> NonMutT<'a, T> {
     pub fn t(&self) -> &T {
         &self.0.elem
     }
+
+    pub fn next(&self) -> Option<NonMutT<'_, T>> {
+        self.0.next.as_ref().map(|next| NonMutT(next.borrow()))
+    }
 }
 
 impl<'a, T> MutT<'a, T> {
@@ -50,9 +54,6 @@ impl<'a, T: PartialOrd> PartialOrd for NonMutT<'a, T> {
     }
 }
 
-/***
-impl<'a , T: PartialEq> Eq for NonMutT<'a, T> {}
-***/
 impl<'a, T: PartialEq> PartialEq for NonMutT<'a, T> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
