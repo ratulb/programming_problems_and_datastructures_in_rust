@@ -1855,6 +1855,15 @@ pub mod iterable {
         }
     }
 
+    impl<T> Drop for LinkedList<T> {
+        fn drop(&mut self) {
+            let mut head = self.head.take();
+            while let Some(node) = head.as_mut().and_then(Rc::get_mut) {
+                head = node.next.take();
+            }
+        }
+    }
+
     impl<T> Default for LinkedList<T> {
         fn default() -> Self {
             Self { head: None, len: 0 }
@@ -1900,10 +1909,10 @@ pub mod iterable {
         type Item = T;
         type IntoIter = IntoIter<Self::Item>;
 
-        fn into_iter(self) -> Self::IntoIter {
-            let mut head = self.head;
+        fn into_iter(mut self) -> Self::IntoIter {
+            //let mut head = self.head.take();
             IntoIter {
-                link: head.take().and_then(Rc::into_inner),
+                link: self.head.take().and_then(Rc::into_inner),
             }
         }
     }
