@@ -1820,9 +1820,7 @@ pub mod iterable {
             }
             self.iter_mut()
                 .enumerate()
-                .skip_while(|(idx, _)| idx != &index)
-                .take(1)
-                .next()
+                .find(|(idx, _)| idx == &index)
                 .map(|(_, t)| t)
                 .map(|t| std::mem::replace(t, elem))
         }
