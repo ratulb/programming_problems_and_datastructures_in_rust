@@ -239,9 +239,7 @@ impl<T: Default> LinkedList<T> {
             self.head.take().map(|head| head.borrow_mut().take())
         } else {
             self.link_iterator()
-                .enumerate()
-                .find(|(index, _)| index == &(self.len() - 2))
-                .map(|(_, cell)| cell)
+                .nth(self.len - 2)
                 .and_then(|penultimate| {
                     penultimate.borrow_mut().next.take().map(|last| {
                         self.len -= 1;
@@ -341,12 +339,7 @@ impl<T: Default> LinkedList<T> {
             0 => self.pop_front(),
             idx if idx == self.len() - 1 => self.pop_back(),
             _ => {
-                let mut prev = self
-                    .link_iterator()
-                    .enumerate()
-                    .find(|(idx, _)| idx == &(index - 1))
-                    .map(|(_, link)| link);
-
+                let mut prev = self.link_iterator().nth(index - 1);
                 let mut elem = prev.as_mut().and_then(|prev| prev.borrow_mut().next.take());
                 let next = elem.as_mut().and_then(|elem| elem.borrow_mut().next.take());
 
@@ -1725,7 +1718,7 @@ mod tests {
     fn linkedlist_pop_back_test_1() {
         //let elems = (1..21750).collect::<Vec<_>>();
         let elems = (1..4000).collect::<Vec<_>>();
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::from_iter(elems);
         //for num in (1..21750).rev() {
         for num in (1..4000).rev() {
             assert_eq!(list.pop_back(), Some(num as i32));
