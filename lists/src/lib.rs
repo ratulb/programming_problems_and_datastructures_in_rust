@@ -820,14 +820,12 @@ impl<T: Debug> Debug for LinkedList<T> {
 impl<T: Default> Add for LinkedList<T> {
     type Output = Self;
 
-    fn add(self, other: Self) -> Self {
-        let mut itself = self;
-        let mut other = other;
-        itself.len += other.len;
-        if let Some(last) = itself.link_iterator().last().as_mut() {
+    fn add(mut self, mut other: Self) -> Self {
+        self.len += other.len;
+        if let Some(last) = self.link_iterator().last().as_mut() {
             last.borrow_mut().next = other.head.take();
         }
-        itself
+        self
     }
 }
 
