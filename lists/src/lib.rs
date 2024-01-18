@@ -1154,6 +1154,27 @@ mod tests {
 
     #[test]
     fn linkedlist_split_off_test_1() {
+        let mut list = LinkedList::<i32>::from_slice(&[1]);
+        let split = list.split_off(0);
+        assert_eq!(split, LinkedList::<i32>::from_slice(&[1]));
+        assert_eq!(split.len(), 1);
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[]));
+        assert_eq!(list.len(), 0);
+
+        let mut list = LinkedList::<i32>::from_slice(&[1, 2]);
+        let split = list.split_off(0);
+        assert_eq!(split, LinkedList::<i32>::from_slice(&[1, 2]));
+        assert_eq!(split.len(), 2);
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[]));
+        assert_eq!(list.len(), 0);
+
+        let mut list = LinkedList::<i32>::from_slice(&[1, 2]);
+        let split = list.split_off(1);
+        assert_eq!(split, LinkedList::<i32>::from_slice(&[2]));
+        assert_eq!(split.len(), 1);
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[1]));
+        assert_eq!(list.len(), 1);
+
         let mut list = LinkedList::<i32>::from_slice(&[1, 2, 3]);
         let mut split = list.split_off(1);
         assert_eq!(split, LinkedList::<i32>::from_slice(&[2, 3]));
@@ -1162,6 +1183,13 @@ mod tests {
         split.push_back(4);
         assert_eq!(split, LinkedList::<i32>::from_slice(&[2, 3, 4]));
         assert_eq!(split.len(), 3);
+
+        let mut list = LinkedList::<i32>::from_slice(&[1, 2, 3]);
+        let split = list.split_off(2);
+        assert_eq!(split, LinkedList::<i32>::from_slice(&[3]));
+        assert_eq!(split.len(), 1);
+        assert_eq!(list, LinkedList::<i32>::from_slice(&[1, 2]));
+        assert_eq!(list.len(), 2);
     }
     #[test]
     fn linkedlist_append_test_1() {
