@@ -218,19 +218,12 @@ impl<T: Default> LinkedList<T> {
             head.borrow_mut().take()
         })
     }
-    //Push values to the back of the list. O(n) recursive operation in worst case
+    //Push values to the back of the list. O(n) operation in worst case
     pub fn push_back(&mut self, elem: T) {
         if self.is_empty() {
             self.push_front(elem);
         } else {
-            let mut last = self
-                .link_iterator()
-                .enumerate()
-                .skip_while(|(index, _)| index != &(self.len() - 1))
-                .map(|(_, cell)| cell)
-                .next();
-
-            if let Some(ref mut last) = last {
+            if let Some(ref mut last) = self.link_iterator().last() {
                 last.borrow_mut().next = Some(Node::rc_cell(elem));
                 self.len += 1;
             }
@@ -245,19 +238,16 @@ impl<T: Default> LinkedList<T> {
             self.len -= 1;
             self.head.take().map(|head| head.borrow_mut().take())
         } else {
-            let penultimate = self
-                .link_iterator()
+            self.link_iterator()
                 .enumerate()
-                .skip_while(|(index, _)| index != &(self.len() - 2))
+                .find(|(index, _)| index == &(self.len() - 2))
                 .map(|(_, cell)| cell)
-                .next();
-
-            penultimate.and_then(|penultimate| {
-                penultimate.borrow_mut().next.take().map(|last| {
-                    self.len -= 1;
-                    last.borrow_mut().take()
+                .and_then(|penultimate| {
+                    penultimate.borrow_mut().next.take().map(|last| {
+                        self.len -= 1;
+                        last.borrow_mut().take()
+                    })
                 })
-            })
         }
     }
 
