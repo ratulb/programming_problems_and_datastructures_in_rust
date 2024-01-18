@@ -39,7 +39,7 @@ impl<'a, T> MutT<'a, T> {
     pub fn t(&mut self) -> &mut T {
         &mut self.0.elem
     }
-    pub fn next(&mut self) -> Option<MutT<'_, T>> {
+    pub fn next_mut(&mut self) -> Option<MutT<'_, T>> {
         self.0.next.as_mut().map(|next| MutT(next.borrow_mut()))
     }
 }
@@ -177,6 +177,12 @@ impl<T: PartialEq> PartialEq for LinkedList<T> {
     #[inline]
     fn eq(&self, other: &LinkedList<T>) -> bool {
         self.head == other.head && self.len == other.len
+    }
+}
+
+impl<T: Default> From<iterable::LinkedList<T>> for LinkedList<T> {
+    fn from(list: iterable::LinkedList<T>) -> Self {
+        Self::from_iter(list)
     }
 }
 
@@ -348,9 +354,7 @@ impl<T: Default> LinkedList<T> {
                 let mut prev = self
                     .link_iterator()
                     .enumerate()
-                    .skip_while(|(idx, _)| idx != &(index - 1))
-                    .take(1)
-                    .next()
+                    .find(|(idx, _)| idx == &(index - 1))
                     .map(|(_, link)| link);
 
                 let mut elem = prev.as_mut().and_then(|prev| prev.borrow_mut().next.take());
@@ -860,12 +864,58 @@ mod tests {
         }
         true
     }
+    #[test]
+    fn linkedlist_to_and_from_iterable_list_1() {
+        let mut list: iterable::LinkedList<usize> =
+            LinkedList::<usize>::from_slice(&[1, 2, 3, 4, 5, 6]).into();
+        let mut iter = list.iter();
+        assert_eq!(iter.next(), Some(&1));
+        for num in 2..6 {
+            assert_eq!(iter.next(), Some(&num));
+        }
+        assert_eq!(iter.next(), Some(6).as_ref());
+        assert_eq!(iter.next(), None);
+
+        let iter = list.iter_mut();
+        for num in iter {
+            *num = *num * 10;
+        }
+        assert_eq!(
+            list,
+            iterable::LinkedList::<usize>::from_slice(&[10, 20, 30, 40, 50, 60])
+        );
+        let mut list: LinkedList<usize> = list.into();
+        list.mergesort(false); //false for descending
+        assert_eq!(
+            list,
+            LinkedList::<usize>::from_slice(&[60, 50, 40, 30, 20, 10])
+        );
+        list.insert_sorted(45, false);
+        list.insert_sorted(70, false);
+        list.insert_sorted(5, false);
+        assert_eq!(
+            list,
+            LinkedList::<usize>::from_slice(&[70, 60, 50, 45, 40, 30, 20, 10, 5])
+        );
+        let split = list.split_off(3);
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[70, 60, 50]));
+        assert_eq!(
+            split,
+            LinkedList::<usize>::from_slice(&[45, 40, 30, 20, 10, 5])
+        );
+        list.quicksort(true); //true for ascending - list does not have to be mutable
+        split.quicksort(true); //split is not mutable
+        list.merge_with(split, true);
+        assert_eq!(
+            list,
+            LinkedList::<usize>::from_slice(&[5, 10, 20, 30, 40, 45, 50, 60, 70])
+        );
+    }
 
     #[test]
     fn linkedlist_mergesort_test_1() {
         let mut list = LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 6]);
         list.mergesort(false);
-        println!("The quick sorted list: {:?}", list);
         assert_eq!(list, LinkedList::<i32>::from_slice(&[6, 5, 4, 3, 2, 1]));
 
         let mut runs = 50;
@@ -1942,6 +1992,22 @@ pub mod iterable {
                 self.link = node.next.as_mut().and_then(|next| Rc::get_mut(next)); //next = &mut Rc<Node<T>>
                 &mut node.elem
             })
+        }
+    }
+
+    impl<T: Default> From<super::LinkedList<T>> for LinkedList<T> {
+        fn from(list: super::LinkedList<T>) -> Self {
+            Self::from_iter(list)
+        }
+    }
+
+    impl<T: Default> FromIterator<T> for LinkedList<T> {
+        fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+            let mut list = LinkedList::default();
+            for t in iter {
+                list.push_back(t);
+            }
+            list
         }
     }
     #[cfg(test)]
