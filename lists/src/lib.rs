@@ -750,6 +750,37 @@ impl<T: Default> LinkedList<T> {
     {
         *self = Self::split_and_merge_sorted(self.split_off(0), ascending);
     }
+
+    #[cfg(feature = "shuffle")]
+    pub fn shuffle(&mut self)
+    where
+        T: PartialOrd,
+    {
+        use rand::Rng;
+        if self.len < 2 {
+            return;
+        }
+        let mut split = self.split_off(0);
+        let mut bound = split.len();
+        let mut rng = rand::thread_rng();
+
+        while bound >= 1 {
+            let index = rng.gen_range(0..bound);
+            if let Some(t) = split.delete_at_index(index) {
+                if rng.gen::<bool>() {
+                    self.push_front(t);
+                } else {
+                    self.push_back(t);
+                }
+                bound -= 1;
+            }
+        }
+        drop(split);
+        //Reshuffle if the list is sorted in ascending or descending order
+        if self.is_sorted(true) || self.is_sorted(false) {
+            self.shuffle();
+        }
+    }
 }
 
 impl<T: Default> Default for Node<T> {
@@ -864,6 +895,15 @@ mod tests {
         }
         true
     }
+    #[test]
+    #[cfg(feature = "shuffle")]
+    fn linkedlist_shuffle_test_1() {
+        let mut list = LinkedList::<usize>::from_slice(&[1, 2, 3, 4, 5, 6]);
+        list.shuffle();
+        println!("The shuffled list: {:?}", list);
+        assert!(!list.is_sorted(true));
+    }
+
     #[test]
     fn linkedlist_to_and_from_iterable_list_1() {
         let mut list: iterable::LinkedList<usize> =
