@@ -21,8 +21,9 @@ pub struct LinkedList<T> {
     head: Link<T>,
     len: usize,
 }
-
+#[derive(Debug)]
 pub struct NonMutT<'a, T>(Ref<'a, Node<T>>);
+#[derive(Debug)]
 pub struct MutT<'a, T>(RefMut<'a, Node<T>>);
 
 impl<'a, T> NonMutT<'a, T> {
@@ -1461,6 +1462,29 @@ mod tests {
         list2.push_front(1000);
         let front2 = list2.front();
         assert!(!(front1 == front2));
+
+        let list = LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5]);
+        let front = list.front();
+        let non_mut_t = front.unwrap();
+        assert_eq!(*non_mut_t, 1);
+        assert_eq!(non_mut_t.deref(), &1);
+
+        let non_mut_t = non_mut_t.next().unwrap();
+        assert_eq!(*non_mut_t, 2);
+        assert_eq!(non_mut_t.deref(), &2);
+
+        let non_mut_t = non_mut_t.next().unwrap();
+        assert_eq!(*non_mut_t, 3);
+
+        let non_mut_t = non_mut_t.next().unwrap();
+        assert_eq!(*non_mut_t, 4);
+
+        let non_mut_t = non_mut_t.next().unwrap();
+        assert_eq!(*non_mut_t, 5);
+
+        let non_mut_t = non_mut_t.next();
+        assert!(non_mut_t.is_none());
+        assert_eq!(non_mut_t, None);
     }
 
     #[test]
@@ -1487,7 +1511,6 @@ mod tests {
         list.insert_sorted(40, true);
         list.insert_sorted(15, true);
         list.insert_sorted(35, true);
-        println!("Insert sorted list:{:?}", list);
 
         assert_eq!(
             list,
