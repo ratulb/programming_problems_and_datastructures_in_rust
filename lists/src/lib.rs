@@ -420,11 +420,11 @@ impl<T: Default> LinkedList<T> {
             }
         }
     }
-    //[t1]  [t1, t2]
-    pub fn sublist(&mut self, start: usize, end: usize) -> Self
-    where
-        T: PartialEq + Debug,
-    {
+    ///Take a subsection of the list starting at start index.
+    ///End index is not inclusive - Can have a max length of list.length or empty list
+    ///is returned
+    ///Start =0, end = list.length would return the whole list, leaving this list empty
+    pub fn sublist(&mut self, start: usize, end: usize) -> Self {
         if self.len == 0 || start >= end || end > self.len {
             Default::default()
         } else if self.len == 1 {
@@ -432,34 +432,35 @@ impl<T: Default> LinkedList<T> {
         } else {
             if start == 0 || end == self.len {
                 if start == 0 && end == self.len {
-                    return self.split_off(0);
+                    self.split_off(0)
                 } else if start == 0 {
                     let split = self.split_off(end);
-                    return std::mem::replace(self, split);
+                    std::mem::replace(self, split)
                 } else {
-                    return self.split_off(start);
+                    self.split_off(start)
                 }
-            }
-            let mut start_and_end_prev = self
-                .link_iterator()
-                .enumerate()
-                .filter(|(index, _)| *index == start - 1 || *index == end - 1)
-                .map(|(_, cell)| cell);
-            let mut start_prev = start_and_end_prev.next();
-            let mut end_prev = start_and_end_prev.next();
-            let mut tail_end = None;
-            let mut head = None;
-            if let Some(ref mut end_prev) = end_prev {
-                tail_end = end_prev.borrow_mut().next.take();
-            }
-            if let Some(ref mut start_prev) = start_prev {
-                head = start_prev.borrow_mut().next.take();
-                start_prev.borrow_mut().next = tail_end;
-            }
+            } else {
+                let mut start_and_end_prev = self
+                    .link_iterator()
+                    .enumerate()
+                    .filter(|(index, _)| *index == start - 1 || *index == end - 1)
+                    .map(|(_, cell)| cell);
+                let mut start_prev = start_and_end_prev.next();
+                let mut end_prev = start_and_end_prev.next();
+                let mut tail_end = None;
+                let mut head = None;
+                if let Some(ref mut end_prev) = end_prev {
+                    tail_end = end_prev.borrow_mut().next.take();
+                }
+                if let Some(ref mut start_prev) = start_prev {
+                    head = start_prev.borrow_mut().next.take();
+                    start_prev.borrow_mut().next = tail_end;
+                }
 
-            let len = end - start;
-            self.len -= len;
-            Self { head, len }
+                let len = end - start;
+                self.len -= len;
+                Self { head, len }
+            }
         }
     }
 
@@ -820,6 +821,13 @@ impl<T> Default for LinkedList<T> {
         Self { head: None, len: 0 }
     }
 }
+
+/***impl<T> Drop for LinkedList<T> {
+    fn drop(&mut self) {
+        while let Some(_) = self.pop_front() {}
+    }
+}***/
+
 impl<T: Default> FromIterator<T> for LinkedList<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut list = LinkedList::default();
@@ -2130,7 +2138,6 @@ pub mod iterable {
         type IntoIter = IntoIter<Self::Item>;
 
         fn into_iter(mut self) -> Self::IntoIter {
-            //let mut head = self.head.take();
             IntoIter {
                 link: self.head.take().and_then(Rc::into_inner),
             }
