@@ -17,7 +17,7 @@ pub(crate) struct Node<T> {
 ///The link list structure for arbritary type T. 'T' should have a default value.
 ///
 
-pub struct LinkedList<T> {
+pub struct LinkedList<T: Default> {
     head: Link<T>,
     len: usize,
 }
@@ -172,9 +172,9 @@ impl<T: PartialEq> PartialEq for Node<T> {
     }
 }
 
-impl<T: PartialEq> Eq for LinkedList<T> {}
+impl<T: PartialEq + Default> Eq for LinkedList<T> {}
 
-impl<T: PartialEq> PartialEq for LinkedList<T> {
+impl<T: PartialEq + Default> PartialEq for LinkedList<T> {
     #[inline]
     fn eq(&self, other: &LinkedList<T>) -> bool {
         self.head == other.head && self.len == other.len
@@ -817,17 +817,17 @@ impl<T: Default> Default for Node<T> {
 }
 
 //Default linked list contains nothing
-impl<T> Default for LinkedList<T> {
+impl<T: Default> Default for LinkedList<T> {
     fn default() -> Self {
         Self { head: None, len: 0 }
     }
 }
 
-/***impl<T> Drop for LinkedList<T> {
+impl<T: Default> Drop for LinkedList<T> {
     fn drop(&mut self) {
         while let Some(_) = self.pop_front() {}
     }
-}***/
+}
 
 impl<T: Default> FromIterator<T> for LinkedList<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
@@ -870,7 +870,7 @@ impl<T> Iterator for LinkIterator<T> {
     }
 }
 
-impl<T: Debug> Debug for LinkedList<T> {
+impl<T: Debug + Default> Debug for LinkedList<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         match self.head {
             None => write!(f, "Empty linked list"),
