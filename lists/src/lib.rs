@@ -222,11 +222,9 @@ impl<T: Default> LinkedList<T> {
     pub fn push_back(&mut self, elem: T) {
         if self.is_empty() {
             self.push_front(elem);
-        } else {
-            if let Some(ref mut last) = self.link_iterator().last() {
-                last.borrow_mut().next = Some(Node::rc_cell(elem));
-                self.len += 1;
-            }
+        } else if let Some(ref mut last) = self.link_iterator().last() {
+            last.borrow_mut().next = Some(Node::rc_cell(elem));
+            self.len += 1;
         }
     }
 
@@ -407,23 +405,64 @@ impl<T: Default> LinkedList<T> {
     ///
     pub fn split_off(&mut self, index: usize) -> Self {
         if self.len == 0 || index >= self.len {
-            Self::default()
+            Default::default()
         } else if index == 0 {
-            return std::mem::take(self);
+            std::mem::take(self)
         } else {
-            let split = self
-                .link_iterator()
-                .enumerate()
-                .find(|(idx, _)| *idx == index - 1)
-                .and_then(|(_, cell)| cell.borrow_mut().next.take());
-            let split_len = self.len - index;
+            let len = self.len - index;
             self.len = index;
-            LinkedList {
-                head: split,
-                len: split_len,
+            Self {
+                head: self
+                    .link_iterator()
+                    .nth(index - 1)
+                    .and_then(|cell| cell.borrow_mut().next.take()),
+                len,
             }
         }
     }
+    //[t1]  [t1, t2]
+    pub fn sublist(&mut self, start: usize, end: usize) -> Self
+    where
+        T: PartialEq + Debug,
+    {
+        if self.len == 0 || start >= end || end > self.len {
+            Default::default()
+        } else if self.len == 1 {
+            std::mem::take(self)
+        } else {
+            if start == 0 || end == self.len {
+                if start == 0 && end == self.len {
+                    return self.split_off(0);
+                } else if start == 0 {
+                    let split = self.split_off(end);
+                    return std::mem::replace(self, split);
+                } else {
+                    return self.split_off(start);
+                }
+            }
+            let mut start_and_end_prev = self
+                .link_iterator()
+                .enumerate()
+                .filter(|(index, _)| *index == start - 1 || *index == end - 1)
+                .map(|(_, cell)| cell);
+            let mut start_prev = start_and_end_prev.next();
+            let mut end_prev = start_and_end_prev.next();
+            let mut tail_end = None;
+            let mut head = None;
+            if let Some(ref mut end_prev) = end_prev {
+                tail_end = end_prev.borrow_mut().next.take();
+            }
+            if let Some(ref mut start_prev) = start_prev {
+                head = start_prev.borrow_mut().next.take();
+                start_prev.borrow_mut().next = tail_end;
+            }
+
+            let len = end - start;
+            self.len -= len;
+            Self { head, len }
+        }
+    }
+
     ///
     ///Merge this sorted list with another sorted list in ascending or descending order
     ///
@@ -878,6 +917,88 @@ mod tests {
         }
         true
     }
+    #[test]
+    fn linkedlist_sublist_test_1() {
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[]);
+        let sl = list.sublist(0, 1);
+        assert_eq!(sl, Default::default());
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1]);
+        let sl = list.sublist(0, 1);
+        assert_eq!(sl, LinkedList::<usize>::from_slice(&[1]));
+        assert_eq!(list, Default::default());
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2]);
+        let sl = list.sublist(0, 1);
+        assert_eq!(sl, LinkedList::<usize>::from_slice(&[1]));
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[2]));
+        assert!(sl.len() == 1);
+        assert!(list.len() == 1);
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2]);
+        let sl = list.sublist(0, 2);
+        assert_eq!(sl, LinkedList::<usize>::from_slice(&[1, 2]));
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[]));
+        assert!(sl.len() == 2);
+        assert!(list.len() == 0);
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2]);
+        let sl = list.sublist(1, 2);
+        assert_eq!(sl, LinkedList::<usize>::from_slice(&[2]));
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[1]));
+        assert!(sl.len() == 1);
+        assert!(list.len() == 1);
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3]);
+        let sl = list.sublist(0, 3);
+        assert_eq!(sl, LinkedList::<usize>::from_slice(&[1, 2, 3]));
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[]));
+        assert!(sl.len() == 3);
+        assert!(list.len() == 0);
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3]);
+        let sl = list.sublist(0, 2);
+        assert_eq!(sl, LinkedList::<usize>::from_slice(&[1, 2]));
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[3]));
+        assert!(sl.len() == 2);
+        assert!(list.len() == 1);
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3]);
+        let sl = list.sublist(0, 1);
+        assert_eq!(sl, LinkedList::<usize>::from_slice(&[1]));
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[2, 3]));
+        assert!(sl.len() == 1);
+        assert!(list.len() == 2);
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3]);
+        let sl = list.sublist(1, 3);
+        assert_eq!(sl, LinkedList::<usize>::from_slice(&[2, 3]));
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[1]));
+        assert!(sl.len() == 2);
+        assert!(list.len() == 1);
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3, 4, 5]);
+        let sl = list.sublist(1, 5);
+        assert_eq!(sl, LinkedList::<usize>::from_slice(&[2, 3, 4, 5]));
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[1]));
+        assert!(sl.len() == 4);
+        assert!(list.len() == 1);
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3]);
+        let sl = list.sublist(1, 2);
+        assert_eq!(sl, LinkedList::<usize>::from_slice(&[2]));
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[1, 3]));
+        assert!(sl.len() == 1);
+        assert!(list.len() == 2);
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3, 4, 5]);
+        let sl = list.sublist(1, 4);
+        assert_eq!(sl, LinkedList::<usize>::from_slice(&[2, 3, 4]));
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[1, 5]));
+        assert!(sl.len() == 3);
+        assert!(list.len() == 2);
+    }
+
     #[test]
     #[cfg(feature = "shuffle")]
     fn linkedlist_shuffle_test_1() {
