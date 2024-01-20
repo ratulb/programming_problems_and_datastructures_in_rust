@@ -283,11 +283,27 @@ impl<T: Default> LinkedList<T> {
         }
         result
     }
+    ///
+    ///Removes all duplicates for all entries preserving the original order.
+    ///O(n^2) operation at worst case
+    pub fn dedup(&mut self)
+    where
+        T: PartialEq,
+    {
+        let mut dedup: LinkedList<T> = Default::default();
+        self.link_iterator().for_each(|cell| {
+            let contains = dedup.contains(&cell.borrow().elem);
+            if !contains {
+                dedup.push_back(cell.borrow_mut().take());
+            }
+        });
+        drop(std::mem::replace(self, dedup));
+    }
 
     //Find all the indices meeting a criteria
     pub fn indices<F: Fn(&T) -> bool>(&self, f: F) -> LinkedList<usize> {
         match self.head {
-            None => LinkedList::<usize>::default(),
+            None => Default::default(),
             Some(_) => self
                 .link_iterator()
                 .enumerate()
@@ -339,14 +355,14 @@ impl<T: Default> LinkedList<T> {
             idx if idx == self.len() - 1 => self.pop_back(),
             _ => {
                 let mut prev = self.link_iterator().nth(index - 1);
-                let mut elem = prev.as_mut().and_then(|prev| prev.borrow_mut().next.take());
-                let next = elem.as_mut().and_then(|elem| elem.borrow_mut().next.take());
+                let mut dele = prev.as_mut().and_then(|prev| prev.borrow_mut().next.take());
+                let next = dele.as_mut().and_then(|dele| dele.borrow_mut().next.take());
 
                 if let Some(prev) = prev {
                     prev.borrow_mut().next = next;
                 }
                 self.len -= 1;
-                elem.map(|elem| elem.borrow_mut().take())
+                dele.map(|dele| dele.borrow_mut().take())
             }
         }
     }
@@ -546,28 +562,28 @@ impl<T: Default> LinkedList<T> {
 
     //Insert values in ascending or descending order. O(n) worst case operation to find the (prev,
     //next) tuple within which to place the value
-    pub fn insert_sorted(&mut self, elem: T, ascending: bool)
+    pub fn insert_sorted(&mut self, value: T, ascending: bool)
     where
         T: PartialOrd,
     {
         if self.is_empty() {
-            self.push_front(elem);
+            self.push_front(value);
             return;
         }
         let mut prev = None;
         let insert_at = self
             .link_iterator()
-            .map(|link| {
+            .map(|cell| {
                 if prev.is_none() {
                     //First item of the iterator. prev is None - set this item as prev for later
                     //If the first item satifies our query - its of no use
-                    prev = Some(Rc::clone(&link));
+                    prev = Some(Rc::clone(&cell));
                     //First value itself satisfy the condition - find returns this with
                     //No previous i.e. value need to be inserted at the beginning
                     if ascending {
-                        (None, link.borrow().elem >= elem, Rc::clone(&link))
+                        (None, cell.borrow().elem >= value, Rc::clone(&cell))
                     } else {
-                        (None, link.borrow().elem <= elem, Rc::clone(&link))
+                        (None, cell.borrow().elem <= value, Rc::clone(&cell))
                     }
                 } else {
                     //Condition was not satisfied with first item of the iterator or so far.
@@ -576,25 +592,25 @@ impl<T: Default> LinkedList<T> {
                     //returned by "find" method on the iterator
                     //let curr_prev = prev.as_ref().cloned();
                     let existent = prev.as_ref().map(Rc::clone);
-                    prev = Some(Rc::clone(&link));
+                    prev = Some(Rc::clone(&cell));
                     if ascending {
-                        (existent, link.borrow().elem >= elem, Rc::clone(&link))
+                        (existent, cell.borrow().elem >= value, Rc::clone(&cell))
                     } else {
-                        (existent, link.borrow().elem <= elem, Rc::clone(&link))
+                        (existent, cell.borrow().elem <= value, Rc::clone(&cell))
                     }
                 }
             })
             .find(|(_, gle, _)| gle == &true) //gle => greater/lesser/equal
             .map(|(prev, _, next)| (prev, next));
         match insert_at {
-            None => self.push_back(elem),
+            None => self.push_back(value),
             //All items are smaller(bigger) than the value to be inserted if ascending(descending).
             //Hence found none. Hence value goes to the end
-            Some((None, _)) => self.push_front(elem), //First item itself was bigger or
+            Some((None, _)) => self.push_front(value), //First item itself was bigger or
             //equal(smaller or equal) if ascending(descending). Hence value goes to the front
             Some((mut prev, next)) => {
                 //Found prev and next. Stick in between them
-                let entry = Some(Node::with_link(elem, next));
+                let entry = Some(Node::with_link(value, next));
                 if let Some(ref mut prev) = prev {
                     prev.borrow_mut().next = entry;
                     self.len += 1;
@@ -745,7 +761,10 @@ impl<T: Default> LinkedList<T> {
                     let value_at_next_pos = at_next_pos.borrow_mut().take();
                     let pivot_value =
                         std::mem::replace(&mut pivot.borrow_mut().elem, value_at_next_pos);
-                    let _ = std::mem::replace(&mut at_next_pos.borrow_mut().elem, pivot_value);
+                    drop(std::mem::replace(
+                        &mut at_next_pos.borrow_mut().elem,
+                        pivot_value,
+                    ));
                 }
             }
         }
@@ -926,6 +945,29 @@ mod tests {
         }
         true
     }
+    #[test]
+    fn linkedlist_dedup_test_1() {
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[]);
+        list.dedup();
+        assert_eq!(list, Default::default());
+        assert_eq!(list.len(), 0);
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3]);
+        list.dedup();
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[1, 2, 3]));
+        assert_eq!(list.len(), 3);
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 1, 1, 1]);
+        list.dedup();
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[1]));
+        assert_eq!(list.len(), 1);
+
+        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3, 3, 1, 2]);
+        list.dedup();
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[1, 2, 3]));
+        assert_eq!(list.len(), 3);
+    }
+
     #[test]
     fn linkedlist_sublist_test_1() {
         let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[]);
@@ -1928,7 +1970,7 @@ pub mod iterable {
                     if let Some(node) = Rc::get_mut(next) {
                         if next_is_none {
                             let result = Some(node.take());
-                            let _ = self.next.take();
+                            drop(self.next.take());
                             return result;
                         } else {
                             return node.pop_back();
@@ -2042,7 +2084,7 @@ pub mod iterable {
                     if self.len == 1 {
                         let result = Some(node.take());
                         self.len -= 1;
-                        let _ = self.head.take();
+                        drop(self.head.take());
                         return result;
                     } else {
                         let result = node.pop_back();
