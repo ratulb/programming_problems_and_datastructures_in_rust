@@ -461,42 +461,40 @@ impl<T: Default> LinkedList<T> {
             Default::default()
         } else if self.len == 1 {
             std::mem::take(self)
-        } else {
-            if start == 0 || end == self.len {
-                if start == 0 && end == self.len {
-                    self.split_off(0)
-                } else if start == 0 {
-                    let split = self.split_off(end);
-                    std::mem::replace(self, split)
-                } else {
-                    self.split_off(start)
-                }
+        } else if start == 0 || end == self.len {
+            if start == 0 && end == self.len {
+                self.split_off(0)
+            } else if start == 0 {
+                let split = self.split_off(end);
+                std::mem::replace(self, split)
             } else {
-                let mut start_and_end_prev = self
-                    .link_iterator()
-                    .enumerate()
-                    .skip(start - 1)
-                    .take(end - start + 1)
-                    //Skip and take above to limit the search space other wise filter would
-                    //continue till the end
-                    .filter(|(index, _)| *index == start - 1 || *index == end - 1)
-                    .map(|(_, cell)| cell);
-                let mut start_prev = start_and_end_prev.next();
-                let mut end_prev = start_and_end_prev.next();
-                let mut tail_end = None;
-                let mut head = None;
-                if let Some(ref mut end_prev) = end_prev {
-                    tail_end = end_prev.borrow_mut().next.take();
-                }
-                if let Some(ref mut start_prev) = start_prev {
-                    head = start_prev.borrow_mut().next.take();
-                    start_prev.borrow_mut().next = tail_end;
-                }
-
-                let len = end - start;
-                self.len -= len;
-                Self { head, len }
+                self.split_off(start)
             }
+        } else {
+            let mut start_and_end_prev = self
+                .link_iterator()
+                .enumerate()
+                .skip(start - 1)
+                .take(end - start + 1)
+                //Skip and take above to limit the search space other wise filter would
+                //continue till the end
+                .filter(|(index, _)| *index == start - 1 || *index == end - 1)
+                .map(|(_, cell)| cell);
+            let mut start_prev = start_and_end_prev.next();
+            let mut end_prev = start_and_end_prev.next();
+            let mut tail_end = None;
+            let mut head = None;
+            if let Some(ref mut end_prev) = end_prev {
+                tail_end = end_prev.borrow_mut().next.take();
+            }
+            if let Some(ref mut start_prev) = start_prev {
+                head = start_prev.borrow_mut().next.take();
+                start_prev.borrow_mut().next = tail_end;
+            }
+
+            let len = end - start;
+            self.len -= len;
+            Self { head, len }
         }
     }
 
@@ -863,7 +861,8 @@ impl<T: Default> Default for LinkedList<T> {
 
 impl<T: Default> Drop for LinkedList<T> {
     fn drop(&mut self) {
-        while let Some(_) = self.pop_front() {}
+        //while let Some(_) = self.pop_front() {}
+        while self.pop_front().is_some() {}
     }
 }
 
