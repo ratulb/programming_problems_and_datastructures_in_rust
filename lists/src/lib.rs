@@ -283,6 +283,21 @@ impl<T: Default> LinkedList<T> {
         }
         result
     }
+
+    pub fn swap(&self, a: usize, b: usize) {
+        if self.len < 2 || a == b || a >= self.len || b >= self.len {
+            return;
+        }
+        let (idx1, idx2) = if b > a { (a, b) } else { (b, a) };
+        let mut iter = self.link_iterator();
+        let (cell1, cell2) = (iter.nth(idx1), iter.nth(idx2 - idx1 - 1));
+        if let Some(cell1) = cell1 {
+            if let Some(cell2) = cell2 {
+                Node::swap(&mut cell1.borrow_mut(), &mut cell2.borrow_mut());
+            }
+        }
+    }
+
     ///
     ///Removes all duplicates for all entries preserving the original order.
     ///O(n^2) operation at worst case
@@ -462,7 +477,8 @@ impl<T: Default> LinkedList<T> {
                     .enumerate()
                     .skip(start - 1)
                     .take(end - start + 1)
-                    //Skip and take above to limit the search space
+                    //Skip and take above to limit the search space other wise filter would
+                    //continue till the end
                     .filter(|(index, _)| *index == start - 1 || *index == end - 1)
                     .map(|(_, cell)| cell);
                 let mut start_prev = start_and_end_prev.next();
@@ -948,6 +964,23 @@ mod tests {
         }
         true
     }
+    #[test]
+    fn linkedlist_swap_test_1() {
+        let list = LinkedList::<usize>::from_slice(&[1, 2, 3, 4, 5, 6]);
+
+        list.swap(0, 5);
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[6, 2, 3, 4, 5, 1]));
+
+        list.swap(2, 3);
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[6, 2, 4, 3, 5, 1]));
+
+        list.swap(0, 1);
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[2, 6, 4, 3, 5, 1]));
+
+        list.swap(4, 1);
+        assert_eq!(list, LinkedList::<usize>::from_slice(&[2, 5, 4, 3, 6, 1]));
+    }
+
     #[test]
     fn linkedlist_dedup_test_1() {
         let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[]);
