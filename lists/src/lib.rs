@@ -460,6 +460,9 @@ impl<T: Default> LinkedList<T> {
                 let mut start_and_end_prev = self
                     .link_iterator()
                     .enumerate()
+                    .skip(start - 1)
+                    .take(end - start + 1)
+                    //Skip and take above to limit the search space
                     .filter(|(index, _)| *index == start - 1 || *index == end - 1)
                     .map(|(_, cell)| cell);
                 let mut start_prev = start_and_end_prev.next();
