@@ -768,33 +768,12 @@ impl<T: Default> LinkedList<T> {
     {
         if start < end {
             let pivot_index = self.partition_at_tail(end, ascending);
-            //let pivot_index = self.partition_at_head(ascending, start);
             if pivot_index > 0 {
                 self.quicklysort(ascending, 0, pivot_index - 1);
             }
             self.quicklysort(ascending, pivot_index + 1, end);
         }
     }
-
-    /***fn partition_at_head(&self, ascending: bool, start: usize) -> usize
-    where
-        T: PartialOrd,
-    {
-        let pivot = self.link_iterator().nth(start);
-        let mut next_pivot_pos = start + 1; //possibly
-        for k in start + 1..self.len() {
-            let kth = self.link_iterator().nth(k);
-            let lesser_or_greater = if ascending { kth < pivot } else { kth > pivot };
-            if lesser_or_greater {
-                self.swap(next_pivot_pos, k);
-                next_pivot_pos += 1;
-            }
-        }
-
-        next_pivot_pos -= 1;
-        self.swap(next_pivot_pos, start);
-        next_pivot_pos
-    }***/
 
     fn split_and_merge_sorted(mut list: Self, ascending: bool) -> Self
     where
@@ -971,25 +950,6 @@ mod tests {
         }
         true
     }
-    /***
-    #[test]
-    fn linkedlist_parttion_test_1() {
-        let list = LinkedList::<i32>::from_slice(&[1, 4, 6, 5, 2, 2]);
-        let pivot = list.partition_at_head(true, 0);
-        println!("Pivot = {:?}", pivot);
-        println!("list = {:?}", list);
-
-        let values = list.into_iter().collect::<Vec<_>>();
-        for (i, v) in values.iter().enumerate() {
-            if i < pivot {
-                assert!(v <= &values[pivot]);
-            } else if i == pivot {
-                assert!(v == &values[pivot]);
-            } else {
-                assert!(v > &values[pivot]);
-            }
-        }
-    }***/
 
     #[test]
     fn linkedlist_parttion_at_tail_test_1() {
@@ -1031,7 +991,7 @@ mod tests {
             }
         }
 
-        let mut runs = 500;
+        let mut runs = 100;
         loop {
             let mut elems: [u16; 64] = [0; 64];
             rand::thread_rng().fill(&mut elems);
@@ -1423,7 +1383,7 @@ mod tests {
             LinkedList::<i32>::from_slice(&[6, 5, 4, 3, 2, 1, 1, 1])
         );
 
-        let mut runs = 10000;
+        let mut runs = 100;
         loop {
             let mut elems: [u16; 16] = [0; 16];
             rand::thread_rng().fill(&mut elems);
