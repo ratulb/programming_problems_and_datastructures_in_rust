@@ -284,16 +284,45 @@ impl<T: Default> LinkedList<T> {
         result
     }
 
+    fn partition_at_tail(&self, high: usize, ascending: bool) -> usize
+    where
+        T: PartialOrd,
+    {
+        if self.len < 2 {
+            panic!("Invalid list size{}!", self.len);
+        }
+
+        let pivot_index = high;
+        let mut i = 0;
+        for j in 0..pivot_index {
+            let mut iter = self.link_iterator();
+            //lte_or_gte = less than equal or greater than equal
+            let lte_or_gte = if ascending {
+                iter.nth(j) <= iter.nth(pivot_index - j - 1)
+            } else {
+                iter.nth(j) >= iter.nth(pivot_index - j - 1)
+            };
+            if lte_or_gte {
+                self.swap(i, j);
+                i += 1;
+            }
+        }
+        self.swap(i, pivot_index);
+        i
+    }
+
+    ///Swap the the value at index 'a' with the value at index 'b'
+    #[inline(always)]
     pub fn swap(&self, a: usize, b: usize) {
         if self.len < 2 || a == b || a >= self.len || b >= self.len {
             return;
         }
-        let (idx1, idx2) = if b > a { (a, b) } else { (b, a) };
+        let (idx_a, idx_b) = if b > a { (a, b) } else { (b, a) };
         let mut iter = self.link_iterator();
-        let (cell1, cell2) = (iter.nth(idx1), iter.nth(idx2 - idx1 - 1));
-        if let Some(cell1) = cell1 {
-            if let Some(cell2) = cell2 {
-                Node::swap(&mut cell1.borrow_mut(), &mut cell2.borrow_mut());
+        let (cell_a, cell_b) = (iter.nth(idx_a), iter.nth(idx_b - idx_a - 1));
+        if let Some(cell_a) = cell_a {
+            if let Some(cell_b) = cell_b {
+                Node::swap(&mut cell_a.borrow_mut(), &mut cell_b.borrow_mut());
             }
         }
     }
@@ -476,7 +505,7 @@ impl<T: Default> LinkedList<T> {
                 .enumerate()
                 .skip(start - 1)
                 .take(end - start + 1)
-                //Skip and take above to limit the search space other wise filter would
+                //Skip and take above to limit the search range. Otherwise filter would
                 //continue till the end
                 .filter(|(index, _)| *index == start - 1 || *index == end - 1)
                 .map(|(_, cell)| cell);
@@ -738,7 +767,8 @@ impl<T: Default> LinkedList<T> {
         T: PartialOrd,
     {
         if start < end {
-            let pivot_index = self.partition(ascending, start, end);
+            let pivot_index = self.partition_at_tail(end, ascending);
+            //let pivot_index = self.partition_at_head(ascending, start);
             if pivot_index > 0 {
                 self.quicklysort(ascending, 0, pivot_index - 1);
             }
@@ -746,47 +776,25 @@ impl<T: Default> LinkedList<T> {
         }
     }
 
-    fn partition(&self, ascending: bool, start: usize, end: usize) -> usize
+    /***fn partition_at_head(&self, ascending: bool, start: usize) -> usize
     where
         T: PartialOrd,
     {
         let pivot = self.link_iterator().nth(start);
         let mut next_pivot_pos = start + 1; //possibly
-        for k in start + 1..=end {
+        for k in start + 1..self.len() {
             let kth = self.link_iterator().nth(k);
             let lesser_or_greater = if ascending { kth < pivot } else { kth > pivot };
             if lesser_or_greater {
-                if next_pivot_pos != k {
-                    if let Some(at_next_pivot_pos) = self.link_iterator().nth(next_pivot_pos) {
-                        if let Some(at_kth_pos) = kth {
-                            Node::swap(
-                                &mut at_next_pivot_pos.borrow_mut(),
-                                &mut at_kth_pos.borrow_mut(),
-                            );
-                        }
-                    }
-                }
+                self.swap(next_pivot_pos, k);
                 next_pivot_pos += 1;
             }
         }
 
         next_pivot_pos -= 1;
-        if next_pivot_pos != start {
-            let at_pivot_next_pos = self.link_iterator().nth(next_pivot_pos);
-            if let Some(pivot) = pivot {
-                if let Some(at_next_pos) = at_pivot_next_pos {
-                    let value_at_next_pos = at_next_pos.borrow_mut().take();
-                    let pivot_value =
-                        std::mem::replace(&mut pivot.borrow_mut().elem, value_at_next_pos);
-                    drop(std::mem::replace(
-                        &mut at_next_pos.borrow_mut().elem,
-                        pivot_value,
-                    ));
-                }
-            }
-        }
+        self.swap(next_pivot_pos, start);
         next_pivot_pos
-    }
+    }***/
 
     fn split_and_merge_sorted(mut list: Self, ascending: bool) -> Self
     where
@@ -963,6 +971,107 @@ mod tests {
         }
         true
     }
+    /***
+    #[test]
+    fn linkedlist_parttion_test_1() {
+        let list = LinkedList::<i32>::from_slice(&[1, 4, 6, 5, 2, 2]);
+        let pivot = list.partition_at_head(true, 0);
+        println!("Pivot = {:?}", pivot);
+        println!("list = {:?}", list);
+
+        let values = list.into_iter().collect::<Vec<_>>();
+        for (i, v) in values.iter().enumerate() {
+            if i < pivot {
+                assert!(v <= &values[pivot]);
+            } else if i == pivot {
+                assert!(v == &values[pivot]);
+            } else {
+                assert!(v > &values[pivot]);
+            }
+        }
+    }***/
+
+    #[test]
+    fn linkedlist_parttion_at_tail_test_1() {
+        let list = LinkedList::<i32>::from_slice(&[1, 4, 6, 5, 2, 3, 2]);
+        let pivot = list.partition_at_tail(3, true);
+        println!("Pivot = {:?}", pivot);
+        println!("list = {:?}", list);
+
+        //////////////////////////////
+        let list = LinkedList::<i32>::from_slice(&[1, 4, 6, 5, 2, 3, 2]);
+        let pivot = list.partition_at_tail(6, true);
+        println!("Pivot = {:?}", pivot);
+        println!("list = {:?}", list);
+
+        let values = list.into_iter().collect::<Vec<_>>();
+        for (i, v) in values.iter().enumerate() {
+            if i < pivot {
+                assert!(v <= &values[pivot]);
+            } else if i == pivot {
+                assert!(v == &values[pivot]);
+            } else {
+                assert!(v > &values[pivot]);
+            }
+        }
+
+        let list = LinkedList::<i32>::from_slice(&[1, 4, 6, 5, 2, 3, 2]);
+        let pivot = list.partition_at_tail(6, false);
+        println!("Pivot = {:?}", pivot);
+        println!("list = {:?}", list);
+
+        let values = list.into_iter().collect::<Vec<_>>();
+        for (i, v) in values.iter().enumerate() {
+            if i < pivot {
+                assert!(v >= &values[pivot]);
+            } else if i == pivot {
+                assert!(v == &values[pivot]);
+            } else {
+                assert!(v < &values[pivot]);
+            }
+        }
+
+        let mut runs = 500;
+        loop {
+            let mut elems: [u16; 64] = [0; 64];
+            rand::thread_rng().fill(&mut elems);
+            let list = LinkedList::<u16>::from_slice(&elems);
+
+            let pivot = list.partition_at_tail(63, true);
+            let values = list.into_iter().collect::<Vec<_>>();
+            for (i, v) in values.iter().enumerate() {
+                if i < pivot {
+                    assert!(v <= &values[pivot]);
+                } else if i == pivot {
+                    assert!(v == &values[pivot]);
+                } else {
+                    assert!(v > &values[pivot]);
+                }
+            }
+            //////////////////////////////////
+            let mut elems: [u8; 64] = [0; 64];
+            rand::thread_rng().fill(&mut elems);
+            let list = LinkedList::<u16>::from_slice(&elems);
+
+            let pivot = list.partition_at_tail(63, false);
+            let values = list.into_iter().collect::<Vec<_>>();
+            for (i, v) in values.iter().enumerate() {
+                if i < pivot {
+                    assert!(v >= &values[pivot]);
+                } else if i == pivot {
+                    assert!(v == &values[pivot]);
+                } else {
+                    assert!(v < &values[pivot]);
+                }
+            }
+
+            runs -= 1;
+            if runs == 0 {
+                break;
+            }
+        }
+    }
+
     #[test]
     fn linkedlist_swap_test_1() {
         let list = LinkedList::<usize>::from_slice(&[1, 2, 3, 4, 5, 6]);
@@ -1306,7 +1415,15 @@ mod tests {
         println!("The quick sorted list: {:?}", list);
         assert_eq!(list, LinkedList::<i32>::from_slice(&[6, 5, 4, 3, 2, 1]));
 
-        let mut runs = 50;
+        let list = LinkedList::<i32>::from_slice(&[1, 1, 2, 3, 4, 5, 6, 1]);
+        list.quicksort(false);
+        println!("The quick sorted list: {:?}", list);
+        assert_eq!(
+            list,
+            LinkedList::<i32>::from_slice(&[6, 5, 4, 3, 2, 1, 1, 1])
+        );
+
+        let mut runs = 10000;
         loop {
             let mut elems: [u16; 16] = [0; 16];
             rand::thread_rng().fill(&mut elems);
