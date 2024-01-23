@@ -33,7 +33,7 @@ impl<T> IntoIterator for Vector<T> {
         unsafe {
             IntoIter {
                 buff: ptr,
-                cap: cap,
+                cap,
                 start: ptr.as_ptr(),
                 end: if cap == 0 {
                     ptr.as_ptr()
