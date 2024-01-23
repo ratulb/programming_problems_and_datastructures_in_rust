@@ -44,6 +44,7 @@ impl<T> IntoIterator for Vector<T> {
         }
     }
 }
+
 impl<T> DoubleEndedIterator for IntoIter<T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
@@ -59,7 +60,6 @@ impl<T> DoubleEndedIterator for IntoIter<T> {
 
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
-
     fn next(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
             None
@@ -71,6 +71,7 @@ impl<T> Iterator for IntoIter<T> {
             }
         }
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         let len = (self.end as usize - self.start as usize) / mem::size_of::<T>();
         (len, Some(len))
@@ -171,6 +172,7 @@ impl<T> Vector<T> {
         self.cap = new_cap;
     }
 }
+
 impl<T> Drop for Vector<T> {
     fn drop(&mut self) {
         if self.cap != 0 {
@@ -207,6 +209,32 @@ mod tests {
     struct Empty;
     #[derive(PartialEq, Debug)]
     struct NonEmpty(Vec<i32>);
+
+    #[test]
+    fn vector_into_iter_next_back_test_1() {
+        let mut vec = Vector::<i32>::new();
+        vec.push(1);
+        vec.push(2);
+        vec.push(3);
+        vec.push(4);
+        let mut value = 4;
+        for v in vec.into_iter().rev() {
+            assert!(v == value);
+            value -= 1;
+        }
+
+        let mut vec = Vector::<i32>::new();
+        vec.push(1);
+        vec.push(2);
+        vec.push(3);
+        vec.push(4);
+        let mut iter = vec.into_iter();
+        assert_eq!(iter.next_back(), Some(4));
+        assert_eq!(iter.next_back(), Some(3));
+        assert_eq!(iter.next_back(), Some(2));
+        assert_eq!(iter.next_back(), Some(1));
+        assert_eq!(iter.next_back(), None);
+    }
 
     #[test]
     fn vector_into_iter_test_1() {
@@ -314,6 +342,7 @@ mod tests {
         let _v = Vector::<Empty>::new();
         unreachable!();
     }
+
     #[test]
     fn vector_first_last_test_1() {
         let mut v = Vector::<&str>::new();
@@ -338,11 +367,8 @@ mod tests {
         let v = Vector::<NonEmpty>::new();
         assert!(v.cap == 0);
         assert!(v.len == 0);
-        let lo = Layout::new::<NonEmpty>();
-        println!("Align:{}", lo.align());
-        println!("size:{}", lo.size());
-        //let lo = Layout::array::<NonEmpty>((isize::MAX/12) as usize).unwrap();
     }
+
     #[test]
     fn vector_push_test_1() {
         let mut v = Vector::<NonEmpty>::new();
@@ -367,6 +393,7 @@ mod tests {
         assert!(v.cap == 8);
         assert!(v.len == 5);
     }
+
     #[test]
     fn vector_pop_test_1() {
         let mut v = Vector::<NonEmpty>::new();
