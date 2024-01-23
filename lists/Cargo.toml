@@ -8,6 +8,7 @@ edition = "2021"
 shuffle = ["rand"]
 
 [dependencies]
+vector = { path = "../vector" }
 rand = { version = "0.8.5", optional = true }
 [dev-dependencies]
 rand = "0.8.5"
