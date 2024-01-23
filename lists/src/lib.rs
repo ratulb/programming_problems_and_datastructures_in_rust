@@ -955,14 +955,12 @@ mod tests {
     fn linkedlist_parttion_at_tail_test_1() {
         let list = LinkedList::<i32>::from_slice(&[1, 4, 6, 5, 2, 3, 2]);
         let pivot = list.partition_at_tail(3, true);
-        println!("Pivot = {:?}", pivot);
-        println!("list = {:?}", list);
+        assert!(pivot == 2);
 
         //////////////////////////////
         let list = LinkedList::<i32>::from_slice(&[1, 4, 6, 5, 2, 3, 2]);
         let pivot = list.partition_at_tail(6, true);
-        println!("Pivot = {:?}", pivot);
-        println!("list = {:?}", list);
+        assert!(pivot == 2);
 
         let values = list.into_iter().collect::<Vec<_>>();
         for (i, v) in values.iter().enumerate() {
@@ -977,8 +975,7 @@ mod tests {
 
         let list = LinkedList::<i32>::from_slice(&[1, 4, 6, 5, 2, 3, 2]);
         let pivot = list.partition_at_tail(6, false);
-        println!("Pivot = {:?}", pivot);
-        println!("list = {:?}", list);
+        assert!(pivot == 5);
 
         let values = list.into_iter().collect::<Vec<_>>();
         for (i, v) in values.iter().enumerate() {
@@ -1159,7 +1156,6 @@ mod tests {
     fn linkedlist_shuffle_test_1() {
         let mut list = LinkedList::<usize>::from_slice(&[1, 2, 3, 4, 5, 6]);
         list.shuffle();
-        println!("The shuffled list: {:?}", list);
         assert!(!list.is_sorted(true));
     }
 
@@ -1203,7 +1199,7 @@ mod tests {
             LinkedList::<usize>::from_slice(&[45, 40, 30, 20, 10, 5])
         );
         list.quicksort(true); //true for ascending - list does not have to be mutable
-        split.quicksort(true); //split is not mutable
+        split.quicksort(true); //split does not require self to be mutable
         list.merge_with(split, true);
         assert_eq!(
             list,
@@ -1372,12 +1368,10 @@ mod tests {
     fn linkedlist_quicksort_test_1() {
         let list = LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 6]);
         list.quicksort(false);
-        println!("The quick sorted list: {:?}", list);
         assert_eq!(list, LinkedList::<i32>::from_slice(&[6, 5, 4, 3, 2, 1]));
 
         let list = LinkedList::<i32>::from_slice(&[1, 1, 2, 3, 4, 5, 6, 1]);
         list.quicksort(false);
-        println!("The quick sorted list: {:?}", list);
         assert_eq!(
             list,
             LinkedList::<i32>::from_slice(&[6, 5, 4, 3, 2, 1, 1, 1])
@@ -1516,8 +1510,6 @@ mod tests {
             list.insertion_sort(true);
             assert!(list.is_sorted(true));
 
-            println!("{:?}", list);
-
             let sorted = is_sorted(list.into_iter(), true);
             assert!(sorted);
 
@@ -1560,8 +1552,6 @@ mod tests {
 
             list.selection_sort(true);
             assert!(list.is_sorted(true));
-
-            println!("{:?}", list);
 
             let sorted = is_sorted(list.into_iter(), true);
             assert!(sorted);
@@ -1682,7 +1672,6 @@ mod tests {
         list.insert_sorted(40, false);
         list.insert_sorted(15, false);
         list.insert_sorted(35, false);
-        println!("Insert sorted list:{:?}", list);
 
         assert_eq!(
             list,
