@@ -197,7 +197,7 @@ impl<T: Default> LinkedList<T> {
     }
 
     //Readily create a list from clonable slice of values. Internally values are never cloned hereafter.
-    pub fn from_slice<U: Clone + Default>(elems: &[U]) -> LinkedList<U> {
+    pub fn of_slice<U: Clone + Default>(elems: &[U]) -> LinkedList<U> {
         let mut list = LinkedList::<U>::default();
         elems.iter().for_each(|elem| list.push_back(elem.clone()));
         list
@@ -953,12 +953,12 @@ mod tests {
 
     #[test]
     fn linkedlist_parttion_at_tail_test_1() {
-        let list = LinkedList::<i32>::from_slice(&[1, 4, 6, 5, 2, 3, 2]);
+        let list = LinkedList::<i32>::of_slice(&[1, 4, 6, 5, 2, 3, 2]);
         let pivot = list.partition_at_tail(3, true);
         assert!(pivot == 2);
 
         //////////////////////////////
-        let list = LinkedList::<i32>::from_slice(&[1, 4, 6, 5, 2, 3, 2]);
+        let list = LinkedList::<i32>::of_slice(&[1, 4, 6, 5, 2, 3, 2]);
         let pivot = list.partition_at_tail(6, true);
         assert!(pivot == 2);
 
@@ -973,7 +973,7 @@ mod tests {
             }
         }
 
-        let list = LinkedList::<i32>::from_slice(&[1, 4, 6, 5, 2, 3, 2]);
+        let list = LinkedList::<i32>::of_slice(&[1, 4, 6, 5, 2, 3, 2]);
         let pivot = list.partition_at_tail(6, false);
         assert!(pivot == 5);
 
@@ -992,7 +992,7 @@ mod tests {
         loop {
             let mut elems: [u16; 64] = [0; 64];
             rand::thread_rng().fill(&mut elems);
-            let list = LinkedList::<u16>::from_slice(&elems);
+            let list = LinkedList::<u16>::of_slice(&elems);
 
             let pivot = list.partition_at_tail(63, true);
             let values = list.into_iter().collect::<Vec<_>>();
@@ -1008,7 +1008,7 @@ mod tests {
             //////////////////////////////////
             let mut elems: [u8; 64] = [0; 64];
             rand::thread_rng().fill(&mut elems);
-            let list = LinkedList::<u16>::from_slice(&elems);
+            let list = LinkedList::<u16>::of_slice(&elems);
 
             let pivot = list.partition_at_tail(63, false);
             let values = list.into_iter().collect::<Vec<_>>();
@@ -1031,122 +1031,122 @@ mod tests {
 
     #[test]
     fn linkedlist_swap_test_1() {
-        let list = LinkedList::<usize>::from_slice(&[1, 2, 3, 4, 5, 6]);
+        let list = LinkedList::<usize>::of_slice(&[1, 2, 3, 4, 5, 6]);
 
         list.swap(0, 5);
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[6, 2, 3, 4, 5, 1]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[6, 2, 3, 4, 5, 1]));
 
         list.swap(2, 3);
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[6, 2, 4, 3, 5, 1]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[6, 2, 4, 3, 5, 1]));
 
         list.swap(0, 1);
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[2, 6, 4, 3, 5, 1]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[2, 6, 4, 3, 5, 1]));
 
         list.swap(4, 1);
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[2, 5, 4, 3, 6, 1]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[2, 5, 4, 3, 6, 1]));
     }
 
     #[test]
     fn linkedlist_dedup_test_1() {
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[]);
         list.dedup();
         assert_eq!(list, Default::default());
         assert_eq!(list.len(), 0);
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 2, 3]);
         list.dedup();
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[1, 2, 3]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[1, 2, 3]));
         assert_eq!(list.len(), 3);
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 1, 1, 1]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 1, 1, 1]);
         list.dedup();
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[1]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[1]));
         assert_eq!(list.len(), 1);
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3, 3, 1, 2]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 2, 3, 3, 1, 2]);
         list.dedup();
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[1, 2, 3]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[1, 2, 3]));
         assert_eq!(list.len(), 3);
     }
 
     #[test]
     fn linkedlist_sublist_test_1() {
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[]);
         let sl = list.sublist(0, 1);
         assert_eq!(sl, Default::default());
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1]);
         let sl = list.sublist(0, 1);
-        assert_eq!(sl, LinkedList::<usize>::from_slice(&[1]));
+        assert_eq!(sl, LinkedList::<usize>::of_slice(&[1]));
         assert_eq!(list, Default::default());
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 2]);
         let sl = list.sublist(0, 1);
-        assert_eq!(sl, LinkedList::<usize>::from_slice(&[1]));
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[2]));
+        assert_eq!(sl, LinkedList::<usize>::of_slice(&[1]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[2]));
         assert!(sl.len() == 1);
         assert!(list.len() == 1);
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 2]);
         let sl = list.sublist(0, 2);
-        assert_eq!(sl, LinkedList::<usize>::from_slice(&[1, 2]));
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[]));
+        assert_eq!(sl, LinkedList::<usize>::of_slice(&[1, 2]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[]));
         assert!(sl.len() == 2);
         assert!(list.len() == 0);
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 2]);
         let sl = list.sublist(1, 2);
-        assert_eq!(sl, LinkedList::<usize>::from_slice(&[2]));
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[1]));
+        assert_eq!(sl, LinkedList::<usize>::of_slice(&[2]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[1]));
         assert!(sl.len() == 1);
         assert!(list.len() == 1);
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 2, 3]);
         let sl = list.sublist(0, 3);
-        assert_eq!(sl, LinkedList::<usize>::from_slice(&[1, 2, 3]));
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[]));
+        assert_eq!(sl, LinkedList::<usize>::of_slice(&[1, 2, 3]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[]));
         assert!(sl.len() == 3);
         assert!(list.len() == 0);
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 2, 3]);
         let sl = list.sublist(0, 2);
-        assert_eq!(sl, LinkedList::<usize>::from_slice(&[1, 2]));
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[3]));
+        assert_eq!(sl, LinkedList::<usize>::of_slice(&[1, 2]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[3]));
         assert!(sl.len() == 2);
         assert!(list.len() == 1);
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 2, 3]);
         let sl = list.sublist(0, 1);
-        assert_eq!(sl, LinkedList::<usize>::from_slice(&[1]));
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[2, 3]));
+        assert_eq!(sl, LinkedList::<usize>::of_slice(&[1]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[2, 3]));
         assert!(sl.len() == 1);
         assert!(list.len() == 2);
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 2, 3]);
         let sl = list.sublist(1, 3);
-        assert_eq!(sl, LinkedList::<usize>::from_slice(&[2, 3]));
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[1]));
+        assert_eq!(sl, LinkedList::<usize>::of_slice(&[2, 3]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[1]));
         assert!(sl.len() == 2);
         assert!(list.len() == 1);
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3, 4, 5]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 2, 3, 4, 5]);
         let sl = list.sublist(1, 5);
-        assert_eq!(sl, LinkedList::<usize>::from_slice(&[2, 3, 4, 5]));
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[1]));
+        assert_eq!(sl, LinkedList::<usize>::of_slice(&[2, 3, 4, 5]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[1]));
         assert!(sl.len() == 4);
         assert!(list.len() == 1);
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 2, 3]);
         let sl = list.sublist(1, 2);
-        assert_eq!(sl, LinkedList::<usize>::from_slice(&[2]));
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[1, 3]));
+        assert_eq!(sl, LinkedList::<usize>::of_slice(&[2]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[1, 3]));
         assert!(sl.len() == 1);
         assert!(list.len() == 2);
 
-        let mut list: LinkedList<usize> = LinkedList::<usize>::from_slice(&[1, 2, 3, 4, 5]);
+        let mut list: LinkedList<usize> = LinkedList::<usize>::of_slice(&[1, 2, 3, 4, 5]);
         let sl = list.sublist(1, 4);
-        assert_eq!(sl, LinkedList::<usize>::from_slice(&[2, 3, 4]));
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[1, 5]));
+        assert_eq!(sl, LinkedList::<usize>::of_slice(&[2, 3, 4]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[1, 5]));
         assert!(sl.len() == 3);
         assert!(list.len() == 2);
     }
@@ -1154,7 +1154,7 @@ mod tests {
     #[test]
     #[cfg(feature = "shuffle")]
     fn linkedlist_shuffle_test_1() {
-        let mut list = LinkedList::<usize>::from_slice(&[1, 2, 3, 4, 5, 6]);
+        let mut list = LinkedList::<usize>::of_slice(&[1, 2, 3, 4, 5, 6]);
         list.shuffle();
         assert!(!list.is_sorted(true));
     }
@@ -1162,7 +1162,7 @@ mod tests {
     #[test]
     fn linkedlist_to_and_from_iterable_list_1() {
         let mut list: iterable::LinkedList<usize> =
-            LinkedList::<usize>::from_slice(&[1, 2, 3, 4, 5, 6]).into();
+            LinkedList::<usize>::of_slice(&[1, 2, 3, 4, 5, 6]).into();
         let mut iter = list.iter();
         assert_eq!(iter.next(), Some(&1));
         for num in 2..6 {
@@ -1177,47 +1177,47 @@ mod tests {
         }
         assert_eq!(
             list,
-            iterable::LinkedList::<usize>::from_slice(&[10, 20, 30, 40, 50, 60])
+            iterable::LinkedList::<usize>::of_slice(&[10, 20, 30, 40, 50, 60])
         );
         let mut list: LinkedList<usize> = list.into();
         list.mergesort(false); //false for descending
         assert_eq!(
             list,
-            LinkedList::<usize>::from_slice(&[60, 50, 40, 30, 20, 10])
+            LinkedList::<usize>::of_slice(&[60, 50, 40, 30, 20, 10])
         );
         list.insert_sorted(45, false);
         list.insert_sorted(70, false);
         list.insert_sorted(5, false);
         assert_eq!(
             list,
-            LinkedList::<usize>::from_slice(&[70, 60, 50, 45, 40, 30, 20, 10, 5])
+            LinkedList::<usize>::of_slice(&[70, 60, 50, 45, 40, 30, 20, 10, 5])
         );
         let split = list.split_off(3);
-        assert_eq!(list, LinkedList::<usize>::from_slice(&[70, 60, 50]));
+        assert_eq!(list, LinkedList::<usize>::of_slice(&[70, 60, 50]));
         assert_eq!(
             split,
-            LinkedList::<usize>::from_slice(&[45, 40, 30, 20, 10, 5])
+            LinkedList::<usize>::of_slice(&[45, 40, 30, 20, 10, 5])
         );
         list.quicksort(true); //true for ascending - list does not have to be mutable
         split.quicksort(true); //split does not require self to be mutable
         list.merge_with(split, true);
         assert_eq!(
             list,
-            LinkedList::<usize>::from_slice(&[5, 10, 20, 30, 40, 45, 50, 60, 70])
+            LinkedList::<usize>::of_slice(&[5, 10, 20, 30, 40, 45, 50, 60, 70])
         );
     }
 
     #[test]
     fn linkedlist_mergesort_test_1() {
-        let mut list = LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 6]);
+        let mut list = LinkedList::<i32>::of_slice(&[1, 2, 3, 4, 5, 6]);
         list.mergesort(false);
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[6, 5, 4, 3, 2, 1]));
+        assert_eq!(list, LinkedList::<i32>::of_slice(&[6, 5, 4, 3, 2, 1]));
 
-        let mut runs = 50;
+        let mut runs = 100;
         loop {
             let mut elems: [u16; 64] = [0; 64];
             rand::thread_rng().fill(&mut elems);
-            let mut list = LinkedList::<u16>::from_slice(&elems);
+            let mut list = LinkedList::<u16>::of_slice(&elems);
 
             list.mergesort(false);
             assert!(list.is_sorted(false)); //false for descending
@@ -1225,9 +1225,9 @@ mod tests {
             let sorted = is_sorted(list.into_iter(), false);
             assert!(sorted);
 
-            let mut elems: [u8; 128] = [0; 128];
+            let mut elems: [u8; 64] = [0; 64];
             rand::thread_rng().fill(&mut elems);
-            let mut list = LinkedList::<i32>::from_slice(&elems);
+            let mut list = LinkedList::<i32>::of_slice(&elems);
 
             list.mergesort(true);
             assert!(list.is_sorted(true));
@@ -1249,35 +1249,35 @@ mod tests {
         list1.merge_with(list, true);
         assert_eq!(list1, LinkedList::<i32>::default());
 
-        let list = LinkedList::<i32>::from_slice(&[1, 3, 5, 6]);
+        let list = LinkedList::<i32>::of_slice(&[1, 3, 5, 6]);
         let mut list1 = LinkedList::<i32>::default();
         list1.merge_with(list, true);
-        assert_eq!(list1, LinkedList::<i32>::from_slice(&[1, 3, 5, 6]));
+        assert_eq!(list1, LinkedList::<i32>::of_slice(&[1, 3, 5, 6]));
 
-        let mut list = LinkedList::<i32>::from_slice(&[1, 3, 5, 6]);
+        let mut list = LinkedList::<i32>::of_slice(&[1, 3, 5, 6]);
         let list1 = LinkedList::<i32>::default();
         list.merge_with(list1, true);
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[1, 3, 5, 6]));
+        assert_eq!(list, LinkedList::<i32>::of_slice(&[1, 3, 5, 6]));
 
-        let mut list = LinkedList::<i32>::from_slice(&[1, 3, 5, 6]);
-        let list1 = LinkedList::<i32>::from_slice(&[2, 4, 5, 6]);
+        let mut list = LinkedList::<i32>::of_slice(&[1, 3, 5, 6]);
+        let list1 = LinkedList::<i32>::of_slice(&[2, 4, 5, 6]);
         list.merge_with(list1, true);
         assert_eq!(
             list,
-            LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 5, 6, 6])
+            LinkedList::<i32>::of_slice(&[1, 2, 3, 4, 5, 5, 6, 6])
         );
-        let mut runs = 50;
+        let mut runs = 100;
         loop {
-            let mut elems: [u16; 16] = [0; 16];
+            let mut elems: [u16; 64] = [0; 64];
             rand::thread_rng().fill(&mut elems);
-            let mut list1 = LinkedList::<u16>::from_slice(&elems);
+            let mut list1 = LinkedList::<u16>::of_slice(&elems);
 
             list1.quicksort(false);
             assert!(list1.is_sorted(false)); //false for descending
 
-            let mut elems: [u16; 16] = [0; 16];
+            let mut elems: [u16; 64] = [0; 64];
             rand::thread_rng().fill(&mut elems);
-            let list2 = LinkedList::<u16>::from_slice(&elems);
+            let list2 = LinkedList::<u16>::of_slice(&elems);
 
             list2.quicksort(false);
             assert!(list2.is_sorted(false));
@@ -1285,16 +1285,16 @@ mod tests {
             assert!(list1.is_sorted(false));
 
             /////////////////////////
-            let mut elems: [u16; 16] = [0; 16];
+            let mut elems: [u16; 64] = [0; 64];
             rand::thread_rng().fill(&mut elems);
-            let list1 = LinkedList::<u16>::from_slice(&elems);
+            let list1 = LinkedList::<u16>::of_slice(&elems);
 
             list1.quicksort(true);
             assert!(list1.is_sorted(true)); //false for descending
 
             let mut elems: [u16; 16] = [0; 16];
             rand::thread_rng().fill(&mut elems);
-            let mut list2 = LinkedList::<u16>::from_slice(&elems);
+            let mut list2 = LinkedList::<u16>::of_slice(&elems);
 
             list2.quicksort(true);
             assert!(list2.is_sorted(true));
@@ -1315,25 +1315,25 @@ mod tests {
         let list = LinkedList::merge(list1, list2, true);
         assert_eq!(list, LinkedList::<i32>::default());
 
-        let list1 = LinkedList::<i32>::from_slice(&[1, 3, 5, 6]);
-        let list2 = LinkedList::<i32>::from_slice(&[2, 4, 5, 6]);
+        let list1 = LinkedList::<i32>::of_slice(&[1, 3, 5, 6]);
+        let list2 = LinkedList::<i32>::of_slice(&[2, 4, 5, 6]);
         let list = LinkedList::merge(list1, list2, true);
         assert_eq!(
             list,
-            LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 5, 6, 6])
+            LinkedList::<i32>::of_slice(&[1, 2, 3, 4, 5, 5, 6, 6])
         );
-        let mut runs = 50;
+        let mut runs = 100;
         loop {
-            let mut elems: [u16; 16] = [0; 16];
+            let mut elems: [u16; 64] = [0; 64];
             rand::thread_rng().fill(&mut elems);
-            let list1 = LinkedList::<u16>::from_slice(&elems);
+            let list1 = LinkedList::<u16>::of_slice(&elems);
 
             list1.quicksort(false);
             assert!(list1.is_sorted(false)); //false for descending
 
             let mut elems: [u16; 16] = [0; 16];
             rand::thread_rng().fill(&mut elems);
-            let list2 = LinkedList::<u16>::from_slice(&elems);
+            let list2 = LinkedList::<u16>::of_slice(&elems);
 
             list2.quicksort(false);
             assert!(list2.is_sorted(false));
@@ -1343,14 +1343,14 @@ mod tests {
             /////////////////////////
             let mut elems: [u16; 16] = [0; 16];
             rand::thread_rng().fill(&mut elems);
-            let list1 = LinkedList::<u16>::from_slice(&elems);
+            let list1 = LinkedList::<u16>::of_slice(&elems);
 
             list1.quicksort(true);
             assert!(list1.is_sorted(true)); //false for descending
 
             let mut elems: [u16; 16] = [0; 16];
             rand::thread_rng().fill(&mut elems);
-            let list2 = LinkedList::<u16>::from_slice(&elems);
+            let list2 = LinkedList::<u16>::of_slice(&elems);
 
             list2.quicksort(true);
             assert!(list2.is_sorted(true));
@@ -1366,22 +1366,22 @@ mod tests {
 
     #[test]
     fn linkedlist_quicksort_test_1() {
-        let list = LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 6]);
+        let list = LinkedList::<i32>::of_slice(&[1, 2, 3, 4, 5, 6]);
         list.quicksort(false);
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[6, 5, 4, 3, 2, 1]));
+        assert_eq!(list, LinkedList::<i32>::of_slice(&[6, 5, 4, 3, 2, 1]));
 
-        let list = LinkedList::<i32>::from_slice(&[1, 1, 2, 3, 4, 5, 6, 1]);
+        let list = LinkedList::<i32>::of_slice(&[1, 1, 2, 3, 4, 5, 6, 1]);
         list.quicksort(false);
         assert_eq!(
             list,
-            LinkedList::<i32>::from_slice(&[6, 5, 4, 3, 2, 1, 1, 1])
+            LinkedList::<i32>::of_slice(&[6, 5, 4, 3, 2, 1, 1, 1])
         );
 
         let mut runs = 100;
         loop {
             let mut elems: [u16; 16] = [0; 16];
             rand::thread_rng().fill(&mut elems);
-            let list = LinkedList::<u16>::from_slice(&elems);
+            let list = LinkedList::<u16>::of_slice(&elems);
 
             list.quicksort(false);
             assert!(list.is_sorted(false)); //false for descending
@@ -1391,7 +1391,7 @@ mod tests {
 
             let mut elems: [u8; 16] = [0; 16];
             rand::thread_rng().fill(&mut elems);
-            let list = LinkedList::<i32>::from_slice(&elems);
+            let list = LinkedList::<i32>::of_slice(&elems);
 
             list.quicksort(true);
             assert!(list.is_sorted(true));
@@ -1408,10 +1408,10 @@ mod tests {
 
     #[test]
     fn linkedlist_add_test_1() {
-        let list1 = LinkedList::<i32>::from_slice(&[1, 2, 3]);
-        let list2 = LinkedList::<i32>::from_slice(&[4, 5, 6]);
+        let list1 = LinkedList::<i32>::of_slice(&[1, 2, 3]);
+        let list2 = LinkedList::<i32>::of_slice(&[4, 5, 6]);
         let mut list = list1 + list2;
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5, 6]));
+        assert_eq!(list, LinkedList::<i32>::of_slice(&[1, 2, 3, 4, 5, 6]));
         assert_eq!(list.len(), 6);
         assert_eq!(list.pop_front(), Some(1));
         assert_eq!(list.pop_back(), Some(6));
@@ -1425,68 +1425,68 @@ mod tests {
 
     #[test]
     fn linkedlist_split_off_test_1() {
-        let mut list = LinkedList::<i32>::from_slice(&[1]);
+        let mut list = LinkedList::<i32>::of_slice(&[1]);
         let split = list.split_off(0);
-        assert_eq!(split, LinkedList::<i32>::from_slice(&[1]));
+        assert_eq!(split, LinkedList::<i32>::of_slice(&[1]));
         assert_eq!(split.len(), 1);
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[]));
+        assert_eq!(list, LinkedList::<i32>::of_slice(&[]));
         assert_eq!(list.len(), 0);
 
-        let mut list = LinkedList::<i32>::from_slice(&[1, 2]);
+        let mut list = LinkedList::<i32>::of_slice(&[1, 2]);
         let split = list.split_off(0);
-        assert_eq!(split, LinkedList::<i32>::from_slice(&[1, 2]));
+        assert_eq!(split, LinkedList::<i32>::of_slice(&[1, 2]));
         assert_eq!(split.len(), 2);
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[]));
+        assert_eq!(list, LinkedList::<i32>::of_slice(&[]));
         assert_eq!(list.len(), 0);
 
-        let mut list = LinkedList::<i32>::from_slice(&[1, 2]);
+        let mut list = LinkedList::<i32>::of_slice(&[1, 2]);
         let split = list.split_off(1);
-        assert_eq!(split, LinkedList::<i32>::from_slice(&[2]));
+        assert_eq!(split, LinkedList::<i32>::of_slice(&[2]));
         assert_eq!(split.len(), 1);
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[1]));
+        assert_eq!(list, LinkedList::<i32>::of_slice(&[1]));
         assert_eq!(list.len(), 1);
 
-        let mut list = LinkedList::<i32>::from_slice(&[1, 2, 3]);
+        let mut list = LinkedList::<i32>::of_slice(&[1, 2, 3]);
         let mut split = list.split_off(1);
-        assert_eq!(split, LinkedList::<i32>::from_slice(&[2, 3]));
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[1]));
+        assert_eq!(split, LinkedList::<i32>::of_slice(&[2, 3]));
+        assert_eq!(list, LinkedList::<i32>::of_slice(&[1]));
         assert_eq!(list.len(), 1);
         split.push_back(4);
-        assert_eq!(split, LinkedList::<i32>::from_slice(&[2, 3, 4]));
+        assert_eq!(split, LinkedList::<i32>::of_slice(&[2, 3, 4]));
         assert_eq!(split.len(), 3);
 
-        let mut list = LinkedList::<i32>::from_slice(&[1, 2, 3]);
+        let mut list = LinkedList::<i32>::of_slice(&[1, 2, 3]);
         let split = list.split_off(2);
-        assert_eq!(split, LinkedList::<i32>::from_slice(&[3]));
+        assert_eq!(split, LinkedList::<i32>::of_slice(&[3]));
         assert_eq!(split.len(), 1);
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[1, 2]));
+        assert_eq!(list, LinkedList::<i32>::of_slice(&[1, 2]));
         assert_eq!(list.len(), 2);
     }
     #[test]
     fn linkedlist_append_test_1() {
-        let source = LinkedList::<i32>::from_slice(&[1, 2, 3]);
+        let source = LinkedList::<i32>::of_slice(&[1, 2, 3]);
         let mut target = LinkedList::default();
         target.append(source);
-        assert_eq!(target, LinkedList::<i32>::from_slice(&[1, 2, 3]));
+        assert_eq!(target, LinkedList::<i32>::of_slice(&[1, 2, 3]));
     }
     #[test]
     fn linkedlist_extend_test_1() {
         let source = vec![1, 2, 3];
         let mut target = LinkedList::default();
         target.extend(source);
-        assert_eq!(target, LinkedList::<i32>::from_slice(&[1, 2, 3]));
+        assert_eq!(target, LinkedList::<i32>::of_slice(&[1, 2, 3]));
     }
 
     #[test]
     fn linkedlist_insertion_sort_test_1() {
-        let mut list = LinkedList::<i32>::from_slice(&[30, 10, 5, 20, 15, 45, 35, 25, 50, 40]);
+        let mut list = LinkedList::<i32>::of_slice(&[30, 10, 5, 20, 15, 45, 35, 25, 50, 40]);
         list.insertion_sort(true); //true for ascending
         assert_eq!(
             list,
-            LinkedList::<i32>::from_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
+            LinkedList::<i32>::of_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
         );
         list.insertion_sort(false);
-        let mut expected = LinkedList::<i32>::from_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50]);
+        let mut expected = LinkedList::<i32>::of_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50]);
         expected.reverse();
         assert_eq!(list, expected);
 
@@ -1495,7 +1495,7 @@ mod tests {
         loop {
             let mut elems: [u16; 256] = [0; 256];
             rand::thread_rng().fill(&mut elems);
-            let mut list = LinkedList::<u16>::from_slice(&elems);
+            let mut list = LinkedList::<u16>::of_slice(&elems);
 
             list.insertion_sort(false);
             assert!(list.is_sorted(false));
@@ -1505,7 +1505,7 @@ mod tests {
 
             let mut elems: [i32; 256] = [0; 256];
             rand::thread_rng().fill(&mut elems);
-            let mut list = LinkedList::<i32>::from_slice(&elems);
+            let mut list = LinkedList::<i32>::of_slice(&elems);
 
             list.insertion_sort(true);
             assert!(list.is_sorted(true));
@@ -1522,14 +1522,14 @@ mod tests {
 
     #[test]
     fn linkedlist_selection_sort_test_1() {
-        let list = LinkedList::<i32>::from_slice(&[30, 10, 5, 20, 15, 45, 35, 25, 50, 40]);
+        let list = LinkedList::<i32>::of_slice(&[30, 10, 5, 20, 15, 45, 35, 25, 50, 40]);
         list.selection_sort(true); //true for ascending
         assert_eq!(
             list,
-            LinkedList::<i32>::from_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
+            LinkedList::<i32>::of_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
         );
         list.selection_sort(false);
-        let mut expected = LinkedList::<i32>::from_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50]);
+        let mut expected = LinkedList::<i32>::of_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50]);
         expected.reverse();
         assert_eq!(list, expected);
 
@@ -1538,7 +1538,7 @@ mod tests {
         loop {
             let mut elems: [u16; 128] = [0; 128];
             rand::thread_rng().fill(&mut elems);
-            let list = LinkedList::<u16>::from_slice(&elems);
+            let list = LinkedList::<u16>::of_slice(&elems);
 
             list.selection_sort(false);
             assert!(list.is_sorted(false));
@@ -1548,7 +1548,7 @@ mod tests {
 
             let mut elems: [i32; 128] = [0; 128];
             rand::thread_rng().fill(&mut elems);
-            let list = LinkedList::<i32>::from_slice(&elems);
+            let list = LinkedList::<i32>::of_slice(&elems);
 
             list.selection_sort(true);
             assert!(list.is_sorted(true));
@@ -1569,12 +1569,12 @@ mod tests {
         if let Some(mut t) = list.front_mut() {
             *t.t() *= 3;
         }
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[90]));
+        assert_eq!(list, LinkedList::<i32>::of_slice(&[90]));
 
         let mut list = LinkedList::new(30);
         let opt: Option<MutT<'_, i32>> = list.front_mut();
         *opt.unwrap() *= 3;
-        assert_eq!(list, LinkedList::<i32>::from_slice(&[90]));
+        assert_eq!(list, LinkedList::<i32>::of_slice(&[90]));
     }
 
     #[test]
@@ -1607,7 +1607,7 @@ mod tests {
         let front2 = list2.front();
         assert!(!(front1 == front2));
 
-        let list = LinkedList::<i32>::from_slice(&[1, 2, 3, 4, 5]);
+        let list = LinkedList::<i32>::of_slice(&[1, 2, 3, 4, 5]);
         let front = list.front();
         let non_mut_t = front.unwrap();
         assert_eq!(*non_mut_t, 1);
@@ -1658,7 +1658,7 @@ mod tests {
 
         assert_eq!(
             list,
-            LinkedList::<i32>::from_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
+            LinkedList::<i32>::of_slice(&[5, 10, 15, 20, 25, 30, 35, 40, 45, 50])
         );
 
         let mut list = LinkedList::<i32>::default();
@@ -1675,18 +1675,18 @@ mod tests {
 
         assert_eq!(
             list,
-            LinkedList::<i32>::from_slice(&[50, 45, 40, 35, 30, 25, 20, 15, 10, 5])
+            LinkedList::<i32>::of_slice(&[50, 45, 40, 35, 30, 25, 20, 15, 10, 5])
         );
     }
 
     #[test]
     fn linkedlist_last_index_of_test_1() {
         let elems: [i32; 0] = [];
-        let list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.last_index_of(&0), None);
 
         let elems = [500, 400, 300, 200, 100];
-        let list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.last_index_of(&500), Some(0));
         assert_eq!(list.last_index_of(&400), Some(1));
         assert_eq!(list.last_index_of(&300), Some(2));
@@ -1695,7 +1695,7 @@ mod tests {
         assert_eq!(list.last_index_of(&1000), None);
 
         let elems = [500, 400, 300, 200, 100, 500, 400, 300, 200, 100];
-        let list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.last_index_of(&500), Some(5));
         assert_eq!(list.last_index_of(&400), Some(6));
         assert_eq!(list.last_index_of(&300), Some(7));
@@ -1707,62 +1707,62 @@ mod tests {
     #[test]
     fn linkedlist_translate_test_1() {
         let elems = [500, 400, 300, 200, 100];
-        let list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::of_slice(&elems);
         let elems = [250, 200, 150, 100, 50];
-        let expect = LinkedList::<i32>::from_slice(&elems);
+        let expect = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.translate(|i| *i / 2), expect);
     }
 
     #[test]
     fn linkedlist_transform_test_1() {
         let elems = [500, 400, 300, 200, 100];
-        let list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::of_slice(&elems);
         let elems = [250, 200, 150, 100, 50];
-        let expect = LinkedList::<i32>::from_slice(&elems);
+        let expect = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.translate(|i| i / 2), expect);
     }
 
     #[test]
     fn linkedlist_transmute_test_1() {
         let elems = [500, 400, 300, 200, 100];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         list.transmute(|i| *i / 2);
         let elems = [250, 200, 150, 100, 50];
-        let expect = LinkedList::<i32>::from_slice(&elems);
+        let expect = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list, expect);
     }
 
     #[test]
     fn linkedlist_iindices_test_1() {
         let elems: [i32; 0] = [];
-        let list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.indices(|i| *i == 0), LinkedList::default());
 
         let elems = [500, 400, 300, 200, 100];
-        let list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.indices(|i| *i == 0), LinkedList::default());
         assert_eq!(
             list.indices(|i| *i == 500),
-            LinkedList::<usize>::from_slice(&[0])
+            LinkedList::<usize>::of_slice(&[0])
         );
         assert_eq!(
             list.indices(|i| *i % 100 == 0),
-            LinkedList::<usize>::from_slice(&[0, 1, 2, 3, 4])
+            LinkedList::<usize>::of_slice(&[0, 1, 2, 3, 4])
         );
         assert_eq!(
             list.indices(|i| *i * 2 == 400),
-            LinkedList::<usize>::from_slice(&[3])
+            LinkedList::<usize>::of_slice(&[3])
         );
     }
 
     #[test]
     fn linkedlist_index_of_test_1() {
         let elems: [i32; 0] = [];
-        let list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.index_of(&0), None);
 
         let elems = [500, 400, 300, 200, 100];
-        let list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.index_of(&500), Some(0));
         assert_eq!(list.index_of(&400), Some(1));
         assert_eq!(list.index_of(&300), Some(2));
@@ -1773,17 +1773,17 @@ mod tests {
     #[test]
     fn linkedlist_delete_last_test_1() {
         let elems: [i32; 0] = [];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_first(&0), None);
         assert_eq!(list.len(), 0);
 
         let elems = [200];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_last(&200), Some(200));
         assert_eq!(list.len(), 0);
 
         let elems = [100, 200];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_last(&100), Some(100));
         assert_eq!(list.len(), 1);
 
@@ -1791,22 +1791,22 @@ mod tests {
         assert_eq!(list.len(), 0);
 
         let elems = [100, 200];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_last(&200), Some(200));
         assert_eq!(list.len(), 1);
 
         let elems = [500, 400, 300];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_last(&400), Some(400));
         assert_eq!(list.len(), 2);
 
         let elems = [500, 400, 300, 200, 100];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_last(&300), Some(300));
         assert_eq!(list.len(), 4);
 
         let elems = [500, 400, 300, 200, 200, 200, 100];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_last(&600), None);
         assert_eq!(list.last_index_of(&200), Some(5));
 
@@ -1823,17 +1823,17 @@ mod tests {
     #[test]
     fn linkedlist_delete_first_test_1() {
         let elems: [i32; 0] = [];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_first(&0), None);
         assert_eq!(list.len(), 0);
 
         let elems = [200];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_first(&200), Some(200));
         assert_eq!(list.len(), 0);
 
         let elems = [100, 200];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_first(&100), Some(100));
         assert_eq!(list.len(), 1);
 
@@ -1841,22 +1841,22 @@ mod tests {
         assert_eq!(list.len(), 0);
 
         let elems = [100, 200];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_first(&200), Some(200));
         assert_eq!(list.len(), 1);
 
         let elems = [500, 400, 300];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_first(&400), Some(400));
         assert_eq!(list.len(), 2);
 
         let elems = [500, 400, 300, 200, 100];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_first(&300), Some(300));
         assert_eq!(list.len(), 4);
 
         let elems = [500, 400, 300, 200, 100];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_first(&600), None);
         assert_eq!(list.len(), 5);
 
@@ -1875,17 +1875,17 @@ mod tests {
     #[test]
     fn linkedlist_delete_at_index_test_1() {
         let elems: [i32; 0] = [];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_at_index(0), None);
         assert_eq!(list.len(), 0);
 
         let elems = [200];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_at_index(0), Some(200));
         assert_eq!(list.len(), 0);
 
         let elems = [100, 200];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_at_index(0), Some(100));
         assert_eq!(list.len(), 1);
 
@@ -1893,22 +1893,22 @@ mod tests {
         assert_eq!(list.len(), 0);
 
         let elems = [100, 200];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_at_index(1), Some(200));
         assert_eq!(list.len(), 1);
 
         let elems = [500, 400, 300];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_at_index(1), Some(400));
         assert_eq!(list.len(), 2);
 
         let elems = [500, 400, 300, 200, 100];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_at_index(2), Some(300));
         assert_eq!(list.len(), 4);
 
         let elems = [500, 400, 300, 200, 100];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list.delete_at_index(5), None);
         assert_eq!(list.len(), 5);
     }
@@ -1916,19 +1916,19 @@ mod tests {
     #[test]
     fn linkedlist_bubble_sort_test_1() {
         let elems = [200, 500, 300, 400, 100];
-        let list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::of_slice(&elems);
         list.bubble_sort(false); //false for descending
 
         let elems = [500, 400, 300, 200, 100];
-        let reversed = LinkedList::<i32>::from_slice(&elems);
+        let reversed = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list, reversed);
 
         let elems = [200, 500, 300, 400, 100];
-        let list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::of_slice(&elems);
         list.bubble_sort(true); //true for ascending
 
         let elems = [100, 200, 300, 400, 500];
-        let reversed = LinkedList::<i32>::from_slice(&elems);
+        let reversed = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list, reversed);
 
         let mut runs = 50;
@@ -1936,7 +1936,7 @@ mod tests {
         loop {
             let mut elems: [u16; 128] = [0; 128];
             rand::thread_rng().fill(&mut elems);
-            let list = LinkedList::<u16>::from_slice(&elems);
+            let list = LinkedList::<u16>::of_slice(&elems);
 
             list.bubble_sort(false);
             assert!(list.is_sorted(false));
@@ -1946,7 +1946,7 @@ mod tests {
 
             let mut elems: [i32; 128] = [0; 128];
             rand::thread_rng().fill(&mut elems);
-            let list = LinkedList::<i32>::from_slice(&elems);
+            let list = LinkedList::<i32>::of_slice(&elems);
 
             list.bubble_sort(true);
             assert!(list.is_sorted(true));
@@ -1964,7 +1964,7 @@ mod tests {
     #[test]
     fn linkedlist_link_iterator_test_1() {
         let elems = (1..5).collect::<Vec<_>>();
-        let list = LinkedList::<i32>::from_slice(&elems);
+        let list = LinkedList::<i32>::of_slice(&elems);
         let itr = list.link_iterator();
         let mut elem = 1;
         for link in itr {
@@ -1977,21 +1977,21 @@ mod tests {
     fn linkedlist_size_test_1() {
         //let elems = (1..21750).collect::<Vec<_>>();
         let elems = (1..4000).collect::<Vec<_>>();
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         list.reverse();
         //let elems = (1..21750).rev().collect::<Vec<_>>();
         let elems = (1..4000).rev().collect::<Vec<_>>();
-        let reversed = LinkedList::<i32>::from_slice(&elems);
+        let reversed = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list, reversed);
     }
 
     #[test]
     fn linkedlist_reverse_test_1() {
         let elems = [100, 200, 300, 400, 500];
-        let mut list = LinkedList::<i32>::from_slice(&elems);
+        let mut list = LinkedList::<i32>::of_slice(&elems);
         list.reverse();
         let elems = [500, 400, 300, 200, 100];
-        let reversed = LinkedList::<i32>::from_slice(&elems);
+        let reversed = LinkedList::<i32>::of_slice(&elems);
         assert_eq!(list, reversed);
     }
 
@@ -2131,7 +2131,7 @@ pub mod iterable {
         }
 
         //Create a list from from clonable types
-        pub fn from_slice<U: Clone + Default>(elems: &[U]) -> LinkedList<U> {
+        pub fn of_slice<U: Clone + Default>(elems: &[U]) -> LinkedList<U> {
             assert!(!elems.is_empty());
             let mut node = Node::<U>::new(elems[0].clone());
             elems[1..]
@@ -2361,7 +2361,7 @@ pub mod iterable {
         #[test]
         fn linklist_iter_test() {
             let elems = [1, 2, 3, 4, 5];
-            let list = LinkedList::<i32>::from_slice(&elems);
+            let list = LinkedList::<i32>::of_slice(&elems);
             let mut iter = list.iter();
             for num in 1..=5 {
                 assert_eq!(iter.next(), Some(&num as &i32));
@@ -2371,7 +2371,7 @@ pub mod iterable {
         #[test]
         fn linklist_iter_mut_test() {
             let elems = [1, 2, 3, 4, 5];
-            let mut list = LinkedList::<i32>::from_slice(&elems);
+            let mut list = LinkedList::<i32>::of_slice(&elems);
             let mut iter = list.iter_mut();
             for _ in 0..5 {
                 if let Some(elem) = iter.next() {
@@ -2379,14 +2379,14 @@ pub mod iterable {
                 }
             }
             let elems = [100, 200, 300, 400, 500];
-            let expected = LinkedList::<i32>::from_slice(&elems);
+            let expected = LinkedList::<i32>::of_slice(&elems);
             assert_eq!(list, expected);
         }
 
         #[test]
         fn linklist_into_iter_test() {
             let elems = [1, 2, 3, 4, 5];
-            let list = LinkedList::<i32>::from_slice(&elems);
+            let list = LinkedList::<i32>::of_slice(&elems);
             let mut iter = list.into_iter();
             for num in 1..=5 {
                 assert_eq!(iter.next(), Some(num));
@@ -2394,7 +2394,7 @@ pub mod iterable {
             assert_eq!(iter.next(), None);
 
             let elems = [1, 2, 3, 4, 5];
-            let list = LinkedList::<i32>::from_slice(&elems);
+            let list = LinkedList::<i32>::of_slice(&elems);
 
             let mut num = 1;
             for i in list {
@@ -2452,17 +2452,17 @@ pub mod iterable {
         #[test]
         fn linkedlist_reverse_test_2() {
             let elems = [100, 200, 300, 400, 500];
-            let mut list = LinkedList::<i32>::from_slice(&elems);
+            let mut list = LinkedList::<i32>::of_slice(&elems);
             list.reverse();
             let elems = [500, 400, 300, 200, 100];
-            let reversed = LinkedList::<i32>::from_slice(&elems);
+            let reversed = LinkedList::<i32>::of_slice(&elems);
             assert_eq!(list, reversed);
         }
 
         #[test]
         fn linkedlist_update_test() {
             let elems = [100, 200, 300, 400, 500];
-            let mut list = LinkedList::<i32>::from_slice(&elems);
+            let mut list = LinkedList::<i32>::of_slice(&elems);
             let result = list.update(4, 1000);
             assert_eq!(result, Some(500));
 
