@@ -4,6 +4,7 @@ use std::cmp::Ordering;
 use std::fmt::{Debug, Error, Formatter};
 use std::ops::{Add, Deref, DerefMut};
 use std::rc::Rc;
+use minivec::MiniVec;
 
 type Cell<T> = Rc<RefCell<Node<T>>>;
 type Link<T> = Option<Cell<T>>;
@@ -288,7 +289,7 @@ impl<T: Default> LinkedList<T> {
         &self,
         high: usize,
         ascending: bool,
-        cells: &vector::Vector<Cell<T>>,
+        cells: &minivec::MiniVec<Cell<T>>,
     ) -> usize
     where
         T: PartialOrd,
@@ -764,13 +765,14 @@ impl<T: Default> LinkedList<T> {
         self.head.as_mut().map(|node| MutT(node.borrow_mut()))
     }
     ///Quick sort - slow. Usage is advisable when list size is small
+    
     pub fn quicksort(&self, ascending: bool)
     where
         T: PartialOrd,
     {
-        let mut vector = vector::Vector::<Cell<T>>::new();
-        self.link_iterator().for_each(|cell| vector.push(cell));
-        self.quicklysort(ascending, 0, self.len - 1, &vector);
+        let mut minivec = MiniVec::<Cell<T>>::with_capacity(self.len);
+        self.link_iterator().for_each(|cell| minivec.push(cell));
+        self.quicklysort(ascending, 0, self.len - 1, &minivec);
     }
 
     fn quicklysort(
@@ -778,7 +780,7 @@ impl<T: Default> LinkedList<T> {
         ascending: bool,
         start: usize,
         end: usize,
-        cells: &vector::Vector<Cell<T>>,
+        cells: &MiniVec<Cell<T>>,
     ) where
         T: PartialOrd,
     {
@@ -864,7 +866,6 @@ impl<T: Default> Default for LinkedList<T> {
 
 impl<T: Default> Drop for LinkedList<T> {
     fn drop(&mut self) {
-        //while let Some(_) = self.pop_front() {}
         while self.pop_front().is_some() {}
     }
 }
