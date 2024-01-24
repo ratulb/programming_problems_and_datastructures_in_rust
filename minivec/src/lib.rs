@@ -1,5 +1,4 @@
 use std::alloc::{self, Layout};
-//use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 use std::ptr::{self, NonNull};
 
@@ -94,7 +93,6 @@ pub struct IntoIter<T> {
 impl<T> Drop for IntoIter<T> {
     fn drop(&mut self) {
         println!("Calling IntoIter drop");
-        //for _ in self {}
         for _ in &mut *self {}
     }
 }
