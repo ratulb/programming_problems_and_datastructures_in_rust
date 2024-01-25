@@ -1,6 +1,65 @@
 use std::alloc::{self, Layout};
+use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::ptr::{self, NonNull};
+
+struct RawEntryIter<T> {
+    start: *const T,
+    end: *const T,
+}
+
+impl<T> RawEntryIter<T> {
+    fn new(slice: &[T]) -> Self {
+        Self {
+            start: slice.as_ptr(),
+            end: if mem::size_of::<T>() == 0 {
+                ((slice.as_ptr() as usize) + slice.len()) as *const T
+            } else if slice.len() == 0 {
+                slice.as_ptr()
+            } else {
+                unsafe { slice.as_ptr().add(slice.len()) }
+            },
+        }
+    }
+}
+
+impl<T> Iterator for RawEntryIter<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.start == self.end {
+            None
+        } else {
+            unsafe {
+                if mem::size_of::<T>() == 0 {
+                    self.start = (self.start as usize + 1) as *const T;
+                    Some(ptr::read(NonNull::<T>::dangling().as_ptr()))
+                } else {
+                    let old_ptr = self.start;
+                    self.start = self.start.offset(1);
+                    Some(ptr::read(old_ptr))
+                }
+            }
+        }
+    }
+}
+
+impl<T> DoubleEndedIterator for RawEntryIter<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.start == self.end {
+            None
+        } else {
+            unsafe {
+                if mem::size_of::<T>() == 0 {
+                    self.end = (self.end as usize - 1) as *const T;
+                    Some(ptr::read(NonNull::<T>::dangling().as_ptr()))
+                } else {
+                    self.end = self.end.offset(-1);
+                    Some(ptr::read(self.end))
+                }
+            }
+        }
+    }
+}
 
 #[derive(Debug)]
 struct RawVec<T> {
@@ -13,21 +72,23 @@ unsafe impl<T: Sync> Sync for RawVec<T> {}
 
 impl<T> RawVec<T> {
     fn new() -> Self {
-        assert!(
-            std::mem::size_of::<T>() != 0,
+        /***assert!(
+            mem::size_of::<T>() != 0,
             "TODO: Implement  ZST support"
-        );
+        );***/
+        let cap = if mem::size_of::<T>() == 0 {
+            usize::MAX
+        } else {
+            0
+        };
         Self {
             ptr: NonNull::dangling(),
-            cap: 0,
+            cap,
         }
     }
 
     fn with_capacity(cap: usize) -> Self {
-        assert!(
-            std::mem::size_of::<T>() != 0,
-            "TODO: Implement  ZST support"
-        );
+        assert!(mem::size_of::<T>() != 0, "TODO: Implement  ZST support");
         if cap == 0 {
             return Self::new();
         }
@@ -44,12 +105,13 @@ impl<T> RawVec<T> {
     }
 
     fn grow(&mut self) {
+        assert!(mem::size_of::<T>() != 0, "capacity overflow");
         let new_cap = if self.cap == 0 { 1 } else { self.cap * 2 };
         let new_layout = match Layout::array::<T>(new_cap) {
             Ok(layout) => layout,
             Err(err) => {
                 //Free up if allocated before
-                std::mem::take(self);
+                mem::take(self);
                 panic!("Allocation too large! {}", err);
             }
         };
@@ -71,8 +133,8 @@ impl<T> RawVec<T> {
 
 impl<T> Drop for RawVec<T> {
     fn drop(&mut self) {
-        println!("Calling RawVec drop");
-        if self.cap != 0 {
+        let size_of_t = mem::size_of::<T>();
+        if self.cap != 0 && size_of_t != 0 {
             let layout = Layout::array::<T>(self.cap).unwrap();
             unsafe { alloc::dealloc(self.ptr.as_ptr() as *mut u8, layout) }
             self.cap = 0;
@@ -86,13 +148,11 @@ impl<T> Default for RawVec<T> {
 }
 pub struct IntoIter<T> {
     _buf: RawVec<T>,
-    start: *const T,
-    end: *const T,
+    iter: RawEntryIter<T>,
 }
 
 impl<T> Drop for IntoIter<T> {
     fn drop(&mut self) {
-        println!("Calling IntoIter drop");
         for _ in &mut *self {}
     }
 }
@@ -103,50 +163,28 @@ impl<T> IntoIterator for MiniVec<T> {
 
     fn into_iter(self) -> Self::IntoIter {
         unsafe {
+            let iter = RawEntryIter::new(&self);
             let buf = ptr::read(&self.buf);
-            let cap = buf.cap;
-            let len = self.len;
-            let ptr = self.ptr();
-            std::mem::forget(self);
-            IntoIter {
-                _buf: buf,
-                start: ptr,
-                end: if cap == 0 { ptr } else { ptr.add(len) },
-            }
+            mem::forget(self);
+            IntoIter { _buf: buf, iter }
         }
     }
 }
 
 impl<T> DoubleEndedIterator for IntoIter<T> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        if self.start == self.end {
-            None
-        } else {
-            unsafe {
-                self.end = self.end.offset(-1);
-                Some(ptr::read(self.end))
-            }
-        }
+        self.iter.next_back()
     }
 }
 
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        if self.start == self.end {
-            None
-        } else {
-            unsafe {
-                let result = Some(ptr::read(self.start));
-                self.start = self.start.offset(1);
-                result
-            }
-        }
+        self.iter.next()
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = (self.end as usize - self.start as usize) / std::mem::size_of::<T>();
-        (len, Some(len))
+        self.iter.size_hint()
     }
 }
 
@@ -252,7 +290,6 @@ impl<T> MiniVec<T> {
 
 impl<T> Drop for MiniVec<T> {
     fn drop(&mut self) {
-        println!("Calling vec drop");
         if self.cap() != 0 {
             while self.pop().is_some() {}
         }
@@ -281,29 +318,39 @@ impl<T> Default for MiniVec<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    #[derive(PartialEq)]
     struct Empty;
 
     #[derive(PartialEq, Debug, Default)]
     struct NonEmpty(Vec<i32>);
 
     #[test]
-    #[should_panic(expected = "TODO: Implement  ZST suppor")]
-    fn vector_new_test_1() {
-        let _v = MiniVec::<Empty>::new();
-        unreachable!();
+    fn minivec_new_test_1() {
+        let v = MiniVec::<Empty>::new();
+        assert!(v.cap() == usize::MAX);
+    }
+    #[test]
+    fn minivec_iter_into_rev_test_1() {
+        let mut v = MiniVec::<Empty>::new();
+        v.insert(0, Empty);
+        v.insert(1, Empty);
+        v.insert(2, Empty);
+        let mut iter = v.into_iter().rev();
+        assert!(iter.next() == Some(Empty));
+        assert!(iter.next() == Some(Empty));
+        assert!(iter.next() == Some(Empty));
+        assert!(iter.next().is_none());
     }
 
     #[test]
-    fn vector_new_test_2() {
+    fn minivec_new_test_2() {
         let v = MiniVec::<NonEmpty>::new();
         assert!(v.cap() == 0);
         assert!(v.len == 0);
     }
 
     #[test]
-    #[ignore]
-    fn vector_with_capacity_test_1() {
+    fn minivec_with_capacity_test_1() {
         let mut v = MiniVec::<bool>::with_capacity(0);
         v.insert(0, true);
         v.push(false);
@@ -313,7 +360,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_with_capacity_test_2() {
+    fn minivec_with_capacity_test_2() {
         let v = MiniVec::<NonEmpty>::with_capacity(3);
         assert!(v.cap() == 3);
         assert!(v.len == 0);
@@ -321,7 +368,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "index out of bounds")]
-    fn vector_with_capacity_test_3() {
+    fn minivec_with_capacity_test_3() {
         let v = MiniVec::<NonEmpty>::with_capacity(3);
         assert!(v.cap() == 3);
         assert!(v.len == 0);
@@ -329,7 +376,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_with_capacity_test_4() {
+    fn minivec_with_capacity_test_4() {
         let mut v = MiniVec::<bool>::with_capacity(3);
         assert!(v.cap() == 3);
         assert!(v.len == 0);
@@ -339,7 +386,7 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "insertion index (is 1) should be <= len(is 0)")]
-    fn vector_with_capacity_test_5() {
+    fn minivec_with_capacity_test_5() {
         let mut v = MiniVec::<String>::with_capacity(3);
         assert!(v.cap() == 3);
         assert!(v.len == 0);
@@ -348,7 +395,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_deref_mut_test_1() {
+    fn minivec_deref_mut_test_1() {
         let mut v = MiniVec::<&str>::new();
         v.push("1");
         v.push("2");
@@ -362,7 +409,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_iter_test_1() {
+    fn minivec_iter_test_1() {
         let mut v = MiniVec::<i32>::new();
         v.push(1);
         v.push(2);
@@ -375,7 +422,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_push_test_1() {
+    fn minivec_push_test_1() {
         let mut v = MiniVec::<NonEmpty>::new();
         assert!(v.cap() == 0);
         assert!(v.len == 0);
@@ -399,7 +446,7 @@ mod tests {
         assert!(v.len == 5);
     }
     #[test]
-    fn vector_pop_test_1() {
+    fn minivec_pop_test_1() {
         let mut v = MiniVec::<NonEmpty>::new();
         v.push(NonEmpty(Vec::new()));
         v.push(NonEmpty(Vec::new()));
@@ -422,7 +469,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_insert_test_1() {
+    fn minivec_insert_test_1() {
         let mut v = MiniVec::<&str>::new();
         v.push("1");
         v.push("2");
@@ -438,7 +485,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_remove_test_1() {
+    fn minivec_remove_test_1() {
         let mut v = MiniVec::<&str>::new();
         v.push("1");
         v.push("2");
@@ -455,14 +502,14 @@ mod tests {
     }
     #[test]
     #[should_panic(expected = "removal index (is 1) should be < len (is 1)")]
-    fn vector_remove_test_2() {
+    fn minivec_remove_test_2() {
         let mut v = MiniVec::<&str>::new();
         v.insert(0, "zero");
         let _ = v.remove(1);
     }
 
     #[test]
-    fn vector_iter_mut_test_1() {
+    fn minivec_iter_mut_test_1() {
         let mut v = MiniVec::<i32>::new();
         v.push(1);
         v.push(2);
@@ -475,7 +522,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_index_test_1() {
+    fn minivec_index_test_1() {
         let mut v = MiniVec::<String>::new();
         v.push("one".to_string());
         let one = &mut v[0];
@@ -485,7 +532,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_first_last_test_1() {
+    fn minivec_first_last_test_1() {
         let mut v = MiniVec::<&str>::new();
         v.push("1");
         v.push("2");
@@ -495,7 +542,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_deref_test_1() {
+    fn minivec_deref_test_1() {
         let mut v = MiniVec::<&str>::new();
         v.push("1");
         v.push("2");
@@ -504,7 +551,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_into_iter_test_1() {
+    fn minivec_into_iter_test_1() {
         let mut vec = MiniVec::<i32>::new();
         vec.push(1);
         vec.push(2);
@@ -517,7 +564,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_into_iter_next_back_test_1() {
+    fn minivec_into_iter_next_back_test_1() {
         let mut vec = MiniVec::<i32>::new();
         vec.push(1);
         vec.push(2);
