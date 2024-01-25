@@ -1,4 +1,5 @@
 use std::alloc::{self, Layout};
+use std::fmt;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::ptr::{self, NonNull};
@@ -60,8 +61,6 @@ impl<T> DoubleEndedIterator for RawEntryIter<T> {
         }
     }
 }
-
-#[derive(Debug)]
 struct RawVec<T> {
     ptr: NonNull<T>,
     cap: usize,
@@ -72,10 +71,6 @@ unsafe impl<T: Sync> Sync for RawVec<T> {}
 
 impl<T> RawVec<T> {
     fn new() -> Self {
-        /***assert!(
-            mem::size_of::<T>() != 0,
-            "TODO: Implement  ZST support"
-        );***/
         let cap = if mem::size_of::<T>() == 0 {
             usize::MAX
         } else {
@@ -188,7 +183,6 @@ impl<T> Iterator for IntoIter<T> {
     }
 }
 
-#[derive(Debug)]
 pub struct MiniVec<T> {
     buf: RawVec<T>,
     len: usize,
@@ -315,6 +309,12 @@ impl<T> Default for MiniVec<T> {
     }
 }
 
+impl<T: fmt::Debug> fmt::Debug for MiniVec<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(self.deref(), f)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -393,7 +393,14 @@ mod tests {
         v.insert(1, "one".to_string());
         assert_eq!(v[1], "one".to_string());
     }
-
+    #[test]
+    fn minivec_deref_debug_test_1() {
+        let mut v = MiniVec::<&str>::new();
+        v.push("1");
+        v.push("2");
+        v.push("3");
+        println!("Debug = {:?}", v);
+    }
     #[test]
     fn minivec_deref_mut_test_1() {
         let mut v = MiniVec::<&str>::new();
