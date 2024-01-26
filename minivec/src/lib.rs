@@ -330,6 +330,27 @@ mod tests {
         assert!(v.cap() == usize::MAX);
     }
     #[test]
+    fn minivec_macro_test_1() {
+        let v: MiniVec<bool> = mv![];
+        assert!(v.cap() == 0);
+        let v: MiniVec<Empty> = mv![];
+        assert!(v.cap() == usize::MAX);
+    }
+    #[test]
+    fn minivec_macro_test_2() {
+        let v = mv![1, 2, 3];
+        assert!(v.len() == 3);
+    }
+    #[test]
+    fn minivec_macro_test_3() {
+        let v = mv![1; 3];
+        assert!(v.len() == 3);
+        for i in v {
+            assert!(i == 1);
+        }
+    }
+
+    #[test]
     fn minivec_iter_into_rev_test_1() {
         let mut v = MiniVec::<Empty>::new();
         v.insert(0, Empty);
@@ -592,4 +613,35 @@ mod tests {
         assert_eq!(iter.next_back(), Some(1));
         assert_eq!(iter.next_back(), None);
     }
+}
+
+#[macro_export]
+macro_rules! mv {
+    [] => {
+        $crate::MiniVec::new()
+    };
+    [ $( $elem:expr ),+ ] => {
+        {
+            let mut count = 0;
+            $(
+                count += 1;
+                let _ = &$elem;
+            )*
+            let mut mini_vec = $crate::MiniVec::with_capacity(count);
+            $(
+                mini_vec.push($elem);
+            )*
+            mini_vec
+        }
+    };
+    [$elem:expr; $n:expr] => {
+        {
+          let count = $n;
+          let mut mini_vec = $crate::MiniVec::with_capacity(count);
+          for _ in 0..count {
+            mini_vec.push($elem.clone());
+          }
+          mini_vec
+        }
+    };
 }
