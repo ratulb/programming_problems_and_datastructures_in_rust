@@ -685,19 +685,18 @@ macro_rules! mv {
             $(
                 count += 1;
                 let _ = &$elem;
-            )*
+            )+
             let mut mini_vec = $crate::MiniVec::with_capacity(count);
             $(
                 mini_vec.push($elem);
-            )*
+            )+
             mini_vec
         }
     };
     [$elem:expr; $n:expr] => {
         {
-          let count = $n;
-          let mut mini_vec = $crate::MiniVec::with_capacity(count);
-          for _ in 0..count {
+          let mut mini_vec = $crate::MiniVec::with_capacity($n);
+          for _ in 0..$n {
             mini_vec.push($elem.clone());
           }
           mini_vec
