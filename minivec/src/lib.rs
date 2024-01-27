@@ -342,6 +342,17 @@ impl<T> Default for MiniVec<T> {
     }
 }
 
+impl<T> FromIterator<T> for MiniVec<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut minivec = MiniVec::with_capacity(42);
+        for t in iter {
+            minivec.push(t);
+        }
+        minivec.shrink();
+        minivec
+    }
+}
+
 impl<T: fmt::Debug> fmt::Debug for MiniVec<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(self.deref(), f)
@@ -362,6 +373,15 @@ mod tests {
         let v = MiniVec::<Empty>::new();
         assert!(v.cap() == usize::MAX);
     }
+    #[test]
+    fn minivec_from_iter_test_1() {
+        let v = mv![1, 2, 3, 4, 5, 6];
+        let v = v.into_iter().collect::<Vec<_>>();
+        let v = MiniVec::from_iter(v);
+        assert!(v.cap() == 6);
+        assert!(v.len() == 6);
+    }
+
     #[test]
     fn minivec_macro_test_1() {
         let v: MiniVec<bool> = mv![];
