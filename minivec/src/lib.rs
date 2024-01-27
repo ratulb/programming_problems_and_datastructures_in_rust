@@ -341,10 +341,16 @@ impl<T> Default for MiniVec<T> {
         Self::new()
     }
 }
-
+impl<T> Extend<T> for MiniVec<T> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        for elem in iter {
+            self.push(elem);
+        }
+    }
+}
 impl<T> FromIterator<T> for MiniVec<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        let mut minivec = MiniVec::with_capacity(42);
+        let mut minivec = MiniVec::with_capacity(16);
         for t in iter {
             minivec.push(t);
         }
@@ -679,7 +685,7 @@ macro_rules! mv {
     [] => {
         $crate::MiniVec::new()
     };
-    [ $( $elem:expr ),+ ] => {
+    [ $($elem:expr ),+ ] => {
         {
             let mut count = 0;
             $(
@@ -693,12 +699,12 @@ macro_rules! mv {
             mini_vec
         }
     };
-    [$elem:expr; $n:expr] => {
+    [$elem:expr; $count:expr] => {
         {
-          let mut mini_vec = $crate::MiniVec::with_capacity($n);
-          for _ in 0..$n {
-            mini_vec.push($elem.clone());
-          }
+          let count = $count;
+          let mut mini_vec = $crate::MiniVec::with_capacity(count);
+          let elem = $elem;
+            mini_vec.extend(std::iter::repeat(elem).take(count));
           mini_vec
         }
     };
