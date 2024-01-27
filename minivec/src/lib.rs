@@ -124,6 +124,31 @@ impl<T> RawVec<T> {
         };
         self.cap = new_cap;
     }
+
+    fn shrink(&mut self, new_cap: usize) {
+        //Shrink only when current cap >= 2 * new_cap
+        if new_cap == 0 || 2 * new_cap > self.cap {
+            return;
+        }
+        let new_layout = match Layout::array::<T>(new_cap) {
+            Ok(layout) => layout,
+            Err(err) => {
+                //Free up if allocated before
+                mem::take(self);
+                panic!("Allocation too large! {}", err);
+            }
+        };
+
+        let old_layout = Layout::array::<T>(self.cap).unwrap();
+        let old_ptr = self.ptr.as_ptr() as *mut u8;
+        let new_ptr = unsafe { alloc::realloc(old_ptr, old_layout, new_layout.size()) };
+
+        self.ptr = match NonNull::new(new_ptr as *mut T) {
+            Some(ptr) => ptr,
+            None => alloc::handle_alloc_error(new_layout),
+        };
+        self.cap = new_cap;
+    }
 }
 
 impl<T> Drop for RawVec<T> {
@@ -213,6 +238,11 @@ impl<T> MiniVec<T> {
     fn grow(&mut self) {
         self.buf.grow();
     }
+
+    fn shrink(&mut self) {
+        self.buf.shrink(self.len);
+    }
+
     pub fn cap(&self) -> usize {
         self.buf.cap
     }
@@ -237,7 +267,9 @@ impl<T> MiniVec<T> {
             None
         } else {
             self.len -= 1;
-            unsafe { Some(ptr::read(self.ptr().add(self.len))) }
+            let result = unsafe { Some(ptr::read(self.ptr().add(self.len))) };
+            self.shrink();
+            result
         }
     }
 
@@ -277,6 +309,7 @@ impl<T> MiniVec<T> {
                 self.ptr().add(index),
                 self.len - index,
             );
+            self.shrink();
             result
         }
     }
@@ -485,15 +518,18 @@ mod tests {
         assert!(v.len == 5);
 
         assert!(v.pop() == Some(NonEmpty(Vec::new())));
-        assert!(v.cap() == 8);
+        assert!(v.cap() == 4);
         assert!(v.len == 4);
         assert!(v.pop() == Some(NonEmpty(Vec::new())));
         assert!(v.pop() == Some(NonEmpty(Vec::new())));
         assert!(v.pop() == Some(NonEmpty(Vec::new())));
         assert!(v.pop() == Some(NonEmpty(Vec::new())));
         assert!(v.pop() == None);
-        assert!(v.cap() == 8);
+        assert!(v.cap() == 1);
         assert!(v.len == 0);
+        v.push(NonEmpty(Vec::new()));
+        assert!(v.cap() == 1);
+        assert!(v.len == 1);
     }
 
     #[test]
@@ -519,14 +555,17 @@ mod tests {
         v.push("2");
         v.push("3");
         v.push("4");
+        assert!(v.cap() == 4);
         assert!(v.remove(2) == "3");
         assert!(v.len == 3);
         assert!(v.remove(0) == "1");
         assert!(v.len == 2);
         assert!(v.remove(1) == "4");
         assert!(v.len == 1);
+        assert!(v.cap() == 1);
         assert!(v.remove(0) == "2");
         assert!(v.len == 0);
+        assert!(v.cap() == 1);
     }
     #[test]
     #[should_panic(expected = "removal index (is 1) should be < len (is 1)")]
