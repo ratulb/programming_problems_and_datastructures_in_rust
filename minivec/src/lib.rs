@@ -240,7 +240,9 @@ impl<T> MiniVec<T> {
     }
 
     fn shrink(&mut self) {
-        self.buf.shrink(self.len);
+        if cfg!(feature = "shrink") {
+            self.buf.shrink(self.len);
+        }
     }
 
     pub fn cap(&self) -> usize {
@@ -350,11 +352,18 @@ impl<T> Extend<T> for MiniVec<T> {
 }
 impl<T> FromIterator<T> for MiniVec<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        let mut minivec = MiniVec::with_capacity(16);
+        let mut minivec: MiniVec<T>;
+        if cfg!(feature = "shrink") {
+            minivec = MiniVec::with_capacity(16);
+        } else {
+            minivec = MiniVec::new();
+        }
         for t in iter {
             minivec.push(t);
         }
-        minivec.shrink();
+        if cfg!(feature = "shrink") {
+            minivec.shrink();
+        }
         minivec
     }
 }
@@ -380,6 +389,7 @@ mod tests {
         assert!(v.cap() == usize::MAX);
     }
     #[test]
+    #[cfg(feature = "shrink")]
     fn minivec_from_iter_test_1() {
         let v = mv![1, 2, 3, 4, 5, 6];
         let v = v.into_iter().collect::<Vec<_>>();
@@ -509,6 +519,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "shrink")]
     fn minivec_push_test_1() {
         let mut v = MiniVec::<NonEmpty>::new();
         assert!(v.cap() == 0);
@@ -533,6 +544,7 @@ mod tests {
         assert!(v.len == 5);
     }
     #[test]
+    #[cfg(feature = "shrink")]
     fn minivec_pop_test_1() {
         let mut v = MiniVec::<NonEmpty>::new();
         v.push(NonEmpty(Vec::new()));
@@ -575,6 +587,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "shrink")]
     fn minivec_remove_test_1() {
         let mut v = MiniVec::<&str>::new();
         v.push("1");
