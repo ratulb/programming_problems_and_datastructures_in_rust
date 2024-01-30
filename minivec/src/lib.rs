@@ -359,6 +359,48 @@ impl<T> MiniVec<T> {
             last_index -= 1;
         }
     }
+
+    pub fn sort(&mut self, ascending: bool)
+    where
+        T: PartialOrd,
+    {
+        Self::quicksort(self, ascending);
+    }
+
+    fn quicksort(arr: &mut [T], ascending: bool)
+    where
+        T: PartialOrd,
+    {
+        if arr.len() > 1 {
+            let pivot_index = Self::partition(arr, ascending);
+            Self::quicksort(&mut arr[..pivot_index], ascending);
+            Self::quicksort(&mut arr[pivot_index + 1..], ascending);
+        }
+    }
+
+    fn partition(arr: &mut [T], ascending: bool) -> usize
+    where
+        T: PartialOrd,
+    {
+        let pivot_index = arr.len() - 1;
+        let mut i = 0;
+
+        for j in 0..pivot_index {
+            let lesser_or_greater = if ascending {
+                arr[j] < arr[pivot_index]
+            } else {
+                arr[j] > arr[pivot_index]
+            };
+            if lesser_or_greater {
+                if i != j {
+                    arr.swap(i, j);
+                }
+                i += 1;
+            }
+        }
+        arr.swap(i, pivot_index);
+        i
+    }
 }
 
 impl<T> Drop for MiniVec<T> {
@@ -468,6 +510,32 @@ mod tests {
         let v = mv![3, 2, 1, 4, 5];
         assert!(!v.is_sorted(true));
         assert!(!v.is_sorted(false));
+    }
+
+    #[test]
+    fn minivec_sort_test_1() {
+        let mut v = mv![1, 2, 3, 4, 5, 6];
+        v.sort(false);
+        assert!(v.is_sorted(false));
+        let mut v = mv![3, 1, 2, 2, 4, 3, 3];
+        v.sort(false);
+        assert!(v.is_sorted(false));
+        v.sort(true);
+        assert!(v.is_sorted(true));
+    }
+
+    #[test]
+    fn minivec_quicksort_test_1() {
+        let mut v = mv![1, 2, 3, 4, 5, 6];
+        MiniVec::quicksort(v.deref_mut(), false);
+        assert!(v.is_sorted(false));
+
+        let mut v = mv![3, 1, 2, 2, 4, 3, 3];
+        MiniVec::quicksort(v.deref_mut(), false);
+        assert!(v.is_sorted(false));
+
+        MiniVec::quicksort(v.deref_mut(), true);
+        assert!(v.is_sorted(true));
     }
 
     #[test]
