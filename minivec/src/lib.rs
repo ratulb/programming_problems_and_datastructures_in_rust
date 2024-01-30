@@ -474,6 +474,8 @@ impl<T: PartialEq> PartialEq for MiniVec<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::Rng;
+
     #[derive(PartialEq)]
     struct Empty;
 
@@ -855,6 +857,27 @@ mod tests {
         assert_eq!(iter.next_back(), Some(2));
         assert_eq!(iter.next_back(), Some(1));
         assert_eq!(iter.next_back(), None);
+    }
+    #[test]
+    fn minivec_sort_test_2() {
+        let mut runs = 100;
+        loop {
+            let mut elems: [u16; 32] = [0; 32];
+            rand::thread_rng().fill(&mut elems);
+            let mut v = MiniVec::from_iter(elems);
+            v.sort(false);
+            assert!(v.is_sorted(false)); //false for descending
+
+            let mut elems: [u8; 64] = [0; 64];
+            rand::thread_rng().fill(&mut elems);
+            let mut v = MiniVec::from_iter(elems);
+            v.sort(true);
+            assert!(v.is_sorted(true)); //true for ascending
+            runs -= 1;
+            if runs == 0 {
+                break;
+            }
+        }
     }
 }
 
