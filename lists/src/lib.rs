@@ -289,7 +289,7 @@ impl<T: Default> LinkedList<T> {
         &self,
         high: usize,
         ascending: bool,
-        cells: &minivec::MiniVec<Cell<T>>,
+        cells: &MiniVec<Cell<T>>,
     ) -> usize
     where
         T: PartialOrd,
@@ -332,7 +332,7 @@ impl<T: Default> LinkedList<T> {
         let (cell_a, cell_b) = (iter.nth(idx_a), iter.nth(idx_b - idx_a - 1));
         if let Some(cell_a) = cell_a {
             if let Some(cell_b) = cell_b {
-                Node::swap(&mut cell_a.borrow_mut(), &mut cell_b.borrow_mut());
+                std::mem::swap(&mut cell_a.borrow_mut().elem, &mut cell_b.borrow_mut().elem);
             }
         }
     }
