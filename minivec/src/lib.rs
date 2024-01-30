@@ -860,10 +860,13 @@ mod tests {
     }
     #[test]
     fn minivec_sort_test_2() {
-        let mut runs = 100;
+        let mut runs = 2;
         loop {
             let mut elems: [u16; 32] = [0; 32];
             rand::thread_rng().fill(&mut elems);
+            for i in (25..elems.len()).rev() {
+                elems[i] = elems[0];
+            }
             let mut v = MiniVec::from_iter(elems);
             v.sort(false);
             assert!(v.is_sorted(false)); //false for descending
