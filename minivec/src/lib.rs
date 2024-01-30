@@ -275,6 +275,14 @@ impl<T> MiniVec<T> {
         }
     }
 
+    pub fn peek(&self) -> Option<&T> {
+        if self.len == 0 {
+            None
+        } else {
+            unsafe { Some(&*self.ptr().add(self.len - 1)) }
+        }
+    }
+
     pub fn insert(&mut self, index: usize, elem: T) {
         assert!(
             index <= self.len,
@@ -374,6 +382,17 @@ impl<T: fmt::Debug> fmt::Debug for MiniVec<T> {
     }
 }
 
+impl<T: PartialEq> PartialEq for MiniVec<T> {
+    fn eq(&self, other: &MiniVec<T>) -> bool {
+        if self.len() != other.len() {
+            return false;
+        }
+        self.iter()
+            .zip(other.iter())
+            .all(|(this, that)| this == that)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -388,6 +407,22 @@ mod tests {
         let v = MiniVec::<Empty>::new();
         assert!(v.cap() == usize::MAX);
     }
+
+    #[test]
+    fn minivec_peek_test_1() {
+        let v: MiniVec<bool> = mv![];
+        let v1 = mv![1, 2, 3, 4, 5, 6];
+        assert!(v.peek() == None);
+        assert!(v1.peek() == Some(&6));
+    }
+
+    #[test]
+    fn minivec_partial_eq_test_1() {
+        let v = mv![1, 2, 3, 4, 5, 6];
+        let v1 = mv![1, 2, 3, 4, 5, 6];
+        assert!(v == v1);
+    }
+
     #[test]
     #[cfg(feature = "shrink")]
     fn minivec_from_iter_test_1() {
