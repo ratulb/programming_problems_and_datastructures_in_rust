@@ -323,6 +323,24 @@ impl<T> MiniVec<T> {
             result
         }
     }
+
+    #[cfg(feature = "shuffle")]
+    pub fn shuffle(&mut self)
+    where
+        T: PartialOrd,
+    {
+        use rand::Rng;
+        if self.len < 2 {
+            return;
+        }
+        let mut rng = rand::thread_rng();
+        let mut last_index = self.len - 1;
+        while last_index > 0 {
+            let rand_index = rng.gen_range(0..=last_index);
+            self.swap(rand_index, last_index);
+            last_index -= 1;
+        }
+    }
 }
 
 impl<T> Drop for MiniVec<T> {
@@ -406,6 +424,14 @@ mod tests {
     fn minivec_new_test_1() {
         let v = MiniVec::<Empty>::new();
         assert!(v.cap() == usize::MAX);
+    }
+
+    #[test]
+    #[cfg(feature = "shuffle")]
+    fn minivec_shuffle_test_1() {
+        let mut v = mv![1, 2, 3, 4, 5];
+        v.shuffle();
+        assert_ne!(v, mv![1, 2, 3, 4, 5]);
     }
 
     #[test]
