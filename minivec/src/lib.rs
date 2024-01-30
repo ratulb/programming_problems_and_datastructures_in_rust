@@ -323,6 +323,24 @@ impl<T> MiniVec<T> {
             result
         }
     }
+    ///Is it sorted in order - ascending or descending?
+    pub fn is_sorted(&self, ascending: bool) -> bool
+    where
+        T: PartialOrd,
+    {
+        let mut current: Option<&T> = None;
+        for t in self.iter() {
+            match current {
+                None => current = Some(t),
+                Some(prev) => match ascending {
+                    true if prev > t => return false,
+                    false if prev < t => return false,
+                    _ => current = Some(t),
+                },
+            }
+        }
+        true
+    }
 
     #[cfg(feature = "shuffle")]
     pub fn shuffle(&mut self)
@@ -432,6 +450,24 @@ mod tests {
         let mut v = mv![1, 2, 3, 4, 5];
         v.shuffle();
         assert_ne!(v, mv![1, 2, 3, 4, 5]);
+    }
+
+    #[test]
+    fn minivec_is_sorted_test_1() {
+        let v: MiniVec<i32> = mv![];
+        assert!(v.is_sorted(true));
+        assert!(v.is_sorted(false));
+        let v = mv![1];
+        assert!(v.is_sorted(true));
+        assert!(v.is_sorted(false));
+
+        let v = mv![1, 2, 3, 4, 5];
+        assert!(v.is_sorted(true));
+        let v = mv![5, 4, 3, 2, 1];
+        assert!(v.is_sorted(false));
+        let v = mv![3, 2, 1, 4, 5];
+        assert!(!v.is_sorted(true));
+        assert!(!v.is_sorted(false));
     }
 
     #[test]
