@@ -68,6 +68,14 @@ mod tests {
         let result = evaluate(s);
         assert_eq!(result, Ok(8));
 
+        let s = "2, 1, '+', 100, '-'";
+        let result = evaluate(s);
+        assert_eq!(result, Ok(-97));
+
+        let s = "2, 1, 100, '-', '+'";
+        let result = evaluate(s);
+        assert_eq!(result, Ok(-97));
+
         let s = "5, 3, '+', 100, '-'";
         let result = evaluate(s);
         assert_eq!(result, Ok(-92));
