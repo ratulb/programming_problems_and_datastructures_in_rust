@@ -1,4 +1,4 @@
-# Programming problems in rust
+# Programming problems in rust1
 
 ## Programming problems
   - [Programming problems](#programming-problems)
