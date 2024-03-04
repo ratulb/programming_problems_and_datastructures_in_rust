@@ -1,17 +1,17 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js light">
+<html lang="en" class="light" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>Programming problems in rust</title>
-        <meta name="robots" content="noindex" />
+        <meta name="robots" content="noindex">
 
 
         <!-- Custom HTML head -->
         
         <meta name="description" content="Programming problems in rust">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff">
 
         <link rel="icon" href="favicon.svg">
         <link rel="shortcut icon" href="favicon.png">
@@ -32,7 +32,7 @@
         <!-- Custom theme stylesheets -->
 
     </head>
-    <body>
+    <body class="sidebar-visible no-js">
     <div id="body-container">
         <!-- Provide site root to javascript -->
         <script>
@@ -62,42 +62,71 @@
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             var html = document.querySelector('html');
-            html.classList.remove('no-js')
             html.classList.remove('light')
             html.classList.add(theme);
-            html.classList.add('js');
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
         </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var html = document.querySelector('html');
+            var body = document.querySelector('body');
             var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
             } else {
                 sidebar = 'hidden';
             }
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
                 <ol class="chapter"><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="binary_search_tree/introduction.html"><strong aria-hidden="true">2.</strong> Binary search tree</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="binary_search_tree/tree_and_node.html"><strong aria-hidden="true">2.1.</strong> Tree and Node</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="binary_search_tree/basic_apis.html"><strong aria-hidden="true">2.1.1.</strong> Basic APIs</a></li><li class="chapter-item expanded "><a href="binary_search_tree/tree_insert.html"><strong aria-hidden="true">2.1.2.</strong> Tree population</a></li><li class="chapter-item expanded "><a href="binary_search_tree/tree_find.html"><strong aria-hidden="true">2.1.3.</strong> Tree find</a></li><li class="chapter-item expanded "><a href="binary_search_tree/node_delete.html"><strong aria-hidden="true">2.1.4.</strong> Node delete (Two children)</a></li><li class="chapter-item expanded "><a href="binary_search_tree/delete_child.html"><strong aria-hidden="true">2.1.5.</strong> Node delete (One or no child)</a></li><li class="chapter-item expanded "><a href="binary_search_tree/tree_delete.html"><strong aria-hidden="true">2.1.6.</strong> Tree delete</a></li></ol></li><li class="chapter-item expanded "><a href="binary_search_tree/additional.html"><strong aria-hidden="true">2.2.</strong> Additional APIs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="binary_search_tree/tree_minimum.html"><strong aria-hidden="true">2.2.1.</strong> Tree minimum</a></li><li class="chapter-item expanded "><a href="binary_search_tree/tree_exists.html"><strong aria-hidden="true">2.2.2.</strong> Tree exists</a></li><li class="chapter-item expanded "><a href="binary_search_tree/tree_identical.html"><strong aria-hidden="true">2.2.3.</strong> Tree identical</a></li><li class="chapter-item expanded "><a href="binary_search_tree/tree_contains.html"><strong aria-hidden="true">2.2.4.</strong> Tree contains</a></li><li class="chapter-item expanded "><a href="binary_search_tree/tree_iterator.html"><strong aria-hidden="true">2.2.5.</strong> Tree iterator</a></li><li class="chapter-item expanded "><a href="binary_search_tree/tree_into_iterator.html"><strong aria-hidden="true">2.2.6.</strong> Tree into iterator</a></li><li class="chapter-item expanded "><a href="binary_search_tree/tree_height.html"><strong aria-hidden="true">2.2.7.</strong> Tree height</a></li><li class="chapter-item expanded "><a href="binary_search_tree/lca.html"><strong aria-hidden="true">2.2.8.</strong> LCA</a></li><li class="chapter-item expanded "><a href="binary_search_tree/nth_smallest.html"><strong aria-hidden="true">2.2.9.</strong> Nth smallest</a></li><li class="chapter-item expanded "><a href="binary_search_tree/kth_smallest.html"><strong aria-hidden="true">2.2.10.</strong> Kth smallest</a></li><li class="chapter-item expanded "><a href="binary_search_tree/from_sorted_array.html"><strong aria-hidden="true">2.2.11.</strong> From sorted array</a></li><li class="chapter-item expanded "><a href="binary_search_tree/validation.html"><strong aria-hidden="true">2.2.12.</strong> Tree validation</a></li><li class="chapter-item expanded "><a href="binary_search_tree/updation.html"><strong aria-hidden="true">2.2.13.</strong> Tree update</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="doubly_linkedlist/introduction.html"><strong aria-hidden="true">3.</strong> Dubley linkedlist</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="doubly_linkedlist/node_and_list.html"><strong aria-hidden="true">3.1.</strong> Node and List</a></li><li class="chapter-item expanded "><a href="doubly_linkedlist/push_front_and_back.html"><strong aria-hidden="true">3.2.</strong> Push front and push back</a></li><li class="chapter-item expanded "><a href="doubly_linkedlist/pop_front_and_back.html"><strong aria-hidden="true">3.3.</strong> Pop front and pop back</a></li><li class="chapter-item expanded "><a href="doubly_linkedlist/delete.html"><strong aria-hidden="true">3.4.</strong> List delete</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="doubly_linkedlist/delete_helpers.html"><strong aria-hidden="true">3.4.1.</strong> Delete helpers</a></li></ol></li><li class="chapter-item expanded "><a href="doubly_linkedlist/iterators.html"><strong aria-hidden="true">3.5.</strong> List iterators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="doubly_linkedlist/mutable_iterator.html"><strong aria-hidden="true">3.5.1.</strong> Mutable iterator</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="doubly_linkedlist/mutable_back_iterator.html"><strong aria-hidden="true">3.5.1.1.</strong> Iterating back</a></li></ol></li><li class="chapter-item expanded "><a href="doubly_linkedlist/immutable_iterator.html"><strong aria-hidden="true">3.5.2.</strong> Bidirectional iterator</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="sorting/introduction.html"><strong aria-hidden="true">4.</strong> Sorting algorithms</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sorting/bubblesort.html"><strong aria-hidden="true">4.1.</strong> Bubble sort</a></li><li class="chapter-item expanded "><a href="sorting/insertionsort.html"><strong aria-hidden="true">4.2.</strong> Insertion sort</a></li><li class="chapter-item expanded "><a href="sorting/selectionsort.html"><strong aria-hidden="true">4.3.</strong> Selection sort</a></li><li class="chapter-item expanded "><a href="sorting/mergesort.html"><strong aria-hidden="true">4.4.</strong> Merge sort</a></li><li class="chapter-item expanded "><a href="sorting/quicksort.html"><strong aria-hidden="true">4.5.</strong> Quick sort</a></li></ol></li><li class="chapter-item expanded "><a href="lru_cache/introduction.html"><strong aria-hidden="true">5.</strong> LRU cache</a></li><li class="chapter-item expanded "><a href="heap/introduction.html"><strong aria-hidden="true">6.</strong> Heap</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="heap/max_heap.html"><strong aria-hidden="true">6.1.</strong> Max heap</a></li><li class="chapter-item expanded "><a href="heap/min_heap.html"><strong aria-hidden="true">6.2.</strong> Min heap</a></li><li class="chapter-item expanded "><a href="heap/max_min_heap.html"><strong aria-hidden="true">6.3.</strong> Max min heap</a></li></ol></li><li class="chapter-item expanded "><a href="trie/introduction.html"><strong aria-hidden="true">7.</strong> Trie</a></li><li class="chapter-item expanded "><a href="prefix_suffix/introduction.html"><strong aria-hidden="true">8.</strong> Longest common prefix/suffixes</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="prefix_suffix/longest_prefix.html"><strong aria-hidden="true">8.1.</strong> Longest common prefix</a></li><li class="chapter-item expanded "><a href="prefix_suffix/longest_suffix.html"><strong aria-hidden="true">8.2.</strong> Longest common suffix</a></li></ol></li><li class="chapter-item expanded "><a href="permutations/introduction.html"><strong aria-hidden="true">9.</strong> String permutation</a></li><li class="chapter-item expanded "><a href="merge_ksorted_arrays/introduction.html"><strong aria-hidden="true">10.</strong> Merge k sorted arrays</a></li><li class="chapter-item expanded "><a href="substring_concatenarion/introduction.html"><strong aria-hidden="true">11.</strong> Concatenated substring indices</a></li><li class="chapter-item expanded "><a href="pascal_triangle/introduction.html"><strong aria-hidden="true">12.</strong> Pascal's triangle</a></li><li class="chapter-item expanded "><a href="two_sum/introduction.html"><strong aria-hidden="true">13.</strong> Two sum</a></li><li class="chapter-item expanded "><a href="sell_stock/introduction.html"><strong aria-hidden="true">14.</strong> Sell stock</a></li><li class="chapter-item expanded "><a href="product_except_self/introduction.html"><strong aria-hidden="true">15.</strong> Product except self</a></li><li class="chapter-item expanded "><a href="max_sub_array_sum/introduction.html"><strong aria-hidden="true">16.</strong> Max sub array sum</a></li><li class="chapter-item expanded "><a href="maximum-number-of-vowels/introduction.html"><strong aria-hidden="true">17.</strong> Max vowels in substring</a></li></ol>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
         </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
 
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
                                 <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky bordered">
+                <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
-                        </button>
+                        </label>
                         <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
                             <i class="fa fa-paint-brush"></i>
                         </button>
@@ -154,12 +183,12 @@ for a given entry, smaller entries are always on its left and biggers are always
 <h2 id="binary-search-tree-implementation-in-rust"><a class="header" href="#binary-search-tree-implementation-in-rust">Binary search tree implementation in rust</a></h2>
 <p>Binary search trees (henceforth called BSTs) can be implemented in rust without parent pointers.
 But deletion of an entry becomes somewhat clunky without parent pointers.</p>
-<p>Here we implement a BST in rust with parent pointers. Both left and right child point to their 
+<p>Here we implement a BST in rust with parent pointers. Both left and right child point to their
 parent. We make use of <a href="https://doc.rust-lang.org/std/rc/struct.Rc.html">shared references</a> -
 since same parent is shared by both children as well as we need to access it from multiple contexts.
 Reference counted pointer alone - <a href="https://doc.rust-lang.org/std/rc/struct.Rc.html">Rc</a> - is not very
 useful in itself - atleast in this context - since we 'Rc' provides mutable reference to its inner
-content - only if there is no other existing reference to it already. This, obviously, is not 
+content - only if there is no other existing reference to it already. This, obviously, is not
 the case here - because children will be pointing to it all the time. We need to be able to
 mutate (for example -change its value or delete) it - while there are outstanding child references
 to a it. We need <a href="https://doc.rust-lang.org/book/ch15-05-interior-mutability.html">shared interior mutability</a>. This is where <a href="https://doc.rust-lang.org/std/cell/struct.RefCell.html">RefCell</a> comes handy - it provides interior mutability when no existing 'borrow' (mutable and immutable) is in the
@@ -167,7 +196,7 @@ context and multiple shared references when there exists no mutable borrow.</p>
 <p>One last thing though. If parent contains(optionally) a child and child points back at its parent,
 while deleting a parent - its reference count will still be 1(or 2). Since parent's reference count is not 0 - it would not be dropped - it would be lingering in memory leading to a <a href="https://doc.rust-lang.org/book/ch15-06-reference-cycles.html">leaky situation</a>. This is certainly undesirable and we
 don't want this. Which is why we want our parent pointers to be <a href="https://doc.rust-lang.org/std/rc/struct.Weak.html">weak</a> ones so that we can drop parents even when there are outstanding weak references to it.</p>
-<p>With these understanding so far - next we define our Tree and Node. </p>
+<p>With these understanding so far - next we define our Tree and Node.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="tree-and-node-definition"><a class="header" href="#tree-and-node-definition">Tree and Node definition</a></h1>
 <h3 id="we-define-our-tree-as-follows"><a class="header" href="#we-define-our-tree-as-follows">We define our Tree as follows:</a></h3>
 <pre><code class="language-rust  ignore">#[derive(Debug, Default)]
@@ -328,7 +357,7 @@ right spot is found - a new <code>Tree</code> branch is created with the input k
 newly created tree is added as left or right child of the parent.</p>
 <blockquote>
 <p><strong>Note</strong>: We downgrade parent's reference because children always maintain a weak pointer to its
-parent. Also, we don't allow duplicate entry. </p>
+parent. Also, we don't allow duplicate entry.</p>
 </blockquote>
 <h3 id="following-is-insert-function-in-its-entirety"><a class="header" href="#following-is-insert-function-in-its-entirety">Following is <code>insert</code> function in its entirety:</a></h3>
 <pre><code class="language-rust  ignore">    //Populate tree with a new key
@@ -453,7 +482,7 @@ out the code to handle the case when the deleted node has only one or no child b
 <p>Node <code>delete_child</code> function gets invoked when the target node being deleted has only left or right
 child or no child but has got a parent. We evict the target node and take out its key, parent and
 its left or right child in a tuple.</p>
-<p>Next we set the deleted node's left or right child's parent to deleted node's parent and finally 
+<p>Next we set the deleted node's left or right child's parent to deleted node's parent and finally
 return the deleted node's key.</p>
 <h3 id="following-is-the-snippet-for-delete_child-function"><a class="header" href="#following-is-the-snippet-for-delete_child-function">Following is the snippet for <code>delete_child</code> function:</a></h3>
 <pre><code class="language-rust  ignore">
@@ -612,8 +641,8 @@ can not be found - we have no further business -  we return <code>None</code>.</
 <div style="break-before: page; page-break-before: always;"></div><h1 id="additional-apis"><a class="header" href="#additional-apis">Additional APIs</a></h1>
 <p>Next we discusss additional public APIs built on top of our core <code>Tree</code> struct.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="tree-minimum"><a class="header" href="#tree-minimum">Tree minimum</a></h1>
-<p>The <code>minimum</code> pub API returns the minimum entry in the tree if the tree is not empty. It call anoth-ther internal API called <code>min</code>. The <code>min</code> function accepts a reference to <code>Rc&lt;RefCell&lt;Node&lt;T&gt;&gt;&gt;</code> 
-and returns <code>OptionRc&lt;RefCell&lt;Node&lt;T&gt;&gt;&gt;&gt;</code>. Its does so by going to the left of the passed in node 
+<p>The <code>minimum</code> pub API returns the minimum entry in the tree if the tree is not empty. It call anoth-ther internal API called <code>min</code>. The <code>min</code> function accepts a reference to <code>Rc&lt;RefCell&lt;Node&lt;T&gt;&gt;&gt;</code>
+and returns <code>OptionRc&lt;RefCell&lt;Node&lt;T&gt;&gt;&gt;&gt;</code>. Its does so by going to the left of the passed in node
 reference as far as possible or returns current left's root node otherwise.</p>
 <p>The tree <code>minimum</code> just calls the internal <code>min</code> function passing its root node's reference and
 returns either returned <code>Node</code>'s (if found) key or <code>None</code> otherwise.</p>
@@ -749,7 +778,7 @@ passed in or a tree similar to the input tree exists somewhere in left or right 
         }
     }		    </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="tree-iterator"><a class="header" href="#tree-iterator">Tree iterator</a></h1>
-<p>Calling <code>tree.iter()</code> returns an <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html">iterator</a> of <code>OptionM&lt;T&gt;</code> and <code>iterator.next()</code> returns the keys level wise. Also, <code>tree.iter()</code> can be 
+<p>Calling <code>tree.iter()</code> returns an <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html">iterator</a> of <code>OptionM&lt;T&gt;</code> and <code>iterator.next()</code> returns the keys level wise. Also, <code>tree.iter()</code> can be
 called repeated since it does not consume the tree.</p>
 <h3 id="following-are-the-relevant-implementation-details"><a class="header" href="#following-are-the-relevant-implementation-details">Following are the relevant implementation details:</a></h3>
 <p>The <code>Iter</code> struct defintion:</p>
@@ -870,12 +899,12 @@ pub fn into_iter(&amp;mut self) -&gt; IntoIter&lt;'_, T&gt; {
         }
     }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="lowest-common-ancestor-lca"><a class="header" href="#lowest-common-ancestor-lca">Lowest common ancestor (LCA)</a></h1>
-<p>Here we present how to find the lowest common ancestor for two given keys. LCA is the 
-immediate parent that the given keys share. Or the parent could be one the keys - if that 
+<p>Here we present how to find the lowest common ancestor for two given keys. LCA is the
+immediate parent that the given keys share. Or the parent could be one the keys - if that
 key happens to the parent of the other given key.</p>
-<p>The LCA would be in the left or right side of a node - if the node's key is bigger or 
-smaller than both the given keys. If that condition trips - that would mean given keys 
-are on the either side of the node or one of the keys is the node itself and the other 
+<p>The LCA would be in the left or right side of a node - if the node's key is bigger or
+smaller than both the given keys. If that condition trips - that would mean given keys
+are on the either side of the node or one of the keys is the node itself and the other
 would be beneath it.</p>
 <h3 id="following-is-the-lca-implentation"><a class="header" href="#following-is-the-lca-implentation">Following is the LCA implentation:</a></h3>
 <pre><code class="language-rust  ignore">//Return the lowest common ancestor for two given keys
@@ -902,7 +931,7 @@ would be beneath it.</p>
         }
     }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="nth-smallest"><a class="header" href="#nth-smallest">Nth smallest</a></h1>
-<p>To find nth smallest key in the tree we go all the way to the left. Once we are there, we 
+<p>To find nth smallest key in the tree we go all the way to the left. Once we are there, we
 ask the question - is the current position is the nth position? If so, we return the node's key at that position. Otherwise, we move up - repeat the process.</p>
 <h3 id="following-is-the-routine-for-finding-the-nth-smallest"><a class="header" href="#following-is-the-routine-for-finding-the-nth-smallest">Following is the routine for finding the nth smallest:</a></h3>
 <pre><code class="language-rust  ignore">//Find nth smallest in the binary seach tree
@@ -929,11 +958,11 @@ ask the question - is the current position is the nth position? If so, we return
     	}
     }                           </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="kth-smallest"><a class="header" href="#kth-smallest">Kth smallest</a></h1>
-<p>Here we present the iterative solution to find the kth smallest number. To do that we 
-maintain a stack. We keep going left as long as possible and keep pushing the nodes we 
-encounter (to back step) to the stack. When the lowest node is found - we pop from the 
-stack and increment our internal counter. We check if interanl counter equals to the kth 
-value we are looking for - If so, we return the node's key. Otherwise we start going up - 
+<p>Here we present the iterative solution to find the kth smallest number. To do that we
+maintain a stack. We keep going left as long as possible and keep pushing the nodes we
+encounter (to back step) to the stack. When the lowest node is found - we pop from the
+stack and increment our internal counter. We check if interanl counter equals to the kth
+value we are looking for - If so, we return the node's key. Otherwise we start going up -
 either by going to the right or popping up previous node entry in the stack.</p>
 <h3 id="following-snippet-of-code-shows-how-we-get-the-kth-smallest-iteratively"><a class="header" href="#following-snippet-of-code-shows-how-we-get-the-kth-smallest-iteratively">Following snippet of code shows how we get the kth smallest iteratively:</a></h3>
 <pre><code class="language-rust  ignore">    //kth smallest element - iterative
@@ -956,12 +985,12 @@ either by going to the right or popping up previous node entry in the stack.</p>
         None
     }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="from-sorted-array"><a class="header" href="#from-sorted-array">From sorted array</a></h1>
-<p>Here we present how to create a height balanced binary search tree from a sorted array. 
-Height balanced BST is such that - height of subtrees in the left and right side of the 
+<p>Here we present how to create a height balanced binary search tree from a sorted array.
+Height balanced BST is such that - height of subtrees in the left and right side of the
 root would not differ by more than 1. The algorithm we use is recursive.</p>
-<p>We pick the mid point of the sorted array - make it the root of the tree. Then we - take 
-half from next of the mid point till the end the array - make a recursive call to make the right subtree of them root. We do the same thing for left subtree - only difference is 
-that this time we take the half from start of the array till the element before the mid 
+<p>We pick the mid point of the sorted array - make it the root of the tree. Then we - take
+half from next of the mid point till the end the array - make a recursive call to make the right subtree of them root. We do the same thing for left subtree - only difference is
+that this time we take the half from start of the array till the element before the mid
 point.</p>
 <h3 id="following-is-the-implementation"><a class="header" href="#following-is-the-implementation">Following is the implementation:</a></h3>
 <pre><code class="language-rust  ignore">//Create a height balanced tree from a sorted array
@@ -1019,8 +1048,8 @@ point.</p>
 <p><strong>Note</strong>: We are making use of nested functions above.</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="tree-validation"><a class="header" href="#tree-validation">Tree validation</a></h1>
-<p>Below we present the implementation of an iterative algoritm to validate the binary search tree. The idea here is to go the left most node - and then traverse the tree in order. 
-When traversing tree in order - we expect every next element to be bigger than the previous element and lesser than the root element. When we cross the root - we want every element 
+<p>Below we present the implementation of an iterative algoritm to validate the binary search tree. The idea here is to go the left most node - and then traverse the tree in order.
+When traversing tree in order - we expect every next element to be bigger than the previous element and lesser than the root element. When we cross the root - we want every element
 be greater than the root and its previous element.</p>
 <p>###Following function achieves the same:</p>
 <pre><code class="language-rust  ignore">//Validate the if the tree is valid
@@ -1079,7 +1108,7 @@ be greater than the root and its previous element.</p>
         }
     }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="tree-update"><a class="header" href="#tree-update">Tree update</a></h1>
-<p>We can update the value of any node in the binary search tree. We search the key to be 
+<p>We can update the value of any node in the binary search tree. We search the key to be
 updated by using <code>Iterator</code> find method any mutate its value.</p>
 <h3 id="tree-update-implementation"><a class="header" href="#tree-update-implementation">Tree update implementation</a></h3>
 <pre><code class="language-rust  ignore"> //Update a node key in the tree
@@ -1259,7 +1288,7 @@ matter of calling <code>pop_front</code> or <code>pop_back</code> accordingly.</
 <p>To delete inner target node we first get a handles to its previous and next nodes. Once we find them,
 we need to rewire the linkages appropriately.</p>
 <p>We clone the the outgoing target's previous pointer, which is a weak pointer reference, set it as theprevious pointer of the outgoing node's next node.</p>
-<p>We upgrade previous (<code>prev</code>) weak  pointer to get a strong refernce to get to previous node and set 
+<p>We upgrade previous (<code>prev</code>) weak  pointer to get a strong refernce to get to previous node and set
 next's cloned reference as its next. Then we return the content of outgoing target node.</p>
 <p>Following is snippet for deleting an inner node:</p>
 <pre><code class="language-rust  ignore">//Delete a node that has previous and next
@@ -1305,8 +1334,8 @@ as well from the back because we implement <a href="https://doc.rust-lang.org/st
 <p>First we will look at mutable variant - because if pretty simple.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="mutable-iterator"><a class="header" href="#mutable-iterator">Mutable iterator</a></h1>
 <p>We iterate through iterator elements by calling <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#tymethod.next">next</a> on it - this means we need to maintain the iterator's state. Folloing is a
-struct that mutabley borrows the underlying list and stores it. The life time paramter 'a is there 
-because we are holding a reference to the list - we don't own the list. An <code>IntoIterator</code> instance 
+struct that mutabley borrows the underlying list and stores it. The life time paramter 'a is there
+because we are holding a reference to the list - we don't own the list. An <code>IntoIterator</code> instance
 can exist only as long as unerlying list struct instance is alive. The iterator can not outlive the
 list struct instance that it is borrowing.</p>
 <pre><code class="language-rust  ignore">pub struct IntoIterator&lt;'a, T: std::fmt::Debug + Default + Clone + PartialEq&gt; {
@@ -1330,7 +1359,7 @@ iteration it bcomes empty. We could have consumed the list instead.</p>
 we iterate over the elements inside the list? Not yet. We have not added the iterator behaviour to
 our struct yet. We need to implement the <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html">Iterator</a> trait for our <code>IntoIterator</code> struct for that. Whichis what we will do next.</p>
 <blockquote>
-<p><strong>Note</strong>: The <code>Iterator</code> trait has quite a bunch of methods defined in it. But we need to 
+<p><strong>Note</strong>: The <code>Iterator</code> trait has quite a bunch of methods defined in it. But we need to
 implement only the <code>next</code> method of it because rests are implemented based on <code>next</code>.</p>
 </blockquote>
 <h3 id="implement-iterator-for-intoiterator"><a class="header" href="#implement-iterator-for-intoiterator">Implement Iterator for IntoIterator:</a></h3>
@@ -1343,7 +1372,7 @@ impl&lt;'a, T: std::fmt::Debug + Default + Clone + PartialEq&gt; Iterator for In
     }
 }</code></pre>
 <p>Our implementation could not have been any more simpler than this - we just pop the elements from
-the front! </p>
+the front!</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="mutable-back-iterator"><a class="header" href="#mutable-back-iterator">Mutable back iterator</a></h1>
 <p>Our <code>IntoIterator</code> implements <code>Iterator</code> - hence we can iterate forward traversing the elements.
 What if we wanted to traverse the elements back? For that we have to implement <a href="https://doc.rust-lang.org/std/iter/trait.DoubleEndedIterator.html">DoubleEndedIterator</a>. To implement double ended
@@ -1370,7 +1399,7 @@ going to return <code>Option&lt;T&gt;</code>. But that does not change anything 
 underlying <code>List</code> - it would still remain intact. We clone our <code>&amp;T</code> and return <code>Option&lt;T&gt;</code>.</p>
 <p>The reason for returning <code>Option&lt;T&gt;</code> and not <code>Option&lt;&amp;T&gt;</code> is that our <code>T</code>s are burried deep inside
 of <code>RefCell</code>s which themselves are insides' of <code>Rc</code>s. Its seems pretty damn hard to give a <code>&amp;T</code> out
-from <code>Rc&lt;RefCell&lt;Node&lt;T&gt;&gt;&gt;</code> - I have not figured it out yet - not sure if that would be possible 
+from <code>Rc&lt;RefCell&lt;Node&lt;T&gt;&gt;&gt;</code> - I have not figured it out yet - not sure if that would be possible
 without resorting to unsafe rust.</p>
 <p>Hence we stick it our good friend - <code>Option&lt;T&gt;</code>.</p>
 <p>In the previous section - we have implemented <code>DoubleEndedIterator</code> when we had a mutable referece
@@ -1379,10 +1408,10 @@ able get elements from right ends in right order.</p>
 <p>In the immutable case, we don't want to maintain a mutable reference to our underlying list. We
 aslo want our immutable iterator to be able traverse forward as well as backward and while doing so, we don't want to trample each other. In another words, while calling <code>next</code>, we don't want our
 iterator to return elements which we have already seen by calling <code>next_back</code> and vice versa.</p>
-<p>Again, when we call <code>iter</code> on our list to get a bi-directional iterator - the struct that gets 
-returned should be simple enough and should not have lot of code to achieve the funtionality that 
-we want. We want to handle case whether to return an element or not, because it may already have 
-been returned by <code>next_back</code> or <code>next</code>, internally. We want that piece of logic to reside in some 
+<p>Again, when we call <code>iter</code> on our list to get a bi-directional iterator - the struct that gets
+returned should be simple enough and should not have lot of code to achieve the funtionality that
+we want. We want to handle case whether to return an element or not, because it may already have
+been returned by <code>next_back</code> or <code>next</code>, internally. We want that piece of logic to reside in some
 other struct. Ok, enough talk. Let's get down to code.</p>
 <h3 id="immutable-iterator-struct-defintion-that-caller-gets"><a class="header" href="#immutable-iterator-struct-defintion-that-caller-gets">Immutable iterator struct defintion that caller gets:</a></h3>
 <pre><code class="language-rust  ignore">pub struct Iter&lt;T: std::fmt::Debug + Default + Clone + PartialEq&gt; {
@@ -1414,7 +1443,7 @@ impl&lt;T: std::fmt::Debug + Default + Clone + PartialEq&gt; DoubleEndedIterator
             .map(|prev| prev.borrow().key.clone())
     }
 }</code></pre>
-<p>Our iterator and double ended iterator implementations are simple enough and much of the logic is 
+<p>Our iterator and double ended iterator implementations are simple enough and much of the logic is
 hidden inside <code>NodeIterator</code>. But it turns out our <code>NodeIterator</code> is also not very complex at all.</p>
 <h3 id="nodeiterator-struct-defintion"><a class="header" href="#nodeiterator-struct-defintion">NodeIterator struct defintion:</a></h3>
 <pre><code class="language-rust  ignore">//This struct holds head and tail of the list
@@ -1425,10 +1454,10 @@ struct NodeIterator&lt;T: std::fmt::Debug + Default + Clone + PartialEq&gt; {
     ptr_crossed: bool,
 }</code></pre>
 <h3 id="iterator-trait-implementation-for-nodeiterator"><a class="header" href="#iterator-trait-implementation-for-nodeiterator">Iterator trait implementation for NodeIterator:</a></h3>
-<p><code>NodeIterator</code> struct has references to head and tail of the list. These references move forward 
-and backward as we call <code>next</code> and <code>next_back</code>. When calling <code>next</code> - we see if the <code>ptr_crossed</code> 
-flag is set - if set we return <code>None</code>, if not set - we proceed forward - check if we are returing 
-the same element that tail is pointing at - if so, if set the <code>ptr_crossed</code> flagged is set so that  calling <code>next_back</code> does not return any more elements. That's all to it. <code>DoubleEndedIteraror</code> 
+<p><code>NodeIterator</code> struct has references to head and tail of the list. These references move forward
+and backward as we call <code>next</code> and <code>next_back</code>. When calling <code>next</code> - we see if the <code>ptr_crossed</code>
+flag is set - if set we return <code>None</code>, if not set - we proceed forward - check if we are returing
+the same element that tail is pointing at - if so, if set the <code>ptr_crossed</code> flagged is set so that  calling <code>next_back</code> does not return any more elements. That's all to it. <code>DoubleEndedIteraror</code>
 implementation does same thing just that it looks at the head pointer.</p>
 <pre><code class="language-rust  ignore">impl&lt;T: std::fmt::Debug + Default + Clone + PartialEq&gt; Iterator for NodeIterator&lt;T&gt; {
     type Item = Rc&lt;RefCell&lt;Node&lt;T&gt;&gt;&gt;;
@@ -1501,9 +1530,9 @@ implementation does same thing just that it looks at the head pointer.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="sorting-algoriths"><a class="header" href="#sorting-algoriths">Sorting algoriths</a></h1>
 <p>We present sorting algorithms in the following sections.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="bubble-sort"><a class="header" href="#bubble-sort">Bubble sort</a></h1>
-<p>Bubble sort algorithm starts with left most item in the given array and compares it to the element next to it and swaps them if next is smaller than the previous. Then it starts with the next item( irrespective of whether it was swapped or not in the previous step) and 
-compares with it's next and the process is continued. In the first pass, the comparison and swapping (if necessary) goes all the way till the end of the array and the biggest element in the array lands in the right most position. Again second pass starts with the left most element, puts next bigger element in the array in one position ahead of the biggest 
-element. We maintain a <code>boolean</code> flag to avoid further unnecessary iterations if no 
+<p>Bubble sort algorithm starts with left most item in the given array and compares it to the element next to it and swaps them if next is smaller than the previous. Then it starts with the next item( irrespective of whether it was swapped or not in the previous step) and
+compares with it's next and the process is continued. In the first pass, the comparison and swapping (if necessary) goes all the way till the end of the array and the biggest element in the array lands in the right most position. Again second pass starts with the left most element, puts next bigger element in the array in one position ahead of the biggest
+element. We maintain a <code>boolean</code> flag to avoid further unnecessary iterations if no
 swapping was done in the previous pass (because array is already sorted).</p>
 <h3 id="following-is-the-bubble-sort-implementation"><a class="header" href="#following-is-the-bubble-sort-implementation">Following is the bubble sort implementation:</a></h3>
 <pre><code class="language-rust  ignore">///Bubble sort implementation
@@ -1524,12 +1553,12 @@ pub fn sort&lt;T: PartialOrd&gt;(items: &amp;mut [T]) {
 }</code></pre>
 <p><a href="https://github.com/ratulb/programming_problems_in_rust/tree/master/bubblesort/src/lib.rs">Source</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="insertion-sort"><a class="header" href="#insertion-sort">Insertion sort</a></h1>
-<p>In insertion sort - we presume the item's array to be in two parts - left part which is 
-presumed to be sorted and the rest - which is supposed to be unsorted. We pick up the 
-unsorted elements one by one and place them in their aprropriate positions in the left 
+<p>In insertion sort - we presume the item's array to be in two parts - left part which is
+presumed to be sorted and the rest - which is supposed to be unsorted. We pick up the
+unsorted elements one by one and place them in their aprropriate positions in the left
 sorted part untill whole unsorted part becomes empty - when the array is fully sorted.</p>
-<p>The sorted part starts with just one element i.e. the first element - which is sorted 
-in itself. Proceeding with second element onwards - we keep growing the sorted part. We 
+<p>The sorted part starts with just one element i.e. the first element - which is sorted
+in itself. Proceeding with second element onwards - we keep growing the sorted part. We
 are done when unsorted part becomes exhausted.</p>
 <h3 id="following-is-the-insertion-sort-algorithm-implementation"><a class="header" href="#following-is-the-insertion-sort-algorithm-implementation">Following is the insertion sort algorithm implementation:</a></h3>
 <pre><code class="language-rust  ignore">///Insertion sort implementation
@@ -1545,8 +1574,8 @@ pub fn sort&lt;T: PartialOrd&gt;(items: &amp;mut [T]) {
 }</code></pre>
 <p><a href="https://github.com/ratulb/programming_problems_in_rust/blob/master/insertionsort/src/lib.rs">Source</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="selection-sort"><a class="header" href="#selection-sort">Selection sort</a></h1>
-<p>In selection sort, we start at the beginning of the item's array, look at the rest of array to find the index of any element that could be the smallest the whole array. If found, we we swap the smallest with the element at the first position of the array. Then we look at 
-the second element of the array - and try to find its replacement - if any. This process 
+<p>In selection sort, we start at the beginning of the item's array, look at the rest of array to find the index of any element that could be the smallest the whole array. If found, we we swap the smallest with the element at the first position of the array. Then we look at
+the second element of the array - and try to find its replacement - if any. This process
 continues till we look at all the elements till the element before the last element.</p>
 <h3 id="below-is-the-insertion-sort-implementation"><a class="header" href="#below-is-the-insertion-sort-implementation">Below is the insertion sort implementation:</a></h3>
 <pre><code class="language-rust  ignore">///Selection sort implementation
@@ -1566,7 +1595,7 @@ pub fn sort&lt;T: PartialOrd&gt;(items: &amp;mut [T]) {
 }</code></pre>
 <p><a href="https://github.com/ratulb/programming_problems_in_rust/blob/master/selectionsort/src/lib.rs">Source</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="merge-sort"><a class="header" href="#merge-sort">Merge sort</a></h1>
-<p>We present the merge sort merge sort algorithm in this section. Merge sort is is divide and conquer algorithm - We keep dividing the input array (in memory) until each division is no longer than 1 element each. At this point all divinsions are sorted in themselves. Then we call the merge procedure. At this point we need an auxiliary  array - to hold the merged 
+<p>We present the merge sort merge sort algorithm in this section. Merge sort is is divide and conquer algorithm - We keep dividing the input array (in memory) until each division is no longer than 1 element each. At this point all divinsions are sorted in themselves. Then we call the merge procedure. At this point we need an auxiliary  array - to hold the merged
 halves. From the auxiliary array - we copy the contents back to the original array picking next smaller elements. We don't expect the element type <code>T</code> to be clonable - but we need it to have a <code>Default::default</code> value - because rust does not like holes in memory.</p>
 <p>Following is the implementation:</p>
 <pre><code class="language-rust  ignore">///Merge sort implementation
@@ -1637,9 +1666,9 @@ pub fn merge&lt;T: PartialOrd + Default&gt;(
 }</code></pre>
 <p><a href="https://github.com/ratulb/programming_problems_in_rust/blob/master/mergesort/src/lib.rs">Source</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="quick-sort"><a class="header" href="#quick-sort">Quick sort</a></h1>
-<p>In this section we present the implementtion of quick sort algorithm. Quick sort is an efficient 
-sorting technique that uses no extra storage and can perform at <code>nlog(n)</code> time when the array 
-elements are randomly placed. </p>
+<p>In this section we present the implementtion of quick sort algorithm. Quick sort is an efficient
+sorting technique that uses no extra storage and can perform at <code>nlog(n)</code> time when the array
+elements are randomly placed.</p>
 <p>Here we randomly select left, right or middle element as the pivot while the algorithm is process-  ing sub arrays.</p>
 <h3 id="following-is-the-implementation-1"><a class="header" href="#following-is-the-implementation-1">Following is the implementation:</a></h3>
 <pre><code class="language-rust  ignore">
@@ -1737,7 +1766,7 @@ mod tests {
             rand::thread_rng().fill(&amp;mut array);
             quicksort(&amp;mut array);
             if !is_sorted(&amp;array) {
-                panic!(&quot;Array is not sorted...&quot;);
+                panic!("Array is not sorted...");
             }
             runs -= 1;
             if runs == 0 {
@@ -1756,8 +1785,8 @@ mod tests {
 }</code></pre>
 <p><a href="https://github.com/ratulb/programming_problems_in_rust/blob/master/quicksort/src/lib.rs">Source</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="lru-cache"><a class="header" href="#lru-cache">LRU cache</a></h1>
-<p>Here we implement a cache that can hold key -&gt; value mappings in memory. The maximum 
-capacity of cache is specified during instantiation and when storage reaches maximun 
+<p>Here we implement a cache that can hold key -&gt; value mappings in memory. The maximum
+capacity of cache is specified during instantiation and when storage reaches maximun
 capacity - least recently used entry is evicted.</p>
 <p>The cache exposes the follwoing APIs:</p>
 <ul>
@@ -1766,9 +1795,9 @@ capacity - least recently used entry is evicted.</p>
 <li><code>delete</code> - delete an entry from the cache</li>
 </ul>
 <blockquote>
-<p><strong>Note</strong>: The cache implementation depends on the doubly linked list implementation 
-discussed in the previous section. Another noticeable thing is that - because our LRU 
-cache implementation uses doulby linked list APIs, the implementation is quite concise, 
+<p><strong>Note</strong>: The cache implementation depends on the doubly linked list implementation
+discussed in the previous section. Another noticeable thing is that - because our LRU
+cache implementation uses doulby linked list APIs, the implementation is quite concise,
 its about sixty odd lines when comments are ignored.</p>
 </blockquote>
 <h3 id="following-is-the-complete-implementation"><a class="header" href="#following-is-the-complete-implementation">Following is the complete implementation:</a></h3>
@@ -2372,11 +2401,11 @@ mod tests {
     use super::*;
     #[test]
     fn longest_common_prefix_test_1() {
-        let arr = [&quot;flower&quot;, &quot;flow&quot;, &quot;flight&quot;];
-        assert_eq!(longest_common_prefix(&amp;arr), String::from(&quot;fl&quot;));
+        let arr = ["flower", "flow", "flight"];
+        assert_eq!(longest_common_prefix(&amp;arr), String::from("fl"));
 
-        let arr = [&quot;flower1&quot;, &quot;flower2&quot;, &quot;flower3&quot;];
-        assert_eq!(longest_common_prefix(&amp;arr), String::from(&quot;flower&quot;));
+        let arr = ["flower1", "flower2", "flower3"];
+        assert_eq!(longest_common_prefix(&amp;arr), String::from("flower"));
     }
 }</code></pre>
 <p><a href="https://github.com/ratulb/programming_problems_in_rust/blob/master/longest_common_prefix/src/lib.rs">Source</a></p>
@@ -2418,17 +2447,17 @@ mod tests {
     use super::*;
     #[test]
     fn longest_common_suffix_test() {
-        let arr = [&quot;privacy&quot;];
+        let arr = ["privacy"];
         let result = longest_common_suffix(&amp;arr);
-        assert_eq!(result, String::from(&quot;privacy&quot;));
+        assert_eq!(result, String::from("privacy"));
 
-        let arr = [&quot;privacy&quot;, &quot;fallacy&quot;, &quot;delicacy&quot;];
+        let arr = ["privacy", "fallacy", "delicacy"];
         let result = longest_common_suffix(&amp;arr);
-        assert_eq!(result, String::from(&quot;acy&quot;));
+        assert_eq!(result, String::from("acy"));
 
-        let arr = [&quot;freedom&quot;, &quot;kingdom&quot;, &quot;boredom&quot;];
+        let arr = ["freedom", "kingdom", "boredom"];
         let result = longest_common_suffix(&amp;arr);
-        assert_eq!(result, String::from(&quot;dom&quot;));
+        assert_eq!(result, String::from("dom"));
     }
 }</code></pre>
 <p><a href="https://github.com/ratulb/programming_problems_in_rust/blob/master/longest_common_suffix/src/lib.rs">Source</a></p>
@@ -2464,16 +2493,16 @@ mod tests {
     use super::permutate;
     #[test]
     fn permutate_test() {
-        let result = permutate(&quot;abc&quot;);
+        let result = permutate("abc");
         assert_eq!(
             result,
             vec![
-                String::from(&quot;cba&quot;),
-                String::from(&quot;bca&quot;),
-                String::from(&quot;cab&quot;),
-                String::from(&quot;acb&quot;),
-                String::from(&quot;bac&quot;),
-                String::from(&quot;abc&quot;)
+                String::from("cba"),
+                String::from("bca"),
+                String::from("cab"),
+                String::from("acb"),
+                String::from("bac"),
+                String::from("abc")
             ]
         );
     }
@@ -2481,7 +2510,7 @@ mod tests {
 <p><a href="https://github.com/ratulb/programming_problems_in_rust/tree/master/permutations/src/lib.rs">Source</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="merge-k-sorted-arrays"><a class="header" href="#merge-k-sorted-arrays">Merge k sorted arrays</a></h1>
 <p>Here we present a simple routine to merge k sorted arrays which might not be of same
-lengths. We make use our <code>Heap</code> datastructure that we developed earlier. We also, make 
+lengths. We make use our <code>Heap</code> datastructure that we developed earlier. We also, make
 use of tuple struct to maintain the state of each array while we are iterating over them.</p>
 <h3 id="following-is-the-implementation-2"><a class="header" href="#following-is-the-implementation-2">Following is the implementation:</a></h3>
 <pre><code class="language-rust  ignore">//Merge k sorted arrays. Arrays are not of equal lengths
@@ -2539,23 +2568,23 @@ mod tests {
 <p>Given a string s and an array of strings words of the same length. Return all starting indices of substring(s) in s that is a concatenation of each word in words exactly once, in any order, and without any intervening characters.</p>
 <p>The answer can be in any order.</p>
 <p>Example 1:</p>
-<p>Input: s = &quot;barfoothefoobarman&quot;, words = [&quot;foo&quot;,&quot;bar&quot;]
+<p>Input: s = "barfoothefoobarman", words = ["foo","bar"]
 Output: [0,9]
-Explanation: Substrings starting at index 0 and 9 are &quot;barfoo&quot; and &quot;foobar&quot; respectively
+Explanation: Substrings starting at index 0 and 9 are "barfoo" and "foobar" respectively
 The output order does not matter, returning [9,0] is fine too.</p>
 <p>Example 2:</p>
-<p>Input: s = &quot;wordgoodgoodgoodbestword&quot;, words = [&quot;word&quot;,&quot;good&quot;,&quot;best&quot;,&quot;word&quot;]</p>
+<p>Input: s = "wordgoodgoodgoodbestword", words = ["word","good","best","word"]</p>
 <p>Output: [12]</p>
 <p>Ingnore the duplicate search words above.</p>
 <p>Example 3:</p>
-<p>Input: s = &quot;barfoofoobarthefoobarman&quot;, words = [&quot;bar&quot;,&quot;foo&quot;,&quot;the&quot;]</p>
+<p>Input: s = "barfoofoobarthefoobarman", words = ["bar","foo","the"]</p>
 <p>Output: [6,9,12]</p>
 <h3 id="solution-explanation-we-use-a-double-ended-queue-for-this-solution-we-keep-iterating-through-the-given-input-string-for-chuncks"><a class="header" href="#solution-explanation-we-use-a-double-ended-queue-for-this-solution-we-keep-iterating-through-the-given-input-string-for-chuncks">Solution explanation: We use a <a href="https://doc.rust-lang.org/std/collections/struct.VecDeque.html">double ended queue</a> for this solution. We keep iterating through the given input string for chuncks</a></h3>
-<p>of words equal in length to the search key words' and keep pushing them into the queue. When we the 
-queue size becomes equal to the search key words' array size, we add the index of the first chunck 
-to the result vector and delete all entries but the last - because that could be the beginning of 
-another substring. If we encounter duplicate immediately after a previous chunck - we clear queue 
-and add just only the current chunck. We also check for previous duplicates - and remove them if any. </p>
+<p>of words equal in length to the search key words' and keep pushing them into the queue. When we the
+queue size becomes equal to the search key words' array size, we add the index of the first chunck
+to the result vector and delete all entries but the last - because that could be the beginning of
+another substring. If we encounter duplicate immediately after a previous chunck - we clear queue
+and add just only the current chunck. We also check for previous duplicates - and remove them if any.</p>
 <h3 id="following-is-the-implementation-3"><a class="header" href="#following-is-the-implementation-3">Following is the implementation:</a></h3>
 <pre><code class="language-rust  ignore">/// Substring with Concatenation of All Words
 
@@ -2730,7 +2759,7 @@ operation.</p>
 }</code></pre>
 <p><a href="https://github.com/ratulb/programming_problems_in_rust/blob/master/product_of_array_except_self/src/lib.rs">Source</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="max-sub-array-sum"><a class="header" href="#max-sub-array-sum">Max sub array sum</a></h1>
-<p>Given an integer array, find the contiguous subarray (containing at least one number) which has 
+<p>Given an integer array, find the contiguous subarray (containing at least one number) which has
 the largest sum and return its sum.</p>
 <h3 id="on3-implementation"><a class="header" href="#on3-implementation">O(n^3) implementation</a></h3>
 <pre><code class="language-rust ignore">pub fn max_sub_array_2(arr: Vec&lt;i32&gt;) -&gt; i32 {
@@ -2798,13 +2827,13 @@ pub fn max_vowels(s: String, k: i32) -&gt; i32 {
     let k: usize = k.try_into().unwrap();
     if s.len() &lt; k.try_into().unwrap() {
         panic!(
-            &quot;IllegalArgumentException - string length {} is shorter than substring length {}&quot;,
+            "IllegalArgumentException - string length {} is shorter than substring length {}",
             s.len(),
             k
         );
     }
     let s = s.chars().collect::&lt;Vec&lt;_&gt;&gt;();
-    let vowels = &quot;aeiou&quot;.chars().collect::&lt;HashSet&lt;_&gt;&gt;();
+    let vowels = "aeiou".chars().collect::&lt;HashSet&lt;_&gt;&gt;();
     let mut count = 0;
     let mut max_count = 0;
     for i in 0..s.len() {
@@ -2840,22 +2869,6 @@ pub fn max_vowels(s: String, k: i32) -&gt; i32 {
 
         </div>
 
-        <!-- Livereload script (if served using the cli tool) -->
-        <script>
-            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
-            const socket = new WebSocket(wsAddress);
-            socket.onmessage = function (event) {
-                if (event.data === "reload") {
-                    socket.close();
-                    location.reload();
-                }
-            };
-
-            window.onbeforeunload = function() {
-                socket.close();
-            }
-        </script>
 
 
 
