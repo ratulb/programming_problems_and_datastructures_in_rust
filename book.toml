@@ -3,8 +3,8 @@ authors = ["Ratul Buragohain"]
 language = "en"
 multilingual = true
 src = "src"
-title = "Programming problems in rust****"
-description = "Programming problems in rust$$$$$$$$$"
+title = "Programming problems in rust"
+description = "Programming problems in rust"
 
 [build]
 build-dir = "docs"
