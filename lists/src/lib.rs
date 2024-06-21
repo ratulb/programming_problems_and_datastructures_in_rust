@@ -1,10 +1,10 @@
 #![forbid(unsafe_code)]
+use minivec::MiniVec;
 use std::cell::{Ref, RefCell, RefMut};
 use std::cmp::Ordering;
 use std::fmt::{Debug, Error, Formatter};
 use std::ops::{Add, Deref, DerefMut};
 use std::rc::Rc;
-use minivec::MiniVec;
 
 type Cell<T> = Rc<RefCell<Node<T>>>;
 type Link<T> = Option<Cell<T>>;
@@ -285,12 +285,7 @@ impl<T: Default> LinkedList<T> {
         result
     }
 
-    fn partition_at_tail(
-        &self,
-        high: usize,
-        ascending: bool,
-        cells: &MiniVec<Cell<T>>,
-    ) -> usize
+    fn partition_at_tail(&self, high: usize, ascending: bool, cells: &MiniVec<Cell<T>>) -> usize
     where
         T: PartialOrd,
     {
@@ -307,7 +302,10 @@ impl<T: Default> LinkedList<T> {
             };
             if less_or_eq_or_greater_or_eq {
                 if i != j {
-                    std::mem::swap(&mut cells[i].borrow_mut().elem, &mut cells[j].borrow_mut().elem);
+                    std::mem::swap(
+                        &mut cells[i].borrow_mut().elem,
+                        &mut cells[j].borrow_mut().elem,
+                    );
                 }
                 i += 1;
             }
@@ -457,6 +455,23 @@ impl<T: Default> LinkedList<T> {
             current = next;
         }
         self.head = previous;
+    }
+
+    pub fn reverse_recursively(&mut self) {
+        if self.len() < 2 {
+            return;
+        }
+        let cell = self.head.take();
+        Self::reverse_recursively_helper(cell);
+    }
+
+    fn reverse_recursively_helper(cell: Option<Cell<T>>) {
+        if let Some(cell) = cell {
+            let has_next = cell.borrow().next.is_some();
+            if has_next {
+                Self::reverse_recursively_helper(cell.borrow_mut().next.take());
+            }
+        }
     }
 
     ///
@@ -765,7 +780,7 @@ impl<T: Default> LinkedList<T> {
         self.head.as_mut().map(|node| MutT(node.borrow_mut()))
     }
     ///Quick sort - slow. Usage is advisable when list size is small
-    
+
     pub fn quicksort(&self, ascending: bool)
     where
         T: PartialOrd,
@@ -775,13 +790,8 @@ impl<T: Default> LinkedList<T> {
         self.quicklysort(ascending, 0, self.len - 1, &minivec);
     }
 
-    fn quicklysort(
-        &self,
-        ascending: bool,
-        start: usize,
-        end: usize,
-        cells: &MiniVec<Cell<T>>,
-    ) where
+    fn quicklysort(&self, ascending: bool, start: usize, end: usize, cells: &MiniVec<Cell<T>>)
+    where
         T: PartialOrd,
     {
         if start < end {
