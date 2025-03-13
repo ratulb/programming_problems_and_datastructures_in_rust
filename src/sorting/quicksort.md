@@ -121,5 +121,5 @@ mod tests {
     }
 }
 ```
-Find it here
+
 [Source](https://github.com/ratulb/programming_problems_in_rust/blob/master/quicksort/src/lib.rs)
