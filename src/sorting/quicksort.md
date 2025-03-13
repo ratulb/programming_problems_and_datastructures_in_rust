@@ -122,6 +122,6 @@ mod tests {
 }
 ```
 
-What is happening guru?
+
 
 [Source](https://github.com/ratulb/programming_problems_in_rust/blob/master/quicksort/src/lib.rs)
