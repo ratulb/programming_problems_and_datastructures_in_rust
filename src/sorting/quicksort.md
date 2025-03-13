@@ -122,6 +122,4 @@ mod tests {
 }
 ```
 
-Are you ok? Are you ok? Are you ok? Are you ok?
-
 [Source](https://github.com/ratulb/programming_problems_in_rust/blob/master/quicksort/src/lib.rs)
