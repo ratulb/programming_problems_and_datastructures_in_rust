@@ -28,4 +28,6 @@ don't want this. Which is why we want our parent pointers to be [weak](https://d
 
 With these understanding so far - next we define our Tree and Node. 
 
+[Source](https://github.com/ratulb/programming_problems_and_datastructures_in_rust/blob/main/binary_search_tree/src/lib.rs)
+
 
