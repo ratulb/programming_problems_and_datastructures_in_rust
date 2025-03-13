@@ -1,4 +1,5 @@
-# Programming problems & Data Structures In Rust
+## Programming problems & Data Structures In Rust
+## Programming problems & Data Structures In Rust
 
 A collection of **Rust implementations** for common programming problems, interview questions, and fundamental data structures. This project serves as a resource for those looking to understand algorithmic problem-solving in Rust with detailed explanations and efficient implementations.
 
