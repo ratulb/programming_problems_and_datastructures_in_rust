@@ -8,7 +8,6 @@ pub fn count_bits(n: usize) -> Vec<usize> {
         }
         result.insert(i, 1 + result[i - power]);
     }
-    println!("{:?}", result);
     return result;
 }
 
