@@ -57,6 +57,3 @@
 * [Max sub array sum](./max_sub_array_sum/introduction.md)
 * [Max vowels in substring](./maximum-number-of-vowels/introduction.md)
 * [Count bits](./count_bits/introduction.md)
-
-
-
